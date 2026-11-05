@@ -7,7 +7,9 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "predev": "node check-node.mjs",
     "dev": "vite",
+    "prebuild": "node check-node.mjs",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit"
   },
