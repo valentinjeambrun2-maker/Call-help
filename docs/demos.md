@@ -35,6 +35,18 @@ Les appels générés localement (`python -m datagen pilot`) s'ajoutent à la li
 | **Transcription en direct** (par défaut) | L'audio est découpé en deux canaux 16 kHz dans le navigateur, envoyé au backend au rythme de la lecture, transcrit par ElevenLabs, puis analysé. C'est le chemin d'un vrai appel. | Voir l'assistant dans les conditions réelles (≈ 0,40 $ par heure d'audio, plus Claude) |
 | **Texte de référence** | Le texte exact de chaque réplique est envoyé à la fin du tour. | Isoler les erreurs de l'assistant de celles de la transcription |
 
+**Si la transcription ne marche pas.** Le backend vérifie les clés à son démarrage, sans rien facturer, et l'écrit dans son terminal (« Call-help · Transcription en direct (ElevenLabs) : … »). La page de démo affiche la même raison avant le lancement. Les causes courantes :
+- **Clé refusée :**
+  - clé révoquée ;
+  - caractère en trop, guillemet ou espace ;
+  - permission « Speech to Text » non accordée à la clé sur elevenlabs.io.
+- **Fichier mal enregistré :**
+  - `backend/.env` enregistré en texte enrichi par TextEdit, ou sous le nom `.env.txt`. Il est lu quand même, avec un avertissement ;
+  - une clé exportée dans le terminal (`export`, `~/.zshrc`), qui l'emporte sur `backend/.env`.
+- **Ancien backend encore lancé :** la page le signale. Arrêtez-le (Ctrl+C), puis relancez-le.
+
+`backend/.env` est relu à chaque appel : une clé corrigée est prise en compte sans relancer le backend. Le bouton « Revérifier » refait le diagnostic.
+
 **Ce que montre la colonne de gauche, pour chaque réplique :**
 - le texte de référence et, en mode direct, ce que la transcription a **entendu**, avec son délai ;
 - l'étape attendue et l'émotion attendue ;

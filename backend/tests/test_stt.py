@@ -92,7 +92,7 @@ async def test_reconnect_replays_untranscribed_audio_and_keeps_call_time():
 async def test_fatal_error_is_reported_and_stops_the_channel():
     fake = FakeScribe(fatal="auth_error")
     ch, out, status = await run_channel(fake, 0.5)
-    assert ch.fatal and status and status[-1][0] == "error" and "auth_error" in status[-1][1]
+    assert ch.fatal and status and status[-1][0] == "error" and "clé ElevenLabs refusée" in status[-1][1]
     assert fake.sessions == 1
 
 

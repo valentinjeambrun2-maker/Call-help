@@ -2,6 +2,7 @@
 // ce que fait l'assistant, à côté de ce qu'il aurait dû faire (vérité terrain).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_BACKEND, type ClientMsg, type Hint, type ServerMsg } from "../shared/protocol";
+import { ServiceNotices, useServiceStatus } from "../shared/serviceStatus";
 import { clock, fr, httpBase } from "../shared/format";
 import { CopilotView, EMOTIONS } from "../sidepanel/CopilotView";
 import { useCallSession } from "../sidepanel/useCallSession";
@@ -82,6 +83,7 @@ function eventTime(e: ClientMsg): number {
 export function DemoApp() {
   const backendUrl = DEFAULT_BACKEND;
   const api = httpBase(backendUrl);
+  const { service, recheck } = useServiceStatus(api);
   const [calls, setCalls] = useState<DemoCall[]>([]);
   const [lang, setLang] = useState<"all" | "fr" | "en">("all");
   const [selected, setSelected] = useState<DemoCall | null>(null);
@@ -369,6 +371,7 @@ export function DemoApp() {
                 </p>
               </div>
               {loadError && <p className="alert">{loadError}</p>}
+              <ServiceNotices service={service} recheck={recheck} />
               <div className="filters">
                 {(["all", "fr", "en"] as const).map((l) => (
                   <button key={l} className={`chip ${lang === l ? "on" : ""}`} onClick={() => setLang(l)}>
@@ -437,6 +440,10 @@ export function DemoApp() {
                     : "Le texte exact des répliques est envoyé à la fin de chaque tour : isole les erreurs de l'assistant de celles de la transcription."}
                   {" "}Vendeur à gauche, prospect à droite (casque conseillé).
                 </p>
+                {state.phase !== "live" && (
+                  <ServiceNotices service={service} recheck={recheck} needsTranscription={mode === "stt"}
+                    transcriptionFallback="En attendant, le mode « Texte de référence » marche sans ElevenLabs." />
+                )}
                 {loadError && <p className="alert">{loadError}</p>}
               </div>
 

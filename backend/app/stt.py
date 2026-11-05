@@ -46,6 +46,13 @@ SPEECH_PEAK = 300  # crête (sur 32768) en dessous de laquelle un bloc est du si
 
 FATAL = {"auth_error", "quota_exceeded", "unaccepted_terms", "invalid_request", "input_error",
          "chunk_size_exceeded"}
+# Ce qu'ElevenLabs répond en anglais, dit au vendeur en français (la raison exacte d'un refus de
+# clé est donnée par le diagnostic du démarrage, voir diagnostics.py).
+FATAL_FR = {
+    "auth_error": "clé ElevenLabs refusée",
+    "quota_exceeded": "quota ElevenLabs épuisé (crédits du compte)",
+    "unaccepted_terms": "conditions d'utilisation à accepter sur elevenlabs.io",
+}
 RETRYABLE = {"error", "session_time_limit_exceeded", "transcriber_error", "resource_exhausted",
              "queue_overflow", "rate_limited", "insufficient_audio_activity", "commit_throttled"}
 
@@ -216,7 +223,7 @@ class ScribeChannel:
                 code = getattr(getattr(exc, "response", None), "status_code", None)
                 if code is not None and 400 <= code < 500 and code not in (408, 429):
                     # Erreur définitive (accès, paramètre, adresse) : inutile de réessayer.
-                    self.fatal = f"refus d'ElevenLabs (HTTP {code})"
+                    self.fatal = "clé ElevenLabs refusée" if code in (401, 403) else f"refus d'ElevenLabs (HTTP {code})"
                     await self._status("error", f"transcription arrêtée : {self.fatal}")
                     self._flushed.set()
                     return
@@ -393,7 +400,9 @@ class ScribeChannel:
     @staticmethod
     def _raise(m: dict) -> None:
         mt = m.get("message_type")
-        raise (FatalSTT if mt in FATAL else RetrySTT)(f"{mt}: {m.get('error') or m.get('message') or ''}".strip())
+        if mt in FATAL:
+            raise FatalSTT(FATAL_FR.get(mt) or f"{mt}: {m.get('error') or m.get('message') or ''}".strip())
+        raise RetrySTT(f"{mt}: {m.get('error') or m.get('message') or ''}".strip())
 
 
 class SttHub:

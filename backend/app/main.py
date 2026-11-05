@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -24,7 +26,20 @@ from .session import CallSession  # noqa: E402
 
 log = logging.getLogger("callhelp")
 
-app = FastAPI(title="Call-help", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # En tâche de fond : le diagnostic des clés s'affiche dans ce terminal sans retarder le démarrage.
+    task = None
+    if os.getenv("CALLHELP_KEY_CHECK", "on") != "off":
+        from . import diagnostics
+
+        task = asyncio.create_task(diagnostics.log_report())
+    yield
+    if task is not None and not task.done():
+        task.cancel()
+
+
+app = FastAPI(title="Call-help", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=os.getenv("CALLHELP_CORS", r"^(chrome-extension://.*|http://localhost(:\d+)?)$"),
@@ -36,6 +51,15 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/status")
+async def status(refresh: bool = False) -> dict:
+    """Ce qui est prêt : transcription en direct (ElevenLabs) et conseils IA (Claude), avec la
+    raison en clair si non. Aucune valeur de clé n'est renvoyée."""
+    from . import diagnostics
+
+    return await diagnostics.report(refresh=refresh)
 
 
 @app.get("/scenarios")
@@ -104,6 +128,9 @@ async def ws_session(ws: WebSocket) -> None:
         except (RuntimeError, WebSocketDisconnect):
             pass
 
+    from .env import reload_if_changed
+
+    reload_if_changed()  # clé ajoutée ou corrigée dans backend/.env : prise en compte sans relancer
     session = CallSession(safe_send, provider=default_provider(), summary_provider=default_summary_provider())
     audio_refused = False
     try:

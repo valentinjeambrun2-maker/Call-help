@@ -53,7 +53,8 @@ class CallSession:
         self.summary_task: asyncio.Task | None = None
         self.pending_turns: dict[float, str] = {}  # fin de tour du prospect -> texte, en attente du LLM
         self._last_classified_ts = -1.0
-        self.no_step_turns: set[float] = set()  # fin de tour : réponse au message, sans avancée d'étape
+        self.no_step_turns: set[float] = set()
+        self._errors_sent: set[str] = set()  # fin de tour : réponse au message, sans avancée d'étape
 
     async def _emit_hint(self, hint: Hint) -> None:
         if hint.replaces:
@@ -177,8 +178,9 @@ class CallSession:
         self.stt_requested = True
         key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
         if not key:
-            await self.send({"type": "error", "message": "Transcription en direct indisponible : "
-                                                        "ELEVENLABS_API_KEY absente du backend."})
+            await self.send({"type": "error", "message": "Transcription en direct indisponible : clé ElevenLabs absente. "
+                                                        "Ajoutez ELEVENLABS_API_KEY=… dans backend/.env, puis relancez "
+                                                        "le backend (le mode « Texte de référence » marche sans clé)."})
             return
         names = msg.keyterms + [v for k, v in self.context_vars.items() if k in ("company", "user_name")]
         self.stt = SttHub(key, msg.language, self._on_stt_transcript, self._on_stt_status, keyterms=names)
@@ -199,8 +201,22 @@ class CallSession:
             await self._on_transcript(msg)
 
     async def _on_stt_status(self, level: str, message: str) -> None:
-        if level == "error":
-            await self.send({"type": "error", "message": message})
+        if level != "error":
+            return
+        if "clé ElevenLabs refusée" in message:
+            # ElevenLabs ne dit pas pourquoi pendant la transcription : le diagnostic, lui, le sait.
+            try:
+                from . import diagnostics
+
+                check = (await asyncio.wait_for(diagnostics.report(), 12))["transcription"]
+                if not check["ready"]:
+                    message = f"Transcription arrêtée : {check['message']}"
+            except Exception:  # noqa: BLE001 — sans diagnostic, le message court suffit
+                pass
+        if message in self._errors_sent:
+            return  # les deux canaux tombent pour la même raison : dit une fois
+        self._errors_sent.add(message)
+        await self.send({"type": "error", "message": message})
 
     @property
     def announcement_pending(self) -> bool:

@@ -6,6 +6,7 @@ import {
 } from "../shared/protocol";
 import { clock, fr, httpBase } from "../shared/format";
 import { CopilotView } from "./CopilotView";
+import { ServiceNotices, useServiceStatus } from "../shared/serviceStatus";
 import { loadSettings, saveSettings, scriptContext, type Settings } from "./settings";
 import { useCallSession } from "./useCallSession";
 
@@ -157,6 +158,7 @@ export function App() {
   const live = state.phase === "live";
   const busy = state.phase === "connecting" || starting;
   const api = httpBase(backendUrl);
+  const { service, recheck } = useServiceStatus(api);
   const demoCalls = calls.filter((c) => c.language === settings.language);
 
   const setSelfAnalysis = (on: boolean) => {
@@ -607,6 +609,7 @@ export function App() {
         {state.error && <p className="alert">{state.error}</p>}
         {!live && capture && capture.tone !== "ok" && <p className={capture.tone === "bad" ? "alert" : "notice"}>{capture.text}</p>}
         {notice && <p className="notice">{notice}</p>}
+        {idle && <ServiceNotices service={service} recheck={recheck} />}
 
         {idle && (
           <section className="card settings" aria-label="Réglages de l'appel">

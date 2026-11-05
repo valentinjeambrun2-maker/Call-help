@@ -502,3 +502,8 @@ blockquote::after { content: "\202f»"; color: var(--accent); }
 .sub.ok { color: var(--ok); }
 .sub.bad { color: var(--danger); }
 .permission .sub { margin-top: 14px; font-size: 14px; }
+
+/* ---- État des services (clés) --------------------------------------------- */
+.service-notice p { margin: 0 0 6px; line-height: 1.45; }
+.service-notice .link { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: inherit;
+  text-decoration: underline; cursor: pointer; }
