@@ -37,7 +37,10 @@ interface Queued {
   at: number;
 }
 
-export function useCallSession(backendUrl: string) {
+export function useCallSession(backendUrl: string, onServerMessage?: (msg: ServerMsg) => void) {
+  // Observateur facultatif de tous les messages (page de démo : mesure de latence, revue).
+  const observer = useRef(onServerMessage);
+  observer.current = onServerMessage;
   const [state, setState] = useState<CallState>(INITIAL);
   const ws = useRef<WebSocket | null>(null);
   const connectedAt = useRef(0);
@@ -87,7 +90,7 @@ export function useCallSession(backendUrl: string) {
       setState((s) => {
         const history = hint.replaces
           ? s.history.map((h) => (h.id === hint.replaces ? hint : h))
-          : [hint, ...s.history].slice(0, 30);
+          : [hint, ...s.history].slice(0, 100);
         // Le vote donné au conseil d'origine vaut pour sa version affinée.
         const voted = hint.replaces ? s.feedback[hint.replaces] : undefined;
         const feedback = voted === undefined ? s.feedback : { ...s.feedback, [hint.id]: voted };
@@ -172,6 +175,7 @@ export function useCallSession(backendUrl: string) {
           } catch {
             return;
           }
+          observer.current?.(msg);
           if (msg.type === "state") {
             setState((s) => ({
               ...s, step: msg.step, metrics: msg.metrics, emotions: msg.emotions,

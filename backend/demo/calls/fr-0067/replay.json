@@ -1,0 +1,226 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "fr",
+ "context": {
+  "user_name": "Julien Morel",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Bonjour ! Euh, Julien Morel, de The Herakles. Je suis bien chez Ferrand Rénovation ?",
+   "start": 0.3,
+   "end": 5.02,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 5.02,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, c'est Bastien, au secrétariat. C'est à quel sujet ?",
+   "start": 5.42,
+   "end": 9.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Alors, juste avant, euh, je vous signale qu'un assistant analyse l'appel, pour, pour la qualité, voilà.",
+   "start": 9.94,
+   "end": 14.82,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum. D'accord.",
+   "start": 15.52,
+   "end": 17.28,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Super. Alors en fait on est un studio digital et on aide les artisans, euh, à sortir en premier sur Google quand quelqu'un tape genre « rénovation » dans sa ville, et du coup ça fait des appels en plus, des chantiers en plus, et en fait on...",
+   "start": 17.43,
+   "end": 28.63,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Attendez, attendez. On a déjà quelqu'un pour ça. Le neveu du patron, c'est lui qui s'occupe du site, de tout ça.",
+   "start": 28.13,
+   "end": 34.93,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ah, d'accord, d'accord. Et euh... il gère aussi la fiche Google ? Les avis, les photos de chantiers, tout ça ?",
+   "start": 35.33,
+   "end": 41.41,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Euh... la fiche... Je sais pas, hein. Il a fait le site y a, quoi, trois ans. Depuis, bon...",
+   "start": 42.61,
+   "end": 50.69,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Parce que j'ai regardé avant d'appeler. Quand on tape « rénovation salle de bain » chez vous, ben vous sortez pas. Enfin si, mais en page deux.",
+   "start": 50.99,
+   "end": 58.43,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah bon ? Page deux ? Ah ouais ?",
+   "start": 58.73,
+   "end": 61.21,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ouais. Et les gens, ils vont jamais en page deux. Par contre votre concurrent, euh, là, celui avec les cinquante avis, il est tout en haut, avec la carte et tout.",
+   "start": 61.41,
+   "end": 69.65,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah, c'est Dumas Bâtiment, ça ! Ah ben ça, ça, ça va le rendre fou, le patron. Dumas devant nous, sérieux ?",
+   "start": 69.85,
+   "end": 77.53,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Voilà ! Et nous, en gros, on optimise la fiche, on, on vous aide à récupérer des avis clients, et en deux, trois mois vous passez devant.",
+   "start": 77.68,
+   "end": 84.0,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mm-hmm.",
+   "start": 84.3,
+   "end": 85.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Et du coup, euh, je pourrais en parler directement avec monsieur Ferrand ?",
+   "start": 85.82,
+   "end": 89.66,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Écoutez, le plus simple, euh, vous m'envoyez un petit truc par mail, et moi je lui pose sur son bureau.",
+   "start": 90.56,
+   "end": 97.12,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je peux, hein. Mais honnêtement, un mail, il va le lire entre deux chantiers... Alors que si je lui montre en direct, sur l'écran, Dumas en haut et vous en page deux, euh, ça parle tout de suite.",
+   "start": 97.42,
+   "end": 107.5,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ha ! Ça c'est sûr. Lui montrer Dumas en premier, il va bondir de sa chaise.",
+   "start": 107.7,
+   "end": 113.38,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Voilà, voilà.",
+   "start": 113.48,
+   "end": 115.16,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Par contre, euh, je vous préviens, hein. Côté sous, c'est serré. On a racheté un camion en janvier, le patron il compte chaque euro, chaque euro.",
+   "start": 115.76,
+   "end": 125.04,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ouais, je comprends. Mais c'est pas, c'est pas des milliers d'euros, hein. Et le rendez-vous, il coûte rien. Vingt minutes, on regarde ensemble si ça vaut le coup.",
+   "start": 125.34,
+   "end": 133.34,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Vingt minutes... Bon. Ben, ça peut se faire, ouais. Il est au dépôt le jeudi matin, en général.",
+   "start": 134.84,
+   "end": 142.12,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Jeudi, euh, neuf heures, ça irait ?",
+   "start": 142.32,
+   "end": 145.12,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Neuf heures, oui oui, c'est bon, je le note. Et venez avec votre capture de Dumas, hein !",
+   "start": 145.52,
+   "end": 151.92,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Promis ! Bon ben, merci beaucoup Bastien, euh, à jeudi alors.",
+   "start": 152.12,
+   "end": 155.8,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "À jeudi. Bonne journée !",
+   "start": 156.0,
+   "end": 158.08,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

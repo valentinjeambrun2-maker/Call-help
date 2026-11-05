@@ -85,7 +85,9 @@ class CoachEngine:
         self.on_classified = on_classified
         self.objection_ids = objection_ids or set()
         self._ids = itertools.count(1)
-        self._llm_task: asyncio.Task | None = None
+        self._llm_task: asyncio.Task | None = None  # dernière analyse lancée
+        self._llm_tasks: set[asyncio.Task] = set()  # analyses en cours (en parallèle)
+        self._llm_generation = 0
         self._last_emotion: EmotionState | None = None
         self._overtime_warned: set[str] = set()
         self.hints_given = 0
@@ -167,15 +169,41 @@ class CoachEngine:
 
     # --- LLM en parallèle ---------------------------------------------------
 
-    def request_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None) -> None:
-        """Lance un conseil LLM ; annule celui en cours, devenu obsolète."""
+    MAX_LLM_INFLIGHT = 6
+
+    @property
+    def has_llm(self) -> bool:
+        return not isinstance(self.provider, NullProvider)
+
+    def retract_objection(self, objection_id: str) -> None:
+        """Objection des mots-clés infirmée par le LLM : elle ne bloque plus la vraie."""
+        self.limiter.last_by_key.pop(f"objection:{objection_id}", None)
+
+    def request_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None, classify_only: bool = False) -> None:
+        """Lance l'analyse du dernier tour par le LLM, en parallèle des précédentes.
+
+        On n'annule plus l'analyse en cours quand le prospect reparle : en direct, il
+        reparle souvent avant le retour du LLM (~2-4 s), et l'annulation faisait perdre
+        le classement du tour qui contenait l'objection (0 objection repérée en démo)."""
         if isinstance(self.provider, NullProvider):
             return
-        if self._llm_task and not self._llm_task.done():
-            self._llm_task.cancel()
-        self._llm_task = asyncio.create_task(self._run_llm(ctx, ts, replaces))
+        if len(self._llm_tasks) >= self.MAX_LLM_INFLIGHT:
+            log.warning("Trop d'analyses LLM en cours : tour ignoré")
+            return
+        if not classify_only:
+            self._llm_generation += 1
+        task = asyncio.create_task(self._run_llm(ctx, ts, replaces, self._llm_generation, classify_only))
+        self._llm_tasks.add(task)
+        task.add_done_callback(self._llm_tasks.discard)
+        self._llm_task = task
 
-    async def _run_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None) -> None:
+    async def wait_llm(self) -> None:
+        """Attend toutes les analyses en cours (évaluation, tests)."""
+        while self._llm_tasks:
+            await asyncio.gather(*list(self._llm_tasks), return_exceptions=True)
+
+    async def _run_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None, generation: int = 0,
+                       classify_only: bool = False) -> None:
         try:
             result = await self.provider.suggest(ctx)
         except asyncio.CancelledError:
@@ -185,11 +213,19 @@ class CoachEngine:
             return
         if result is None:
             return
-        if result.objection not in self.objection_ids:
-            result = result.model_copy(update={"objection": None})  # "other" ou inconnu : pas de fiche
+        if classify_only or result.objection not in self.objection_ids:
+            result = result.model_copy(update={"objection": None})  # "other", inconnu ou tour du vendeur
         if self.on_classified:
             await self.on_classified(result, ts)
+        if classify_only:
+            return
         if result.confidence < self.llm_min_confidence:
+            return
+        # Un tour plus récent a déjà été envoyé au LLM : le classement ci-dessus reste
+        # utile, mais un conseil générique sur un tour dépassé n'est plus affiché
+        # (sauf objection, ou affinage d'un conseil par règle).
+        stale = generation < self._llm_generation
+        if stale and not result.objection and not replaces:
             return
         kind = result.kind if result.kind in ("objection", "step", "question", "emotion", "closing") else "question"
         ref = None
@@ -197,26 +233,24 @@ class CoachEngine:
         if result.objection:
             kind, ref, priority = "objection", result.objection, 3
         hint = self._new(kind=kind, text=result.text, say=result.say, source="llm",
-                         priority=priority, ref=ref or (replaces.ref if replaces else None),
-                         replaces=replaces.id if replaces else None, ts=ts)
-        if replaces and (not result.objection or replaces.ref == result.objection):
-            # Affinage du conseil par règle : ne compte pas une seconde fois.
+                         priority=priority, ref=ref, replaces=replaces.id if replaces else None, ts=ts)
+        if replaces:
+            # Affinage ou correction du conseil par règle de ce tour : il le remplace à l'écran
+            # (une fausse alerte des mots-clés disparaît) et ne compte pas une seconde fois.
             await self.emit(hint)
         elif result.objection:
-            # Objection que les mots-clés ont manquée (ou différente de la leur).
-            hint = hint.model_copy(update={"replaces": None})
+            # Objection que les mots-clés ont manquée.
             await self._send(f"objection:{result.objection}", hint)
         else:
             await self._send(f"llm:{result.text}", hint)
 
     def cancel_llm(self) -> None:
-        if self._llm_task and not self._llm_task.done():
-            self._llm_task.cancel()
+        for task in list(self._llm_tasks):
+            task.cancel()
 
     async def close(self) -> None:
-        if self._llm_task and not self._llm_task.done():
-            self._llm_task.cancel()
-            try:
-                await self._llm_task
-            except asyncio.CancelledError:
-                pass
+        tasks = list(self._llm_tasks)
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)

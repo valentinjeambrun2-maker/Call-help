@@ -1,0 +1,250 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "en",
+ "context": {
+  "user_name": "Daniel Brooks",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi, uh, is this Martin Feld?",
+   "start": 0.3,
+   "end": 3.1,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 3.1,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Yeah. Speaking.",
+   "start": 3.7,
+   "end": 5.54,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Martin, it's Daniel Brooks from The Herakles. Quick heads-up, I've got an AI assistant analysing the call, it just helps me keep notes. Is that alright with you?",
+   "start": 5.79,
+   "end": 15.63,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Sure. Whatever.",
+   "start": 16.33,
+   "end": 18.89,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thanks. So, we're a digital studio, we redesign websites, mostly for professional services firms. I was looking at the Feld and Ashcombe site this morning and, well, I've got a question more than a pitch, if that's okay.",
+   "start": 19.19,
+   "end": 33.99,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Look, um, can you just... pop something over by email? I'll have a look when I get a minute.",
+   "start": 34.49,
+   "end": 40.01,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "I can do that, sure. Before I do, so I don't send you something generic, how do new clients usually find you these days?",
+   "start": 40.31,
+   "end": 48.23,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Uh... referrals, mostly. Some find us online, I suppose. I don't really, I don't really know the split, to be honest.",
+   "start": 49.43,
+   "end": 58.47,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm.",
+   "start": 58.67,
+   "end": 59.63,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "And, well, we've already got a guy who does the website. Freelancer. He's been with us, what, six years now?",
+   "start": 60.03,
+   "end": 67.47,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Six years, that's a good run. Is he more on the maintenance side, or does he also, um, think about how the site actually brings in work?",
+   "start": 67.82,
+   "end": 77.34,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Maintenance, mostly. He updates the team page. Changes the tax deadlines. That sort of thing.",
+   "start": 78.84,
+   "end": 84.84,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Right. So one thing I noticed... on a phone, your contact form sits about four scrolls down, and there's no way to book a call. For an accounting firm in January, that's, uh, that's exactly where people drop off.",
+   "start": 85.14,
+   "end": 100.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Huh. Four scrolls? I didn't... I never really check it on my phone.",
+   "start": 101.22,
+   "end": 106.1,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Most directors don't. What we usually do is keep your freelancer in the loop, he still runs the updates, and we rework the structure. Clear services, online booking, client portal link right up front.",
+   "start": 106.4,
+   "end": 119.44,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Okay, that's... actually, our receptionist spends half her morning on the phone just scheduling appointments.",
+   "start": 120.34,
+   "end": 127.78,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Right.",
+   "start": 127.93,
+   "end": 128.89,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Would that, I mean, would the booking tie into our calendar? We use, uh, a shared one. It's a bit of a mess.",
+   "start": 129.19,
+   "end": 136.87,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "It can, yeah. One firm we worked with, similar size to yours, cut their booking calls by about a third in the first quarter.",
+   "start": 137.17,
+   "end": 145.17,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "A third. Hm.",
+   "start": 146.17,
+   "end": 148.25,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "So how about this. Thirty minutes, I walk you through the mobile issues on your own site and a rough plan. Would next Tuesday or Wednesday work?",
+   "start": 148.55,
+   "end": 157.43,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oh, I mean, it's January, we're right in the thick of tax season. I can barely breathe till the end of the month. I'd like to, but...",
+   "start": 158.33,
+   "end": 168.49,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Totally fair. When does it ease off for you?",
+   "start": 168.79,
+   "end": 171.91,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Uh, first week of February? Maybe. Probably. Let me, let me think... yes. Early February.",
+   "start": 173.71,
+   "end": 181.39,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "How about I call you back Monday the third, mid-morning, and we pick a slot then? And I'll send a short email today with the screenshots.",
+   "start": 181.69,
+   "end": 189.45,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Yeah. Yeah, do that. Actually, send those screenshots, I want to show my partner, Ruth. She's been going on about the website for ages!",
+   "start": 189.85,
+   "end": 198.97,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Will do. Monday the third, around ten?",
+   "start": 199.22,
+   "end": 202.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ten's good. Honestly, glad you rang. Speak then.",
+   "start": 202.48,
+   "end": 206.16,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thanks, Martin. Talk soon.",
+   "start": 206.36,
+   "end": 208.52,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

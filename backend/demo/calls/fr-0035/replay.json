@@ -1,0 +1,210 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "fr",
+ "context": {
+  "user_name": "Claire Vasseur",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Bonjour, euh, monsieur Morel ? Claire Vasseur, du studio digital The Herakles.",
+   "start": 0.3,
+   "end": 5.5,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 5.5,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui... oui, c'est moi. C'est à quel sujet ?",
+   "start": 6.1,
+   "end": 10.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Juste avant, je vous préviens, un assistant analyse l'appel, pour m'aider à prendre des notes. Ça vous convient ?",
+   "start": 10.27,
+   "end": 16.35,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Euh... un assistant, quel genre d'assistant ? Bon... bon, allez-y, allez-y.",
+   "start": 17.25,
+   "end": 23.65,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Merci. Alors je vous appelle parce que, euh, en tapant « couvreur Rennes » sur Google, je suis tombée sur vous... en page deux. Et je me demandais, aujourd'hui, comment vous, vous trouvez vos chantiers ?",
+   "start": 23.95,
+   "end": 35.15,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum. Page deux, vous dites. Ben... surtout le bouche-à-oreille. Et puis le site, un peu.",
+   "start": 36.35,
+   "end": 43.79,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Et le site, il vous ramène des demandes de devis, euh, régulièrement ?",
+   "start": 44.09,
+   "end": 49.05,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Écoutez, on a déjà quelqu'un pour tout ça, hein. Une agence, ça fait trois ans qu'ils bossent avec nous. Donc bon.",
+   "start": 49.55,
+   "end": 56.59,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Oui oui, je comprends. Et vous en êtes content, de ce qu'ils vous apportent ?",
+   "start": 56.89,
+   "end": 61.13,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ça va. Enfin... ça va, quoi.",
+   "start": 62.53,
+   "end": 65.89,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm. Ce que je vois souvent chez les artisans, c'est que le site est bien fait, mais la fiche Google, elle, euh, elle est un peu oubliée. Les avis, les photos de chantiers, les zones d'intervention. Et c'est là que se joue le local, en fait.",
+   "start": 66.29,
+   "end": 79.49,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, enfin, on me dit ça toutes les semaines, hein. Tout le monde a sa, sa solution miracle.",
+   "start": 79.79,
+   "end": 86.83,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "C'est vrai que vous devez en recevoir, des appels comme le mien.",
+   "start": 87.13,
+   "end": 90.81,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah ben ça, oui.",
+   "start": 91.01,
+   "end": 92.77,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je vous propose pas de tout changer. Juste un audit de votre visibilité locale, une demi-heure, pour voir où vous perdez des demandes et...",
+   "start": 93.17,
+   "end": 101.01,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Et ça coûte combien, votre truc ? Parce que là, honnêtement, le budget com', il est bouclé jusqu'en décembre. Y a pas un euro de plus, pas un.",
+   "start": 100.51,
+   "end": 108.67,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "L'audit est offert. Et s'il n'y a rien à gagner, je vous le dirai franchement.",
+   "start": 108.97,
+   "end": 113.05,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum... offert. C'est toujours offert, au début.",
+   "start": 113.85,
+   "end": 118.57,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je comprends la méfiance, vraiment. On pourrait, euh, caler un créneau jeudi ou vendredi matin ?",
+   "start": 118.87,
+   "end": 124.87,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Non, écoutez... envoyez-moi plutôt un mail. Une plaquette, quelque chose. Je regarderai, si j'ai le temps.",
+   "start": 126.37,
+   "end": 134.05,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je peux, bien sûr. Mais, euh, honnêtement, vous croyez que vous l'ouvrirez, ce mail ?",
+   "start": 134.45,
+   "end": 139.89,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ben... peut-être pas, non. Je... non, franchement, c'est pas le moment. On va rester comme ça.",
+   "start": 141.89,
+   "end": 148.85,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord, je respecte ça. Merci de m'avoir écoutée, monsieur Morel. Bonne journée à vous.",
+   "start": 149.25,
+   "end": 154.45,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui... merci. Au revoir.",
+   "start": 155.05,
+   "end": 158.09,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

@@ -91,12 +91,10 @@
       "label": "Pas le temps",
       "keywords": [
         "pas le temps",
-        "occupé",
         "pas maintenant",
-        "rappelez",
+        "j'ai pas une minute",
         "no time",
-        "busy",
-        "call me back",
+        "not a good time",
         "not now"
       ],
       "hint": "Respecte son temps, propose un créneau court.",
@@ -110,10 +108,11 @@
       "label": "Déjà un prestataire",
       "keywords": [
         "déjà un prestataire",
-        "on a déjà",
         "déjà quelqu'un",
-        "already have",
-        "already work with"
+        "déjà une agence",
+        "already have someone",
+        "already work with",
+        "already have an agency"
       ],
       "hint": "Ne critique pas le prestataire. Cherche ce qui pourrait être mieux.",
       "say": {
@@ -128,9 +127,9 @@
         "pas de budget",
         "trop cher",
         "pas les moyens",
-        "budget",
         "too expensive",
-        "no budget"
+        "no budget",
+        "can't afford"
       ],
       "hint": "Parle du coût du problème, pas du prix.",
       "say": {
@@ -144,10 +143,10 @@
       "keywords": [
         "envoyez-moi un mail",
         "envoyez un mail",
-        "par mail",
-        "envoyez-moi",
+        "envoyez-moi un e-mail",
         "send me an email",
-        "send an email"
+        "send an email",
+        "email me"
       ],
       "hint": "Accepte, mais qualifie pour que le mail soit utile.",
       "say": {

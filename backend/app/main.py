@@ -7,7 +7,8 @@ import logging
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
@@ -16,6 +17,7 @@ from .env import load_env
 load_env()  # avant toute lecture de clé d'API
 
 from .coach import default_provider  # noqa: E402
+from . import demo_library  # noqa: E402
 from .scenario import list_scenarios  # noqa: E402
 from .session import CallSession  # noqa: E402
 
@@ -47,6 +49,28 @@ DEMO_FILE = Path(__file__).resolve().parent.parent / "demo" / "cold_call_demo.js
 def demo() -> dict:
     """Appel scripté rejoué par le panneau (mode démo)."""
     return json.loads(DEMO_FILE.read_text(encoding="utf-8"))
+
+
+@app.get("/demo/calls")
+def demo_calls() -> list[dict]:
+    """Appels générés disponibles pour les démos (sélection du dépôt + génération locale)."""
+    return demo_library.list_calls()
+
+
+@app.get("/demo/calls/{call_id}/audio")
+def demo_call_audio(call_id: str) -> FileResponse:
+    path = demo_library.audio_path(call_id)
+    if path is None:
+        raise HTTPException(404, "Appel ou audio introuvable")
+    return FileResponse(path, media_type="audio/mpeg" if path.suffix == ".mp3" else "audio/wav")
+
+
+@app.get("/demo/calls/{call_id}/{kind}")
+def demo_call_data(call_id: str, kind: str):
+    data = demo_library.load_json(call_id, f"{kind}.json") if kind in ("labels", "replay") else None
+    if data is None:
+        raise HTTPException(404, "Appel introuvable")
+    return data
 
 
 @app.websocket("/ws/session")

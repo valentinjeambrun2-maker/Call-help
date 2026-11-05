@@ -1,0 +1,20 @@
+{
+ "id": "fr-0070",
+ "language": "fr",
+ "duration": 154.7,
+ "turns": 24,
+ "objections": [
+  "send_email",
+  "no_time",
+  "no_budget"
+ ],
+ "emotions": [
+  "interest",
+  "hesitation"
+ ],
+ "outcome": "callback",
+ "offer": "Logiciel métier sur mesure pour agences immobilières : gestion centralisée des mandats, des visites et des relances clients, connecté aux outils existants",
+ "prospect_company": "Lefranc Immobilier",
+ "seller_name": "Julien Morel",
+ "prospect_name": "Patrick Lefranc"
+}

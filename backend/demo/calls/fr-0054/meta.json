@@ -1,0 +1,22 @@
+{
+ "id": "fr-0054",
+ "language": "fr",
+ "duration": 197.9,
+ "turns": 28,
+ "objections": [
+  "no_budget",
+  "has_provider",
+  "send_email"
+ ],
+ "emotions": [
+  "hesitation",
+  "interest",
+  "boredom",
+  "annoyance"
+ ],
+ "outcome": "hung_up",
+ "offer": "Logiciel métier sur mesure (ex. portail client de dépôt de pièces avec relances automatiques, connecté au logiciel comptable existant)",
+ "prospect_company": "Cabinet Duverger & Associés",
+ "seller_name": "Claire Vasseur",
+ "prospect_name": "Hélène Duverger"
+}

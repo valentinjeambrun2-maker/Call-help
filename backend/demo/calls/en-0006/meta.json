@@ -1,0 +1,21 @@
+{
+ "id": "en-0006",
+ "language": "en",
+ "duration": 197.7,
+ "turns": 26,
+ "objections": [
+  "has_provider",
+  "no_time",
+  "no_budget"
+ ],
+ "emotions": [
+  "interest",
+  "hesitation",
+  "enthusiasm"
+ ],
+ "outcome": "meeting_booked",
+ "offer": "Website redesign by The Herakles: a contractor website with a quick photo-to-portfolio upload from the job site and a quote request form that sorts leads by job size. About three hours of the client's time in total, from around six thousand, payable over six months.",
+ "prospect_company": "Kettering & Daughters Construction",
+ "seller_name": "Claire Donovan",
+ "prospect_name": "Marisa Kettering"
+}

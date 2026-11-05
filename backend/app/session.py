@@ -38,6 +38,7 @@ class CallSession:
         self.announcement_at: float | None = None
         self.prospect_consent: bool | None = None
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
+        self.provisional: dict[float, str] = {}  # fin de tour -> objection des mots-clés à confirmer
 
     async def _emit_hint(self, hint: Hint) -> None:
         if hint.replaces:
@@ -139,13 +140,25 @@ class CallSession:
 
         rule_hint = None
         if msg.speaker is Speaker.PROSPECT:
-            objection, advanced = self.tracker.on_prospect_text(msg.text, msg.end)
-            if objection:
-                rule_hint = await self.coach.on_objection(objection, msg.end)
-            elif advanced:
-                rule_hint = await self.coach.on_step(self.tracker.step, msg.end)
+            if self.coach.has_llm:
+                # Le LLM fait autorité : les mots-clés donnent un conseil instantané mais
+                # provisoire, que le classement du LLM (~2-3 s) confirme ou retire. Les
+                # étapes n'avancent plus sur un simple « oui » (mesuré en démo).
+                objection = self.tracker.detect_objection(msg.text)
+                if objection:
+                    rule_hint = await self.coach.on_objection(objection, msg.end)
+                    self.provisional[msg.end] = objection.id
+            else:
+                objection, advanced = self.tracker.on_prospect_text(msg.text, msg.end)
+                if objection:
+                    rule_hint = await self.coach.on_objection(objection, msg.end)
+                elif advanced:
+                    rule_hint = await self.coach.on_step(self.tracker.step, msg.end)
             # Full duplex : le LLM affine pendant que le vendeur lit déjà la règle.
             self.coach.request_llm(self._context(), msg.end, replaces=rule_hint)
+        elif self.coach.has_llm:
+            # Tour du vendeur : classement seul (l'étape suit ce qu'il est en train de faire).
+            self.coach.request_llm(self._context(), msg.end, replaces=None, classify_only=True)
 
         if self.tracker.step_overtime(self.now):
             await self.coach.on_overtime(self.tracker.step, self.now)
@@ -158,8 +171,13 @@ class CallSession:
         await self._send_state()
 
     async def _on_classified(self, result, ts: float) -> None:
-        """Classement du LLM : complète les mots-clés pour l'objection et l'étape."""
+        """Classement du LLM : confirme ou corrige les mots-clés (objection), fait avancer l'étape."""
         changed = False
+        provisional = self.provisional.pop(ts, None)
+        if provisional and provisional != result.objection:
+            # Fausse alerte des mots-clés : elle ne compte pas comme objection levée et ne
+            # bloque pas la vraie objection de ce type plus tard.
+            self.coach.retract_objection(provisional)
         if result.objection:
             changed |= self.tracker.mark_objection(result.objection)
         if result.step and self.tracker.advance_to(result.step, ts):

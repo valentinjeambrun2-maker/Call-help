@@ -209,6 +209,58 @@ def cmd_assemble(args: argparse.Namespace) -> None:
     print(f"{n} appels assemblés")
 
 
+def cmd_export_demo(args: argparse.Namespace) -> None:
+    """Copie une sélection variée d'appels voisés vers backend/demo/calls (MP3 + étiquettes),
+    pour les démos sans régénérer : couverture des objections, issues, émotions et langues."""
+    import shutil
+    import subprocess
+
+    from app.demo_library import describe
+
+    calls = args.root / "calls"
+    pool = []
+    for d in sorted(calls.iterdir()):
+        if not ((d / "call.wav").exists() and (d / "labels.json").exists() and (d / "replay.json").exists()):
+            continue
+        labels = json.loads((d / "labels.json").read_text("utf-8"))
+        dialogue = json.loads((d / "dialogue.json").read_text("utf-8"))
+        pool.append((d, describe(d.name, labels, dialogue)))
+    if args.ids:
+        wanted = set(args.ids.split(","))
+        chosen = [p for p in pool if p[0].name in wanted]
+    else:
+        # Choix glouton : chaque appel ajouté doit couvrir le plus de nouveautés possible,
+        # en alternant les langues.
+        chosen, covered = [], set()
+        while len(chosen) < args.n and pool:
+            lang = "fr" if sum(m["language"] == "fr" for _, m in chosen) <= len(chosen) / 2 else "en"
+
+            def gain(item):
+                m = item[1]
+                feats = {f"obj:{o}" for o in m["objections"]} | {f"emo:{e}" for e in m["emotions"]} \
+                    | {f"out:{m['outcome']}"}
+                return (m["language"] == lang, len(feats - covered), len(m["objections"]), -abs(m["duration"] - 150))
+            best = max(pool, key=gain)
+            pool.remove(best)
+            m = best[1]
+            covered |= {f"obj:{o}" for o in m["objections"]} | {f"emo:{e}" for e in m["emotions"]} \
+                | {f"out:{m['outcome']}"}
+            chosen.append(best)
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
+    for d, meta in chosen:
+        dst = out / d.name
+        dst.mkdir(exist_ok=True)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(d / "call.wav"),
+                        "-c:a", "libmp3lame", "-b:a", "64k", str(dst / "call.mp3")], check=True)
+        for name in ("labels.json", "replay.json", "provenance.json"):
+            if (d / name).exists():
+                shutil.copy(d / name, dst / name)
+        (dst / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"{d.name} {meta['language']} {meta['duration']:.0f}s {meta['outcome']} {meta['objections']} {meta['emotions']}")
+    print(f"{len(chosen)} appels exportés vers {out}")
+
+
 def cmd_evaluate(args: argparse.Namespace) -> None:
     from .evaluate import evaluate_dir, format_report
 
@@ -275,6 +327,12 @@ def main() -> None:
     p = sub.add_parser("evaluate", help="évaluer le moteur sur les appels")
     p.add_argument("--llm", action="store_true", help="avec le classement par Claude (sinon mots-clés seuls)")
     p.set_defaults(func=cmd_evaluate)
+
+    p = sub.add_parser("export-demo", help="sélection d'appels voisés pour les démos (MP3)")
+    p.add_argument("--n", type=int, default=10)
+    p.add_argument("--ids", default=None, help="liste d'identifiants séparés par des virgules")
+    p.add_argument("--out", type=Path, default=Path(__file__).resolve().parent.parent / "demo" / "calls")
+    p.set_defaults(func=cmd_export_demo)
 
     p = sub.add_parser("voices-pick", help="choisir des voix natives dans la bibliothèque ElevenLabs")
     p.add_argument("--per-bucket", type=int, default=6, help="voix par langue et par genre (6 minimum)")

@@ -1,0 +1,20 @@
+{
+ "id": "fr-0035",
+ "language": "fr",
+ "duration": 158.1,
+ "turns": 24,
+ "objections": [
+  "has_provider",
+  "no_budget",
+  "send_email"
+ ],
+ "emotions": [
+  "hesitation",
+  "annoyance"
+ ],
+ "outcome": "refused",
+ "offer": "Référencement SEO et visibilité locale (audit offert de la fiche Google, avis, photos de chantiers et zones d'intervention)",
+ "prospect_company": "Batiforme Charpente et Couverture",
+ "seller_name": "Claire Vasseur",
+ "prospect_name": "Julien Morel"
+}

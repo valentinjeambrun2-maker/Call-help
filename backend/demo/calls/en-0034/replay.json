@@ -1,0 +1,170 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "en",
+ "context": {
+  "user_name": "Claire Donovan",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Brightwater Dental, this is Marcus, uh, can you hold one sec? Okay. Sorry. How can I help?",
+   "start": 0.2,
+   "end": 5.48,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi Marcus, it's Claire Donovan from The Herakles, a digital studio. Quick note first, I use an assistant that analyses this call, just so you know.",
+   "start": 5.78,
+   "end": 15.06,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 15.06,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Uh, okay. Sure.",
+   "start": 15.46,
+   "end": 18.26,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thanks. So, I work with dental practices on how they look to new patients. Who usually handles that kind of thing at Brightwater?",
+   "start": 18.46,
+   "end": 26.54,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "That'd be Dr. Alvarez, but honestly, I've got a waiting room full and two phones ringing, so this, uh, this really isn't a great minute.",
+   "start": 26.84,
+   "end": 35.24,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Totally fair. One question and I'll let you go. When patients find you online, does the practice look the way it feels inside?",
+   "start": 35.54,
+   "end": 43.46,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ha. No. No, not really. The logo's, um, from like twenty ten. And the sign outside doesn't match the cards.",
+   "start": 44.16,
+   "end": 53.2,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm.",
+   "start": 53.3,
+   "end": 54.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "And we just renovated, so it's kind of, it's kind of weird now.",
+   "start": 54.38,
+   "end": 59.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "That's really common after a renovation. What we do is a brand identity refresh. Logo, colours, signage, the forms patients fill in. So everything finally matches the new space.",
+   "start": 59.32,
+   "end": 71.4,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Yeah, but, uh, we kind of blew the budget on the chairs and the flooring. I don't think there's money left for, you know, design stuff.",
+   "start": 71.8,
+   "end": 80.68,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Makes sense. We often phase it, starting small, just the logo and the sign, and spread the rest over the year. Would that change things?",
+   "start": 80.98,
+   "end": 89.7,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Huh. Maybe. Look, can you just email me something? I'll, uh, I'll pass it on to her.",
+   "start": 90.2,
+   "end": 95.4,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Happy to. Though emails tend to sink. What if I show Dr. Alvarez three before-and-after examples from other practices, fifteen minutes, on a day that's quiet for you?",
+   "start": 95.7,
+   "end": 106.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oh, before and after, she'd love that. Thursdays, she's free at twelve thirty. Thursday works?",
+   "start": 107.04,
+   "end": 113.36,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thursday at twelve thirty is perfect.",
+   "start": 113.56,
+   "end": 116.04,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Great, I'm putting it in her calendar right now. Honestly, I've been nagging her about that sign for months.",
+   "start": 116.24,
+   "end": 123.52,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Then we're on the same side. I'll send a short invite so it doesn't get lost. Thanks, Marcus.",
+   "start": 123.72,
+   "end": 129.4,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Perfect, thanks Claire. Gotta run, bye!",
+   "start": 129.5,
+   "end": 132.3,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

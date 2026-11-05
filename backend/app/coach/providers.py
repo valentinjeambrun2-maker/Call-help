@@ -91,8 +91,11 @@ Classement (en plus du conseil) :
   - le prospect revient sur une objection déjà levée (`objections_raised`) ;
   - il accepte un rappel ou propose un créneau (« rappelez-moi mardi » quand on fixe un rendez-vous) ;
   - simple politesse, acquiescement ou fin d'appel (« d'accord », « au revoir », « mm-hmm »).
-- `step` : l'étape où en est réellement l'appel, parmi `steps` du contexte. Elle n'avance que si
-  l'objectif de l'étape courante est atteint ou dépassé.
+- `step` : l'étape où en est l'appel, parmi `steps` du contexte, d'après ce que le vendeur est en
+  train de faire : se présenter et capter l'attention (accroche), questionner sur la situation
+  (qualification), présenter son offre ou un bénéfice (valeur), proposer un rendez-vous ou un
+  créneau (prise de rendez-vous). L'appel avance normalement dans cet ordre ; ne reviens pas en arrière.
+- Si le DERNIER tour est celui du vendeur, `objection` vaut null (seul `step` compte).
 - Si `objection` n'est pas null, `kind` vaut "objection" et le conseil y répond."""
 
 

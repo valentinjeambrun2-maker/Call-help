@@ -55,29 +55,57 @@ async def test_llm_hint_replaces_rule_hint():
     objection = load_scenario("cold_call_fr").objections[0]
     rule = await engine.on_objection(objection, 10)
     engine.request_llm(CTX, 10, replaces=rule)
-    await engine._llm_task
+    await engine.wait_llm()
     assert [h.source for h in out] == ["rule", "llm"]
     assert out[1].replaces == rule.id
     assert engine.hints_given == 1
 
 
-async def test_new_request_cancels_stale_llm_generation():
+async def test_stale_llm_result_still_classifies_but_generic_hint_is_dropped():
+    """En direct, le prospect reparle avant le retour du LLM : l'analyse du tour
+    précédent n'est plus annulée (son classement compte), seul son conseil générique
+    dépassé n'est pas affiché."""
     out, emit = collector()
-    engine = CoachEngine(emit, provider=FakeProvider(delay=0.2))
+    classified = []
+
+    async def on_classified(result, ts):
+        classified.append(ts)
+
+    class Generic(FakeProvider):
+        async def suggest(self, ctx):
+            await asyncio.sleep(self.delay)
+            return LLMHint(kind="question", text="Conseil", say=None, confidence=0.9)
+
+    engine = CoachEngine(emit, provider=Generic(delay=0.05), on_classified=on_classified)
     engine.request_llm(CTX, 1, replaces=None)
-    first = engine._llm_task
-    await asyncio.sleep(0)
     engine.request_llm(CTX, 2, replaces=None)
-    await engine._llm_task
-    assert first.cancelled()
-    assert len(out) == 1 and out[0].ts == 2
+    await engine.wait_llm()
+    assert sorted(classified) == [1, 2]       # les deux tours sont classés
+    assert [h.ts for h in out] == [2]         # seul le conseil du dernier tour est affiché
+
+
+async def test_stale_llm_objection_is_still_shown():
+    out, emit = collector()
+    engine = CoachEngine(emit, provider=FakeProvider(delay=0.05), objection_ids={"no_time"})
+
+    class Obj(FakeProvider):
+        async def suggest(self, ctx):
+            await asyncio.sleep(self.delay)
+            return LLMHint(kind="objection", text="Réponds au manque de temps", say=None,
+                           confidence=0.9, objection="no_time")
+
+    engine.provider = Obj(delay=0.05)
+    engine.request_llm(CTX, 1, replaces=None)
+    engine.request_llm(CTX, 2, replaces=None)
+    await engine.wait_llm()
+    assert any(h.kind == "objection" and h.ts == 1 for h in out)
 
 
 async def test_low_confidence_llm_stays_silent():
     out, emit = collector()
     engine = CoachEngine(emit, provider=FakeProvider(confidence=0.3))
     engine.request_llm(CTX, 1, replaces=None)
-    await engine._llm_task
+    await engine.wait_llm()
     assert out == []
 
 

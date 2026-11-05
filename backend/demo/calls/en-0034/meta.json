@@ -1,0 +1,21 @@
+{
+ "id": "en-0034",
+ "language": "en",
+ "duration": 132.3,
+ "turns": 19,
+ "objections": [
+  "no_time",
+  "no_budget",
+  "send_email"
+ ],
+ "emotions": [
+  "hesitation",
+  "interest",
+  "enthusiasm"
+ ],
+ "outcome": "meeting_booked",
+ "offer": "Brand identity refresh for dental practices: logo, colour palette, signage and patient-facing materials, delivered by The Herakles digital studio",
+ "prospect_company": "Brightwater Dental Care",
+ "seller_name": "Claire Donovan",
+ "prospect_name": "Marcus Bell"
+}

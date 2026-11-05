@@ -1,0 +1,242 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "en",
+ "context": {
+  "user_name": "Jake Morrow",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi, is this, uh, Dennis Halloway?",
+   "start": 0.3,
+   "end": 2.54,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 2.54,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Yeah, speaking. Who's this?",
+   "start": 3.04,
+   "end": 5.6,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hey Dennis, it's Jake from The Herakles. Just so you know, uh, I've got an AI assistant that analyses the call, kind of helps me take notes. That okay?",
+   "start": 5.8,
+   "end": 14.52,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Uh... sure, I guess. What's this about?",
+   "start": 15.42,
+   "end": 19.66,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Great, great. So, we're a digital studio and we build custom business software, like, tools made for your agency specifically, so instead of juggling spreadsheets and, and five different apps, you get one system that tracks your listings, your leads, your showings, your follow-ups, all of it, and the cool part is—",
+   "start": 19.81,
+   "end": 36.85,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Okay, hang on, hang on. I've got a showing in, like, twenty minutes. I really can't do a whole pitch right now.",
+   "start": 36.25,
+   "end": 41.93,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Totally, totally fair. Sorry. Just, uh, one quick question then?",
+   "start": 42.33,
+   "end": 47.21,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "...Go ahead.",
+   "start": 48.41,
+   "end": 50.57,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "How are you guys keeping track of leads right now?",
+   "start": 50.87,
+   "end": 53.43,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Honestly? Um, a shared spreadsheet and a CRM we kind of, kind of half use. Leads come in from the website, from email, from the portals, and somebody's supposed to copy them over, and... yeah. My agents hate it.",
+   "start": 54.23,
+   "end": 69.91,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm.",
+   "start": 70.01,
+   "end": 70.97,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Why, what would you even do differently?",
+   "start": 71.27,
+   "end": 74.07,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "So, uh, we'd sit down with your team, see how they actually work, and build around that. Like, a lead comes in from your website, it gets assigned to an agent automatically, the agent gets a text, and you see the whole pipeline on one screen. No copying anything.",
+   "start": 74.32,
+   "end": 89.84,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Huh. Okay, that's... that's actually the exact thing I complain about every Monday.",
+   "start": 90.54,
+   "end": 96.54,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Right, yeah, we hear that a lot from agencies.",
+   "start": 96.74,
+   "end": 100.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "But, uh, custom software, that sounds pricey. We're twelve people. I'm not exactly sitting on some big tech budget here.",
+   "start": 101.02,
+   "end": 109.58,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Yeah, no, I get it. So we usually start small, like a first version with just the lead piece, and it's priced more like, um, a few months of what you're probably paying for that CRM nobody uses.",
+   "start": 109.88,
+   "end": 123.16,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Wait, really? Okay. And it would, uh, talk to our website? And the portals?",
+   "start": 123.56,
+   "end": 129.16,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Yep, yep. Website, email, and the listing portals too, as long as they've got some kind of export.",
+   "start": 129.36,
+   "end": 135.2,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Okay, now I'm curious. Tell you what, just shoot me an email with some examples and I'll look at it tonight.",
+   "start": 135.7,
+   "end": 143.06,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "I can definitely do that. But, um, honestly, examples won't mean much without seeing your setup. Could we do a quick twenty-minute video call? I'd show you a demo we built for an agency, like, pretty much your size.",
+   "start": 143.36,
+   "end": 156.08,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hmm... Yeah. Yeah, okay, you're right, a PDF's not gonna sell me. What about Thursday morning?",
+   "start": 157.68,
+   "end": 165.44,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thursday works! Ten o'clock?",
+   "start": 165.59,
+   "end": 167.59,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ten's great. And bring that lead routing thing, I wanna show my office manager. She's gonna love it, she's the one copying everything.",
+   "start": 167.79,
+   "end": 176.11,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Perfect. I'll send an invite to, uh, what's the best email for you?",
+   "start": 176.31,
+   "end": 181.03,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Just use the contact one on our website, it comes straight to me.",
+   "start": 181.33,
+   "end": 185.09,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Got it. Thanks, Dennis, and good luck with the showing!",
+   "start": 185.24,
+   "end": 188.68,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Thanks, Jake. See you Thursday.",
+   "start": 188.88,
+   "end": 191.04,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

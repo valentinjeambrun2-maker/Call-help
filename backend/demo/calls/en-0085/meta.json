@@ -1,0 +1,21 @@
+{
+ "id": "en-0085",
+ "language": "en",
+ "duration": 191.0,
+ "turns": 28,
+ "objections": [
+  "no_time",
+  "no_budget",
+  "send_email"
+ ],
+ "emotions": [
+  "hesitation",
+  "interest",
+  "enthusiasm"
+ ],
+ "outcome": "meeting_booked",
+ "offer": "Custom business software built around a real estate agency's workflow, starting with a lead-routing and pipeline tool that connects the website, email and listing portals.",
+ "prospect_company": "Halloway & Reed Realty",
+ "seller_name": "Jake Morrow",
+ "prospect_name": "Dennis Halloway"
+}

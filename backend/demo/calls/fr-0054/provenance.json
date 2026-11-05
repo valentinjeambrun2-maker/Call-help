@@ -1,0 +1,12 @@
+{
+ "source": "synthetic",
+ "dialogue_model": "anthropic",
+ "voice_provider": "elevenlabs",
+ "voice_model": "eleven_v4",
+ "voices": {
+  "seller": "QsDlOCjd5J6ppfSa7k4K",
+  "prospect": "HuLbOdhRlvQQN8oPP0AJ"
+ },
+ "split": "train",
+ "terms_note": "Sorties ElevenLabs : usage pour entraîner un modèle d'IA interdit sans autorisation expresse (Prohibited Use Policy). Réservé aux tests et à l'évaluation."
+}

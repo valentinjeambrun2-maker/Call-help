@@ -46,12 +46,9 @@ async def run_call(replay: dict, provider=None) -> tuple[list[dict], list[str | 
                           "language": replay.get("language", "fr")})
     for event in replay["events"]:
         await session.handle(event)
-        task = getattr(getattr(session, "coach", None), "_llm_task", None)
-        if task is not None and not task.done():
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+        coach = getattr(session, "coach", None)
+        if coach is not None:
+            await coach.wait_llm()
         if event["type"] == "transcript":
             steps_after_turn.append(last_step[0])
     return hints, steps_after_turn
@@ -62,7 +59,11 @@ def score_call(turns: list[TurnLabel], hints: list[dict], steps_after_turn: list
     fn: dict[str, int] = defaultdict(int)
     fp: dict[str, int] = defaultdict(int)
 
-    obj_hints = [h for h in hints if h["kind"] == "objection" and h.get("ref") in OBJECTIONS]
+    # Une fiche remplacée par sa version affinée/corrigée par le LLM ne compte ni comme
+    # repérage ni comme fausse alerte : à l'écran, c'est la version du LLM qui reste.
+    replaced = {h["replaces"] for h in hints if h.get("replaces")}
+    obj_hints = [h for h in hints if h["kind"] == "objection" and h.get("ref") in OBJECTIONS
+                 and h["id"] not in replaced]
     used: set[str] = set()
     for t in turns:
         if t.speaker != "prospect" or t.objection not in OBJECTIONS:

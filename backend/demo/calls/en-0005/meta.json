@@ -1,0 +1,22 @@
+{
+ "id": "en-0005",
+ "language": "en",
+ "duration": 208.5,
+ "turns": 29,
+ "objections": [
+  "send_email",
+  "has_provider",
+  "no_time"
+ ],
+ "emotions": [
+  "boredom",
+  "interest",
+  "hesitation",
+  "enthusiasm"
+ ],
+ "outcome": "callback",
+ "offer": "Website redesign for professional services firms: mobile-first restructure, clear service pages and online appointment booking, working alongside the client's existing web freelancer",
+ "prospect_company": "Feld & Ashcombe Accountants",
+ "seller_name": "Daniel Brooks",
+ "prospect_name": "Martin Feld"
+}

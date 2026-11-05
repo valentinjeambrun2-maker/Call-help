@@ -1,0 +1,194 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "en",
+ "context": {
+  "user_name": "Jake Morrow",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi, uh, hi, is this Denise Kowalczyk?",
+   "start": 0.3,
+   "end": 3.02,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 3.02,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Speaking. Who's this?",
+   "start": 3.42,
+   "end": 5.5,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Great, hi Denise, it's Jake, Jake Morrow from The Herakles. Quick heads-up before anything, there's an AI assistant analysing this call, just to help me, uh, take notes. Is that okay?",
+   "start": 5.7,
+   "end": 16.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Um. I guess. What's The Herakles?",
+   "start": 17.08,
+   "end": 21.4,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "So we're a digital studio, we build websites, and I was, um, I was looking at your site, Kowalczyk and Reid, and honestly I think there's a lot we could do with it, like, a lot, so I wanted to, uh, reach out.",
+   "start": 21.6,
+   "end": 34.64,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Look, I've got a crew pouring a slab in twenty minutes. I really can't do this right now.",
+   "start": 35.14,
+   "end": 40.34,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Totally, totally get it. Two minutes, tops, I promise. Can I just ask, where do most of your new jobs come from right now?",
+   "start": 40.54,
+   "end": 47.34,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Word of mouth. Repeat clients. Same as always.",
+   "start": 47.94,
+   "end": 51.94,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Okay. And do people ever, like, mention the website? Do you get enquiries through it?",
+   "start": 52.14,
+   "end": 58.38,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Some. Not many. I don't really look at it, to be honest.",
+   "start": 58.88,
+   "end": 63.04,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Right, so that's kind of what I noticed, because, uh, on a phone the menu sort of breaks, the photos are tiny, and there's no way to request a quote, you just get an email address. So what we'd do is a full redesign, mobile first, a proper portfolio of your builds, a quote form that goes straight to you, some local search stuff so when people type, you know, builder plus your town, you actually show up, and we usually turn it around in about six weeks, and the clients we've done this for in construction, they, um, they've seen way more enquiries, like, noticeably more.",
+   "start": 63.19,
+   "end": 97.35,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Okay, okay. Just email it to me. I'll look when I look.",
+   "start": 96.85,
+   "end": 100.93,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "I can, for sure, but honestly an email kind of, uh, gets buried. What if we did a fifteen-minute video call, I could show you a mock-up of your own homepage, redone?",
+   "start": 101.23,
+   "end": 112.59,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "You're not hearing me. We've got a guy. My office manager's son built the site, he looks after it, he fixes stuff when it breaks. That's sorted.",
+   "start": 112.99,
+   "end": 122.27,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm.",
+   "start": 122.47,
+   "end": 123.43,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "And, I mean, that's great to have someone. But is he, uh, doing the search side, the quote form? Because that's, that's really where the jobs come from now.",
+   "start": 123.73,
+   "end": 134.45,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum. I don't know. Probably not.",
+   "start": 135.95,
+   "end": 139.55,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "So could we maybe just book that quick call, next week, Tuesday or Wednesday? No commitment, just a look.",
+   "start": 139.75,
+   "end": 146.47,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "No. Look, it's, it's not a bad point. But I'm not changing who does the site, it'd cause a whole thing in the office. So no. Thanks.",
+   "start": 147.67,
+   "end": 157.91,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Okay. Yeah, no, that's, that's fair. Sorry for catching you right before the pour.",
+   "start": 158.31,
+   "end": 163.75,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "It's fine. Good luck, Jake.",
+   "start": 164.25,
+   "end": 166.33,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thanks, Denise. Have a good one.",
+   "start": 166.53,
+   "end": 168.69,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

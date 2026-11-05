@@ -1,0 +1,210 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "fr",
+ "context": {
+  "user_name": "Julien Morel",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Allô, bonjour, euh, monsieur Lefranc ? Julien Morel, de The Herakles, un studio digital.",
+   "start": 0.3,
+   "end": 5.5,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 5.5,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, c'est moi. C'est pour quoi ?",
+   "start": 5.9,
+   "end": 7.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Alors, juste avant, euh, je vous préviens, j'ai un assistant qui analyse l'appel, pour m'aider à, à prendre des notes. Ça vous dérange pas ?",
+   "start": 8.18,
+   "end": 15.38,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Bof. Allez-y. Mais faites vite.",
+   "start": 15.88,
+   "end": 18.36,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Oui oui, alors en fait, euh, on développe des logiciels métier sur mesure, pour les agences immobilières notamment, genre la gestion des mandats, des visites, des relances clients, tout, tout centralisé au même endroit, et euh...",
+   "start": 18.51,
+   "end": 29.95,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Attendez. Les mandats, les visites... Vous faites ça comment, sur mesure ?",
+   "start": 29.55,
+   "end": 34.03,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ben, on part de vos process à vous. Euh, vous utilisez quoi aujourd'hui, pour, pour suivre vos mandats ?",
+   "start": 34.33,
+   "end": 40.17,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Un logiciel de transaction, plus des tableurs. Beaucoup de tableurs. Mes négos ressaisissent tout deux fois, et ça, franchement, ça m'agace.",
+   "start": 40.67,
+   "end": 48.59,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Et, euh, vous êtes combien à l'agence ?",
+   "start": 48.79,
+   "end": 52.47,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Six. Moi plus cinq négociateurs.",
+   "start": 52.77,
+   "end": 55.49,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ah ben voilà, c'est typiquement le cas où, euh, on peut vous faire gagner, je sais pas, plusieurs heures par semaine par négo. Parce que, en fait, on connecte votre logiciel de transaction, on supprime les tableurs...",
+   "start": 55.64,
+   "end": 66.92,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mm-hmm.",
+   "start": 67.12,
+   "end": 67.92,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "...les relances partent toutes seules, vous avez un tableau de bord avec, euh, le, le portefeuille de chaque négo, les visites de la semaine, et en plus on peut ajouter...",
+   "start": 68.02,
+   "end": 75.94,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Bon, bon. Écoutez, vous m'envoyez un mail avec tout ça, je jetterai un œil.",
+   "start": 75.34,
+   "end": 79.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Oui, je peux, bien sûr, mais euh... un mail, honnêtement, ça va finir sous la pile. Ce serait mieux qu'on se cale vingt minutes avec un de nos chefs de projet, pour regarder vos, vos process ensemble ?",
+   "start": 80.38,
+   "end": 92.86,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Vingt minutes, je les ai pas. On est en pleine saison, j'enchaîne les visites jusqu'à vingt heures tous les soirs.",
+   "start": 93.56,
+   "end": 99.8,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ouais, je comprends. Et, euh, la semaine prochaine, même tôt le matin, ça pourrait pas, euh, coller ?",
+   "start": 100.1,
+   "end": 106.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum... Et puis soyons clairs. Du sur mesure, ça coûte combien ? Parce que moi j'ai pas, j'ai pas de budget pour un gros projet informatique cette année. Voilà.",
+   "start": 108.18,
+   "end": 116.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Alors ça dépend vraiment du périmètre, euh, on peut commencer petit, juste les relances par exemple, et étendre après. C'est justement ce qu'on chiffrerait pendant le rendez-vous.",
+   "start": 117.38,
+   "end": 128.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mouais. Je sais pas. Faut que j'y réfléchisse, là, comme ça, je peux rien vous dire.",
+   "start": 129.98,
+   "end": 135.58,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Est-ce que je peux vous rappeler, disons, début du mois prochain, quand la saison sera un peu plus calme ?",
+   "start": 135.88,
+   "end": 142.44,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Rappelez-moi le cinq. Le matin, avant neuf heures. Après, je suis injoignable.",
+   "start": 143.34,
+   "end": 147.82,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Parfait, le cinq, avant neuf heures, c'est noté. Merci monsieur Lefranc, bonne journée !",
+   "start": 148.02,
+   "end": 153.06,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ouais. Au revoir.",
+   "start": 153.36,
+   "end": 154.72,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

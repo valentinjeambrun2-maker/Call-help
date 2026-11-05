@@ -1,0 +1,2388 @@
+[
+ {
+  "index": 0,
+  "speaker": "user",
+  "text": "Bonjour, euh, monsieur Morel ? Claire Vasseur, du studio digital The Herakles.",
+  "start": 0.3,
+  "end": 5.5,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "warm",
+   "calm"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Bonjour,",
+    0.896,
+    1.06
+   ],
+   [
+    "euh,",
+    1.18,
+    1.38
+   ],
+   [
+    "monsieur",
+    1.5,
+    1.74
+   ],
+   [
+    "Morel",
+    1.86,
+    2.14
+   ],
+   [
+    "?",
+    2.54,
+    2.593
+   ],
+   [
+    "Claire",
+    2.647,
+    2.78
+   ],
+   [
+    "Vasseur,",
+    2.82,
+    3.42
+   ],
+   [
+    "du",
+    3.46,
+    3.5
+   ],
+   [
+    "studio",
+    3.58,
+    3.82
+   ],
+   [
+    "digital",
+    3.9,
+    4.38
+   ],
+   [
+    "The",
+    4.54,
+    4.62
+   ],
+   [
+    "Herakles.",
+    4.74,
+    5.58
+   ]
+  ]
+ },
+ {
+  "index": 1,
+  "speaker": "prospect",
+  "text": "Oui... oui, c'est moi. C'est à quel sujet ?",
+  "start": 6.1,
+  "end": 10.02,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "hesitant",
+   "skeptical"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Oui...",
+    6.34,
+    7.1
+   ],
+   [
+    "oui,",
+    7.3,
+    7.66
+   ],
+   [
+    "c'est",
+    7.78,
+    7.94
+   ],
+   [
+    "moi.",
+    8.02,
+    8.62
+   ],
+   [
+    "C'est",
+    8.9,
+    9.14
+   ],
+   [
+    "à",
+    9.18,
+    9.22
+   ],
+   [
+    "quel",
+    9.3,
+    9.38
+   ],
+   [
+    "sujet",
+    9.46,
+    9.78
+   ],
+   [
+    "?",
+    9.86,
+    10.1
+   ]
+  ]
+ },
+ {
+  "index": 2,
+  "speaker": "user",
+  "text": "Juste avant, je vous préviens, un assistant analyse l'appel, pour m'aider à prendre des notes. Ça vous convient ?",
+  "start": 10.27,
+  "end": 16.35,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Juste",
+    10.43,
+    10.63
+   ],
+   [
+    "avant,",
+    10.67,
+    11.23
+   ],
+   [
+    "je",
+    11.31,
+    11.39
+   ],
+   [
+    "vous",
+    11.47,
+    11.55
+   ],
+   [
+    "préviens,",
+    11.63,
+    12.27
+   ],
+   [
+    "un",
+    12.35,
+    12.43
+   ],
+   [
+    "assistant",
+    12.67,
+    12.91
+   ],
+   [
+    "analyse",
+    13.07,
+    13.31
+   ],
+   [
+    "l'appel,",
+    13.39,
+    13.95
+   ],
+   [
+    "pour",
+    14.03,
+    14.11
+   ],
+   [
+    "m'aider",
+    14.137,
+    14.35
+   ],
+   [
+    "à",
+    14.39,
+    14.43
+   ],
+   [
+    "prendre",
+    14.51,
+    14.75
+   ],
+   [
+    "des",
+    14.83,
+    14.91
+   ],
+   [
+    "notes.",
+    15.03,
+    15.55
+   ],
+   [
+    "Ça",
+    15.59,
+    15.67
+   ],
+   [
+    "vous",
+    15.71,
+    15.79
+   ],
+   [
+    "convient",
+    15.87,
+    16.11
+   ],
+   [
+    "?",
+    16.19,
+    16.43
+   ]
+  ]
+ },
+ {
+  "index": 3,
+  "speaker": "prospect",
+  "text": "Euh... un assistant, quel genre d'assistant ? Bon... bon, allez-y, allez-y.",
+  "start": 17.25,
+  "end": 23.65,
+  "emotion": "hesitation",
+  "intensity": 0.6,
+  "delivery": [
+   "hesitant",
+   "skeptical"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Euh...",
+    17.41,
+    18.25
+   ],
+   [
+    "un",
+    18.45,
+    18.61
+   ],
+   [
+    "assistant,",
+    18.93,
+    19.53
+   ],
+   [
+    "quel",
+    19.81,
+    19.97
+   ],
+   [
+    "genre",
+    20.05,
+    20.21
+   ],
+   [
+    "d'assistant",
+    20.29,
+    20.85
+   ],
+   [
+    "?",
+    21.49,
+    21.597
+   ],
+   [
+    "Bon...",
+    21.703,
+    22.13
+   ],
+   [
+    "bon,",
+    22.21,
+    22.53
+   ],
+   [
+    "allez-y,",
+    22.61,
+    23.09
+   ],
+   [
+    "allez-y.",
+    23.17,
+    23.73
+   ]
+  ]
+ },
+ {
+  "index": 4,
+  "speaker": "user",
+  "text": "Merci. Alors je vous appelle parce que, euh, en tapant « couvreur Rennes » sur Google, je suis tombée sur vous... en page deux. Et je me demandais, aujourd'hui, comment vous, vous trouvez vos chantiers ?",
+  "start": 23.95,
+  "end": 35.15,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "warm",
+   "curious"
+  ],
+  "step": "hook",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Merci.",
+    24.03,
+    24.75
+   ],
+   [
+    "Alors",
+    24.99,
+    25.15
+   ],
+   [
+    "je",
+    25.23,
+    25.31
+   ],
+   [
+    "vous",
+    25.39,
+    25.47
+   ],
+   [
+    "appelle",
+    25.59,
+    25.87
+   ],
+   [
+    "parce",
+    25.99,
+    26.19
+   ],
+   [
+    "que,",
+    26.31,
+    26.47
+   ],
+   [
+    "euh,",
+    26.51,
+    26.83
+   ],
+   [
+    "en",
+    26.87,
+    26.91
+   ],
+   [
+    "tapant",
+    26.99,
+    27.39
+   ],
+   [
+    "«",
+    27.43,
+    27.47
+   ],
+   [
+    "couvreur",
+    27.51,
+    27.87
+   ],
+   [
+    "Rennes",
+    27.95,
+    28.19
+   ],
+   [
+    "»",
+    28.217,
+    28.243
+   ],
+   [
+    "sur",
+    28.27,
+    28.35
+   ],
+   [
+    "Google,",
+    28.43,
+    29.07
+   ],
+   [
+    "je",
+    29.15,
+    29.19
+   ],
+   [
+    "suis",
+    29.23,
+    29.39
+   ],
+   [
+    "tombée",
+    29.443,
+    29.63
+   ],
+   [
+    "sur",
+    29.71,
+    29.87
+   ],
+   [
+    "vous...",
+    30.11,
+    30.403
+   ],
+   [
+    "en",
+    30.457,
+    30.51
+   ],
+   [
+    "page",
+    30.63,
+    30.75
+   ],
+   [
+    "deux.",
+    30.79,
+    31.497
+   ],
+   [
+    "Et",
+    31.523,
+    31.55
+   ],
+   [
+    "je",
+    31.63,
+    31.67
+   ],
+   [
+    "me",
+    31.71,
+    31.79
+   ],
+   [
+    "demandais,",
+    31.95,
+    32.563
+   ],
+   [
+    "aujourd'hui,",
+    32.617,
+    33.443
+   ],
+   [
+    "comment",
+    33.577,
+    33.71
+   ],
+   [
+    "vous,",
+    33.87,
+    34.083
+   ],
+   [
+    "vous",
+    34.137,
+    34.19
+   ],
+   [
+    "trouvez",
+    34.23,
+    34.43
+   ],
+   [
+    "vos",
+    34.51,
+    34.59
+   ],
+   [
+    "chantiers",
+    34.71,
+    34.99
+   ],
+   [
+    "?",
+    35.07,
+    35.23
+   ]
+  ]
+ },
+ {
+  "index": 5,
+  "speaker": "prospect",
+  "text": "Hum. Page deux, vous dites. Ben... surtout le bouche-à-oreille. Et puis le site, un peu.",
+  "start": 36.35,
+  "end": 43.79,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "thoughtful",
+   "hesitant"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hum.",
+    36.51,
+    37.31
+   ],
+   [
+    "Page",
+    37.55,
+    37.95
+   ],
+   [
+    "deux,",
+    38.03,
+    38.31
+   ],
+   [
+    "vous",
+    38.35,
+    38.43
+   ],
+   [
+    "dites.",
+    38.51,
+    39.47
+   ],
+   [
+    "Ben...",
+    39.71,
+    40.43
+   ],
+   [
+    "surtout",
+    40.51,
+    40.75
+   ],
+   [
+    "le",
+    40.83,
+    40.91
+   ],
+   [
+    "bouche-à-oreille.",
+    40.95,
+    42.11
+   ],
+   [
+    "Et",
+    42.19,
+    42.27
+   ],
+   [
+    "puis",
+    42.31,
+    42.59
+   ],
+   [
+    "le",
+    42.63,
+    42.67
+   ],
+   [
+    "site,",
+    42.83,
+    43.23
+   ],
+   [
+    "un",
+    43.27,
+    43.31
+   ],
+   [
+    "peu.",
+    43.39,
+    43.87
+   ]
+  ]
+ },
+ {
+  "index": 6,
+  "speaker": "user",
+  "text": "D'accord. Et le site, il vous ramène des demandes de devis, euh, régulièrement ?",
+  "start": 44.09,
+  "end": 49.05,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "curious",
+   "calm"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "D'accord.",
+    44.33,
+    45.29
+   ],
+   [
+    "Et",
+    45.37,
+    45.45
+   ],
+   [
+    "le",
+    45.53,
+    45.61
+   ],
+   [
+    "site,",
+    45.69,
+    46.25
+   ],
+   [
+    "il",
+    46.33,
+    46.41
+   ],
+   [
+    "vous",
+    46.49,
+    46.57
+   ],
+   [
+    "ramène",
+    46.65,
+    46.89
+   ],
+   [
+    "des",
+    46.97,
+    47.05
+   ],
+   [
+    "demandes",
+    47.17,
+    47.37
+   ],
+   [
+    "de",
+    47.41,
+    47.45
+   ],
+   [
+    "devis,",
+    47.53,
+    47.97
+   ],
+   [
+    "euh,",
+    48.01,
+    48.21
+   ],
+   [
+    "régulièrement",
+    48.25,
+    48.81
+   ],
+   [
+    "?",
+    48.89,
+    49.13
+   ]
+  ]
+ },
+ {
+  "index": 7,
+  "speaker": "prospect",
+  "text": "Écoutez, on a déjà quelqu'un pour tout ça, hein. Une agence, ça fait trois ans qu'ils bossent avec nous. Donc bon.",
+  "start": 49.55,
+  "end": 56.59,
+  "emotion": "hesitation",
+  "intensity": 0.6,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "qualify",
+  "objection": "has_provider",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Écoutez,",
+    49.63,
+    50.43
+   ],
+   [
+    "on",
+    50.51,
+    50.59
+   ],
+   [
+    "a",
+    50.63,
+    50.67
+   ],
+   [
+    "déjà",
+    50.75,
+    50.99
+   ],
+   [
+    "quelqu'un",
+    51.11,
+    51.39
+   ],
+   [
+    "pour",
+    51.47,
+    51.63
+   ],
+   [
+    "tout",
+    51.71,
+    51.79
+   ],
+   [
+    "ça,",
+    51.91,
+    52.057
+   ],
+   [
+    "hein.",
+    52.083,
+    52.59
+   ],
+   [
+    "Une",
+    52.63,
+    52.67
+   ],
+   [
+    "agence,",
+    52.75,
+    53.47
+   ],
+   [
+    "ça",
+    53.51,
+    53.55
+   ],
+   [
+    "fait",
+    53.63,
+    53.79
+   ],
+   [
+    "trois",
+    53.87,
+    54.11
+   ],
+   [
+    "ans",
+    54.19,
+    54.35
+   ],
+   [
+    "qu'ils",
+    54.39,
+    54.59
+   ],
+   [
+    "bossent",
+    54.67,
+    54.79
+   ],
+   [
+    "avec",
+    54.83,
+    54.99
+   ],
+   [
+    "nous.",
+    55.07,
+    55.71
+   ],
+   [
+    "Donc",
+    55.79,
+    56.03
+   ],
+   [
+    "bon.",
+    56.19,
+    56.67
+   ]
+  ]
+ },
+ {
+  "index": 8,
+  "speaker": "user",
+  "text": "Oui oui, je comprends. Et vous en êtes content, de ce qu'ils vous apportent ?",
+  "start": 56.89,
+  "end": 61.13,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm",
+   "curious"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Oui",
+    56.97,
+    57.13
+   ],
+   [
+    "oui,",
+    57.25,
+    57.49
+   ],
+   [
+    "je",
+    57.61,
+    57.69
+   ],
+   [
+    "comprends.",
+    57.77,
+    58.543
+   ],
+   [
+    "Et",
+    58.73,
+    58.89
+   ],
+   [
+    "vous",
+    58.97,
+    59.13
+   ],
+   [
+    "en",
+    59.17,
+    59.21
+   ],
+   [
+    "êtes",
+    59.29,
+    59.37
+   ],
+   [
+    "content,",
+    59.57,
+    59.93
+   ],
+   [
+    "de",
+    59.97,
+    60.01
+   ],
+   [
+    "ce",
+    60.05,
+    60.09
+   ],
+   [
+    "qu'ils",
+    60.13,
+    60.25
+   ],
+   [
+    "vous",
+    60.33,
+    60.41
+   ],
+   [
+    "apportent",
+    60.49,
+    60.89
+   ],
+   [
+    "?",
+    60.97,
+    61.21
+   ]
+  ]
+ },
+ {
+  "index": 9,
+  "speaker": "prospect",
+  "text": "Ça va. Enfin... ça va, quoi.",
+  "start": 62.53,
+  "end": 65.89,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ça",
+    62.73,
+    62.85
+   ],
+   [
+    "va.",
+    62.93,
+    63.73
+   ],
+   [
+    "Enfin...",
+    63.81,
+    64.77
+   ],
+   [
+    "ça",
+    64.85,
+    64.93
+   ],
+   [
+    "va,",
+    65.05,
+    65.33
+   ],
+   [
+    "quoi.",
+    65.49,
+    65.89
+   ]
+  ]
+ },
+ {
+  "index": 10,
+  "speaker": "user",
+  "text": "Mm-hmm. Ce que je vois souvent chez les artisans, c'est que le site est bien fait, mais la fiche Google, elle, euh, elle est un peu oubliée. Les avis, les photos de chantiers, les zones d'intervention. Et c'est là que se joue le local, en fait.",
+  "start": 66.29,
+  "end": 79.49,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "calm",
+   "warm"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Mm-hmm.",
+    66.37,
+    67.09
+   ],
+   [
+    "Ce",
+    67.41,
+    67.49
+   ],
+   [
+    "que",
+    67.53,
+    67.57
+   ],
+   [
+    "je",
+    67.65,
+    67.677
+   ],
+   [
+    "vois",
+    67.703,
+    67.89
+   ],
+   [
+    "souvent",
+    67.917,
+    68.13
+   ],
+   [
+    "chez",
+    68.21,
+    68.29
+   ],
+   [
+    "les",
+    68.33,
+    68.37
+   ],
+   [
+    "artisans,",
+    68.45,
+    69.17
+   ],
+   [
+    "c'est",
+    69.223,
+    69.33
+   ],
+   [
+    "que",
+    69.37,
+    69.41
+   ],
+   [
+    "le",
+    69.45,
+    69.49
+   ],
+   [
+    "site",
+    69.57,
+    69.73
+   ],
+   [
+    "est",
+    69.77,
+    69.81
+   ],
+   [
+    "bien",
+    69.89,
+    70.05
+   ],
+   [
+    "fait,",
+    70.13,
+    70.69
+   ],
+   [
+    "mais",
+    70.73,
+    70.81
+   ],
+   [
+    "la",
+    70.85,
+    70.93
+   ],
+   [
+    "fiche",
+    70.97,
+    71.17
+   ],
+   [
+    "Google,",
+    71.37,
+    71.73
+   ],
+   [
+    "elle,",
+    71.85,
+    72.05
+   ],
+   [
+    "euh,",
+    72.103,
+    72.37
+   ],
+   [
+    "elle",
+    72.53,
+    72.61
+   ],
+   [
+    "est",
+    72.65,
+    72.69
+   ],
+   [
+    "un",
+    72.743,
+    72.797
+   ],
+   [
+    "peu",
+    72.85,
+    72.93
+   ],
+   [
+    "oubliée.",
+    73.01,
+    73.49
+   ],
+   [
+    "Les",
+    73.97,
+    74.05
+   ],
+   [
+    "avis,",
+    74.13,
+    74.69
+   ],
+   [
+    "les",
+    74.73,
+    74.77
+   ],
+   [
+    "photos",
+    74.85,
+    75.09
+   ],
+   [
+    "de",
+    75.13,
+    75.17
+   ],
+   [
+    "chantiers,",
+    75.33,
+    75.81
+   ],
+   [
+    "les",
+    75.85,
+    75.89
+   ],
+   [
+    "zones",
+    76.01,
+    76.13
+   ],
+   [
+    "d'intervention.",
+    76.183,
+    76.85
+   ],
+   [
+    "Et",
+    77.33,
+    77.41
+   ],
+   [
+    "c'est",
+    77.49,
+    77.65
+   ],
+   [
+    "là",
+    77.73,
+    77.89
+   ],
+   [
+    "que",
+    77.97,
+    78.13
+   ],
+   [
+    "se",
+    78.21,
+    78.29
+   ],
+   [
+    "joue",
+    78.33,
+    78.45
+   ],
+   [
+    "le",
+    78.49,
+    78.53
+   ],
+   [
+    "local,",
+    78.61,
+    78.93
+   ],
+   [
+    "en",
+    78.97,
+    79.01
+   ],
+   [
+    "fait.",
+    79.09,
+    79.57
+   ]
+  ]
+ },
+ {
+  "index": 11,
+  "speaker": "prospect",
+  "text": "Oui, enfin, on me dit ça toutes les semaines, hein. Tout le monde a sa, sa solution miracle.",
+  "start": 79.79,
+  "end": 86.83,
+  "emotion": "annoyance",
+  "intensity": 0.6,
+  "delivery": [
+   "annoyed",
+   "sighs"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Oui,",
+    80.55,
+    81.03
+   ],
+   [
+    "enfin,",
+    81.15,
+    81.87
+   ],
+   [
+    "on",
+    81.91,
+    81.95
+   ],
+   [
+    "me",
+    81.99,
+    82.03
+   ],
+   [
+    "dit",
+    82.11,
+    82.19
+   ],
+   [
+    "ça",
+    82.31,
+    82.43
+   ],
+   [
+    "toutes",
+    82.51,
+    82.67
+   ],
+   [
+    "les",
+    82.75,
+    82.83
+   ],
+   [
+    "semaines,",
+    82.91,
+    83.257
+   ],
+   [
+    "hein.",
+    83.283,
+    83.79
+   ],
+   [
+    "Tout",
+    83.83,
+    83.95
+   ],
+   [
+    "le",
+    83.99,
+    84.03
+   ],
+   [
+    "monde",
+    84.11,
+    84.35
+   ],
+   [
+    "a",
+    84.43,
+    84.51
+   ],
+   [
+    "sa,",
+    84.59,
+    85.23
+   ],
+   [
+    "sa",
+    85.27,
+    85.31
+   ],
+   [
+    "solution",
+    85.55,
+    86.03
+   ],
+   [
+    "miracle.",
+    86.11,
+    86.91
+   ]
+  ]
+ },
+ {
+  "index": 12,
+  "speaker": "user",
+  "text": "C'est vrai que vous devez en recevoir, des appels comme le mien.",
+  "start": 87.13,
+  "end": 90.81,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "warm",
+   "laughs"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "C'est",
+    87.53,
+    87.69
+   ],
+   [
+    "vrai",
+    87.77,
+    87.93
+   ],
+   [
+    "que",
+    88.01,
+    88.09
+   ],
+   [
+    "vous",
+    88.17,
+    88.25
+   ],
+   [
+    "devez",
+    88.29,
+    88.49
+   ],
+   [
+    "en",
+    88.53,
+    88.57
+   ],
+   [
+    "recevoir,",
+    88.65,
+    89.53
+   ],
+   [
+    "des",
+    89.61,
+    89.69
+   ],
+   [
+    "appels",
+    89.77,
+    90.01
+   ],
+   [
+    "comme",
+    90.09,
+    90.25
+   ],
+   [
+    "le",
+    90.29,
+    90.33
+   ],
+   [
+    "mien.",
+    90.41,
+    90.89
+   ]
+  ]
+ },
+ {
+  "index": 13,
+  "speaker": "prospect",
+  "text": "Ah ben ça, oui.",
+  "start": 91.01,
+  "end": 92.77,
+  "emotion": "annoyance",
+  "intensity": 0.5,
+  "delivery": [
+   "annoyed"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ah",
+    91.09,
+    91.25
+   ],
+   [
+    "ben",
+    91.33,
+    91.57
+   ],
+   [
+    "ça,",
+    91.65,
+    92.13
+   ],
+   [
+    "oui.",
+    92.21,
+    92.85
+   ]
+  ]
+ },
+ {
+  "index": 14,
+  "speaker": "user",
+  "text": "Je vous propose pas de tout changer. Juste un audit de votre visibilité locale, une demi-heure, pour voir où vous perdez des demandes et...",
+  "start": 93.17,
+  "end": 101.01,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Je",
+    93.33,
+    93.37
+   ],
+   [
+    "vous",
+    93.41,
+    93.49
+   ],
+   [
+    "propose",
+    93.61,
+    93.89
+   ],
+   [
+    "pas",
+    93.97,
+    94.05
+   ],
+   [
+    "de",
+    94.13,
+    94.21
+   ],
+   [
+    "tout",
+    94.29,
+    94.37
+   ],
+   [
+    "changer.",
+    94.45,
+    95.25
+   ],
+   [
+    "Juste",
+    95.33,
+    95.53
+   ],
+   [
+    "un",
+    95.57,
+    95.65
+   ],
+   [
+    "audit",
+    95.81,
+    95.97
+   ],
+   [
+    "de",
+    96.01,
+    96.05
+   ],
+   [
+    "votre",
+    96.09,
+    96.37
+   ],
+   [
+    "visibilité",
+    96.45,
+    96.93
+   ],
+   [
+    "locale,",
+    97.01,
+    97.65
+   ],
+   [
+    "une",
+    97.73,
+    97.81
+   ],
+   [
+    "demi-heure,",
+    97.89,
+    98.61
+   ],
+   [
+    "pour",
+    98.69,
+    98.77
+   ],
+   [
+    "voir",
+    98.85,
+    99.09
+   ],
+   [
+    "où",
+    99.17,
+    99.25
+   ],
+   [
+    "vous",
+    99.33,
+    99.41
+   ],
+   [
+    "perdez",
+    99.49,
+    99.73
+   ],
+   [
+    "des",
+    99.77,
+    99.81
+   ],
+   [
+    "demandes",
+    99.89,
+    100.37
+   ],
+   [
+    "et...",
+    100.45,
+    101.01
+   ]
+  ]
+ },
+ {
+  "index": 15,
+  "speaker": "prospect",
+  "text": "Et ça coûte combien, votre truc ? Parce que là, honnêtement, le budget com', il est bouclé jusqu'en décembre. Y a pas un euro de plus, pas un.",
+  "start": 100.51,
+  "end": 108.67,
+  "emotion": "annoyance",
+  "intensity": 0.8,
+  "delivery": [
+   "interrupting",
+   "annoyed"
+  ],
+  "step": "close",
+  "objection": "no_budget",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Et",
+    100.583,
+    100.59
+   ],
+   [
+    "ça",
+    100.67,
+    100.75
+   ],
+   [
+    "coûte",
+    100.79,
+    100.99
+   ],
+   [
+    "combien,",
+    101.11,
+    101.39
+   ],
+   [
+    "votre",
+    101.47,
+    101.63
+   ],
+   [
+    "truc",
+    101.71,
+    101.95
+   ],
+   [
+    "?",
+    102.35,
+    102.403
+   ],
+   [
+    "Parce",
+    102.457,
+    102.563
+   ],
+   [
+    "que",
+    102.617,
+    102.67
+   ],
+   [
+    "là,",
+    102.79,
+    102.95
+   ],
+   [
+    "honnêtement,",
+    102.99,
+    103.683
+   ],
+   [
+    "le",
+    103.737,
+    103.79
+   ],
+   [
+    "budget",
+    103.95,
+    104.11
+   ],
+   [
+    "com',",
+    104.19,
+    104.51
+   ],
+   [
+    "il",
+    104.55,
+    104.59
+   ],
+   [
+    "est",
+    104.67,
+    104.75
+   ],
+   [
+    "bouclé",
+    104.803,
+    105.15
+   ],
+   [
+    "jusqu'en",
+    105.19,
+    105.55
+   ],
+   [
+    "décembre.",
+    105.59,
+    106.377
+   ],
+   [
+    "Y",
+    106.403,
+    106.43
+   ],
+   [
+    "a",
+    106.55,
+    106.67
+   ],
+   [
+    "pas",
+    106.83,
+    106.99
+   ],
+   [
+    "un",
+    107.07,
+    107.15
+   ],
+   [
+    "euro",
+    107.19,
+    107.39
+   ],
+   [
+    "de",
+    107.43,
+    107.47
+   ],
+   [
+    "plus,",
+    107.55,
+    107.99
+   ],
+   [
+    "pas",
+    108.03,
+    108.27
+   ],
+   [
+    "un.",
+    108.35,
+    108.75
+   ]
+  ]
+ },
+ {
+  "index": 16,
+  "speaker": "user",
+  "text": "L'audit est offert. Et s'il n'y a rien à gagner, je vous le dirai franchement.",
+  "start": 108.97,
+  "end": 113.05,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "L'audit",
+    109.05,
+    109.37
+   ],
+   [
+    "est",
+    109.41,
+    109.45
+   ],
+   [
+    "offert.",
+    109.53,
+    110.41
+   ],
+   [
+    "Et",
+    110.49,
+    110.57
+   ],
+   [
+    "s'il",
+    110.61,
+    110.73
+   ],
+   [
+    "n'y",
+    110.81,
+    110.85
+   ],
+   [
+    "a",
+    110.87,
+    110.89
+   ],
+   [
+    "rien",
+    110.97,
+    111.05
+   ],
+   [
+    "à",
+    111.13,
+    111.21
+   ],
+   [
+    "gagner,",
+    111.343,
+    111.85
+   ],
+   [
+    "je",
+    111.93,
+    112.01
+   ],
+   [
+    "vous",
+    112.05,
+    112.09
+   ],
+   [
+    "le",
+    112.13,
+    112.17
+   ],
+   [
+    "dirai",
+    112.25,
+    112.41
+   ],
+   [
+    "franchement.",
+    112.45,
+    113.13
+   ]
+  ]
+ },
+ {
+  "index": 17,
+  "speaker": "prospect",
+  "text": "Hum... offert. C'est toujours offert, au début.",
+  "start": 113.85,
+  "end": 118.57,
+  "emotion": "annoyance",
+  "intensity": 0.6,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hum...",
+    113.93,
+    114.97
+   ],
+   [
+    "offert.",
+    115.13,
+    116.17
+   ],
+   [
+    "C'est",
+    116.25,
+    116.49
+   ],
+   [
+    "toujours",
+    116.53,
+    116.89
+   ],
+   [
+    "offert,",
+    116.97,
+    117.77
+   ],
+   [
+    "au",
+    117.81,
+    117.85
+   ],
+   [
+    "début.",
+    117.93,
+    118.65
+   ]
+  ]
+ },
+ {
+  "index": 18,
+  "speaker": "user",
+  "text": "Je comprends la méfiance, vraiment. On pourrait, euh, caler un créneau jeudi ou vendredi matin ?",
+  "start": 118.87,
+  "end": 124.87,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Je",
+    119.03,
+    119.11
+   ],
+   [
+    "comprends",
+    119.19,
+    119.537
+   ],
+   [
+    "la",
+    119.563,
+    119.59
+   ],
+   [
+    "méfiance,",
+    119.67,
+    120.39
+   ],
+   [
+    "vraiment.",
+    120.47,
+    121.43
+   ],
+   [
+    "On",
+    121.51,
+    121.59
+   ],
+   [
+    "pourrait,",
+    121.67,
+    122.07
+   ],
+   [
+    "euh,",
+    122.123,
+    122.31
+   ],
+   [
+    "caler",
+    122.39,
+    122.63
+   ],
+   [
+    "un",
+    122.67,
+    122.71
+   ],
+   [
+    "créneau",
+    122.79,
+    123.11
+   ],
+   [
+    "jeudi",
+    123.27,
+    123.67
+   ],
+   [
+    "ou",
+    123.75,
+    123.91
+   ],
+   [
+    "vendredi",
+    123.99,
+    124.31
+   ],
+   [
+    "matin",
+    124.39,
+    124.63
+   ],
+   [
+    "?",
+    124.71,
+    124.95
+   ]
+  ]
+ },
+ {
+  "index": 19,
+  "speaker": "prospect",
+  "text": "Non, écoutez... envoyez-moi plutôt un mail. Une plaquette, quelque chose. Je regarderai, si j'ai le temps.",
+  "start": 126.37,
+  "end": 134.05,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "close",
+  "objection": "send_email",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Non,",
+    126.61,
+    127.25
+   ],
+   [
+    "écoutez...",
+    127.33,
+    128.45
+   ],
+   [
+    "envoyez-moi",
+    128.53,
+    129.01
+   ],
+   [
+    "plutôt",
+    129.05,
+    129.33
+   ],
+   [
+    "un",
+    129.37,
+    129.41
+   ],
+   [
+    "mail.",
+    129.49,
+    130.21
+   ],
+   [
+    "Une",
+    130.29,
+    130.37
+   ],
+   [
+    "plaquette,",
+    130.45,
+    131.17
+   ],
+   [
+    "quelque",
+    131.25,
+    131.41
+   ],
+   [
+    "chose.",
+    131.49,
+    132.21
+   ],
+   [
+    "Je",
+    132.29,
+    132.37
+   ],
+   [
+    "regarderai,",
+    132.45,
+    133.25
+   ],
+   [
+    "si",
+    133.29,
+    133.33
+   ],
+   [
+    "j'ai",
+    133.41,
+    133.49
+   ],
+   [
+    "le",
+    133.57,
+    133.61
+   ],
+   [
+    "temps.",
+    133.65,
+    134.13
+   ]
+  ]
+ },
+ {
+  "index": 20,
+  "speaker": "user",
+  "text": "Je peux, bien sûr. Mais, euh, honnêtement, vous croyez que vous l'ouvrirez, ce mail ?",
+  "start": 134.45,
+  "end": 139.89,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm",
+   "thoughtful"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Je",
+    134.61,
+    134.69
+   ],
+   [
+    "peux,",
+    134.77,
+    135.09
+   ],
+   [
+    "bien",
+    135.17,
+    135.33
+   ],
+   [
+    "sûr.",
+    135.41,
+    136.21
+   ],
+   [
+    "Mais,",
+    136.37,
+    136.557
+   ],
+   [
+    "euh,",
+    136.583,
+    136.89
+   ],
+   [
+    "honnêtement,",
+    137.01,
+    137.89
+   ],
+   [
+    "vous",
+    137.97,
+    138.05
+   ],
+   [
+    "croyez",
+    138.09,
+    138.37
+   ],
+   [
+    "que",
+    138.41,
+    138.45
+   ],
+   [
+    "vous",
+    138.53,
+    138.61
+   ],
+   [
+    "l'ouvrirez,",
+    138.637,
+    139.17
+   ],
+   [
+    "ce",
+    139.25,
+    139.33
+   ],
+   [
+    "mail",
+    139.49,
+    139.65
+   ],
+   [
+    "?",
+    139.73,
+    139.97
+   ]
+  ]
+ },
+ {
+  "index": 21,
+  "speaker": "prospect",
+  "text": "Ben... peut-être pas, non. Je... non, franchement, c'est pas le moment. On va rester comme ça.",
+  "start": 141.89,
+  "end": 148.85,
+  "emotion": "hesitation",
+  "intensity": 0.6,
+  "delivery": [
+   "hesitant",
+   "thoughtful"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ben...",
+    142.13,
+    142.97
+   ],
+   [
+    "peut-être",
+    143.17,
+    143.65
+   ],
+   [
+    "pas,",
+    143.73,
+    143.93
+   ],
+   [
+    "non.",
+    143.97,
+    144.53
+   ],
+   [
+    "Je...",
+    144.85,
+    145.49
+   ],
+   [
+    "non,",
+    145.57,
+    145.81
+   ],
+   [
+    "franchement,",
+    145.85,
+    146.69
+   ],
+   [
+    "c'est",
+    146.73,
+    146.93
+   ],
+   [
+    "pas",
+    146.97,
+    147.01
+   ],
+   [
+    "le",
+    147.05,
+    147.09
+   ],
+   [
+    "moment.",
+    147.17,
+    147.81
+   ],
+   [
+    "On",
+    147.85,
+    147.89
+   ],
+   [
+    "va",
+    147.93,
+    147.97
+   ],
+   [
+    "rester",
+    148.05,
+    148.29
+   ],
+   [
+    "comme",
+    148.33,
+    148.45
+   ],
+   [
+    "ça.",
+    148.53,
+    148.93
+   ]
+  ]
+ },
+ {
+  "index": 22,
+  "speaker": "user",
+  "text": "D'accord, je respecte ça. Merci de m'avoir écoutée, monsieur Morel. Bonne journée à vous.",
+  "start": 149.25,
+  "end": 154.45,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "D'accord,",
+    149.49,
+    150.05
+   ],
+   [
+    "je",
+    150.09,
+    150.13
+   ],
+   [
+    "respecte",
+    150.21,
+    150.69
+   ],
+   [
+    "ça.",
+    150.97,
+    151.33
+   ],
+   [
+    "Merci",
+    151.45,
+    151.65
+   ],
+   [
+    "de",
+    151.69,
+    151.73
+   ],
+   [
+    "m'avoir",
+    151.77,
+    152.05
+   ],
+   [
+    "écoutée,",
+    152.13,
+    152.45
+   ],
+   [
+    "monsieur",
+    152.53,
+    152.69
+   ],
+   [
+    "Morel.",
+    152.81,
+    153.49
+   ],
+   [
+    "Bonne",
+    153.53,
+    153.65
+   ],
+   [
+    "journée",
+    153.73,
+    153.97
+   ],
+   [
+    "à",
+    154.01,
+    154.05
+   ],
+   [
+    "vous.",
+    154.13,
+    154.53
+   ]
+  ]
+ },
+ {
+  "index": 23,
+  "speaker": "prospect",
+  "text": "Oui... merci. Au revoir.",
+  "start": 155.05,
+  "end": 158.09,
+  "emotion": "hesitation",
+  "intensity": 0.3,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Oui...",
+    155.21,
+    155.85
+   ],
+   [
+    "merci.",
+    156.17,
+    156.73
+   ],
+   [
+    "Au",
+    157.29,
+    157.37
+   ],
+   [
+    "revoir.",
+    157.45,
+    158.17
+   ]
+  ]
+ }
+]

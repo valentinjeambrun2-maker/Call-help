@@ -143,7 +143,7 @@ async def test_feedback_on_refined_hint_counts_once():
     s, out = await started(provider=Refine())
     await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
     await s.handle({"type": "transcript", "speaker": "prospect", "text": "J'ai pas le temps.", "start": 1, "end": 2})
-    await s.coach._llm_task
+    await s.coach.wait_llm()
     rule = next(h for h in hints(out) if h["kind"] == "objection" and h["source"] == "rule")
     llm = next(h for h in hints(out) if h["source"] == "llm")
     await s.handle({"type": "feedback", "hint_id": rule["id"], "useful": True})
@@ -163,7 +163,7 @@ async def test_llm_classification_catches_objection_missed_by_keywords_and_advan
     await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
     await s.handle({"type": "transcript", "speaker": "prospect",
                     "text": "Bon, on bosse déjà avec une agence pour le site.", "start": 1, "end": 3})
-    await s.coach._llm_task
+    await s.coach.wait_llm()
     objection = [h for h in hints(out) if h["kind"] == "objection"]
     assert objection and objection[-1]["ref"] == "has_provider" and objection[-1]["source"] == "llm"
     assert s.tracker.step.id == "value" and "has_provider" in s.tracker.objections_seen
@@ -179,6 +179,6 @@ async def test_llm_other_objection_does_not_create_fake_ref():
     s, out = await started(provider=Other())
     await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
     await s.handle({"type": "transcript", "speaker": "prospect", "text": "Et mes données ?", "start": 1, "end": 2})
-    await s.coach._llm_task
+    await s.coach.wait_llm()
     llm = [h for h in hints(out) if h["source"] == "llm"]
     assert llm and llm[-1]["ref"] is None and s.tracker.objections_seen == []

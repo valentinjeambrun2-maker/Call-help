@@ -1,0 +1,2810 @@
+[
+ {
+  "index": 0,
+  "speaker": "user",
+  "text": "Bonjour ! Euh, Julien Morel, de The Herakles. Je suis bien chez Ferrand Rénovation ?",
+  "start": 0.3,
+  "end": 5.02,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "rushed",
+   "warm"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Bonjour",
+    0.668,
+    0.7
+   ],
+   [
+    "!",
+    1.02,
+    1.047
+   ],
+   [
+    "Euh,",
+    1.073,
+    1.3
+   ],
+   [
+    "Julien",
+    1.34,
+    1.58
+   ],
+   [
+    "Morel,",
+    1.7,
+    2.06
+   ],
+   [
+    "de",
+    2.14,
+    2.22
+   ],
+   [
+    "The",
+    2.3,
+    2.38
+   ],
+   [
+    "Herakles.",
+    2.46,
+    3.26
+   ],
+   [
+    "Je",
+    3.34,
+    3.42
+   ],
+   [
+    "suis",
+    3.46,
+    3.58
+   ],
+   [
+    "bien",
+    3.633,
+    3.74
+   ],
+   [
+    "chez",
+    3.82,
+    3.98
+   ],
+   [
+    "Ferrand",
+    4.06,
+    4.3
+   ],
+   [
+    "Rénovation",
+    4.34,
+    4.78
+   ],
+   [
+    "?",
+    4.86,
+    5.1
+   ]
+  ]
+ },
+ {
+  "index": 1,
+  "speaker": "prospect",
+  "text": "Oui, c'est Bastien, au secrétariat. C'est à quel sujet ?",
+  "start": 5.42,
+  "end": 9.74,
+  "emotion": "neutral",
+  "intensity": 0.4,
+  "delivery": [
+   "skeptical",
+   "calm"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Oui,",
+    5.58,
+    6.1
+   ],
+   [
+    "c'est",
+    6.3,
+    6.54
+   ],
+   [
+    "Bastien,",
+    6.62,
+    7.34
+   ],
+   [
+    "au",
+    7.38,
+    7.42
+   ],
+   [
+    "secrétariat.",
+    7.5,
+    8.62
+   ],
+   [
+    "C'est",
+    8.7,
+    8.86
+   ],
+   [
+    "à",
+    8.9,
+    8.94
+   ],
+   [
+    "quel",
+    9.02,
+    9.1
+   ],
+   [
+    "sujet",
+    9.18,
+    9.5
+   ],
+   [
+    "?",
+    9.58,
+    9.82
+   ]
+  ]
+ },
+ {
+  "index": 2,
+  "speaker": "user",
+  "text": "Alors, juste avant, euh, je vous signale qu'un assistant analyse l'appel, pour, pour la qualité, voilà.",
+  "start": 9.94,
+  "end": 14.82,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "rushed"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Alors,",
+    10.073,
+    10.42
+   ],
+   [
+    "juste",
+    10.5,
+    10.7
+   ],
+   [
+    "avant,",
+    10.74,
+    11.1
+   ],
+   [
+    "euh,",
+    11.14,
+    11.34
+   ],
+   [
+    "je",
+    11.38,
+    11.42
+   ],
+   [
+    "vous",
+    11.46,
+    11.54
+   ],
+   [
+    "signale",
+    11.66,
+    11.86
+   ],
+   [
+    "qu'un",
+    11.9,
+    12.02
+   ],
+   [
+    "assistant",
+    12.22,
+    12.42
+   ],
+   [
+    "analyse",
+    12.54,
+    12.74
+   ],
+   [
+    "l'appel,",
+    12.78,
+    13.3
+   ],
+   [
+    "pour,",
+    13.42,
+    13.7
+   ],
+   [
+    "pour",
+    13.74,
+    13.78
+   ],
+   [
+    "la",
+    13.86,
+    13.9
+   ],
+   [
+    "qualité,",
+    13.94,
+    14.42
+   ],
+   [
+    "voilà.",
+    14.46,
+    14.9
+   ]
+  ]
+ },
+ {
+  "index": 3,
+  "speaker": "prospect",
+  "text": "Hum. D'accord.",
+  "start": 15.52,
+  "end": 17.28,
+  "emotion": "neutral",
+  "intensity": 0.4,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hum.",
+    15.6,
+    16.28
+   ],
+   [
+    "D'accord.",
+    16.56,
+    17.36
+   ]
+  ]
+ },
+ {
+  "index": 4,
+  "speaker": "user",
+  "text": "Super. Alors en fait on est un studio digital et on aide les artisans, euh, à sortir en premier sur Google quand quelqu'un tape genre « rénovation » dans sa ville, et du coup ça fait des appels en plus, des chantiers en plus, et en fait on...",
+  "start": 17.43,
+  "end": 28.63,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "rushed",
+   "excited"
+  ],
+  "step": "hook",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Super.",
+    17.51,
+    18.15
+   ],
+   [
+    "Alors",
+    18.19,
+    18.31
+   ],
+   [
+    "en",
+    18.39,
+    18.43
+   ],
+   [
+    "fait",
+    18.47,
+    18.55
+   ],
+   [
+    "on",
+    18.63,
+    18.67
+   ],
+   [
+    "est",
+    18.71,
+    18.737
+   ],
+   [
+    "un",
+    18.763,
+    18.79
+   ],
+   [
+    "studio",
+    18.87,
+    19.11
+   ],
+   [
+    "digital",
+    19.35,
+    19.59
+   ],
+   [
+    "et",
+    19.75,
+    19.83
+   ],
+   [
+    "on",
+    19.87,
+    19.91
+   ],
+   [
+    "aide",
+    19.95,
+    20.07
+   ],
+   [
+    "les",
+    20.15,
+    20.23
+   ],
+   [
+    "artisans,",
+    20.31,
+    20.817
+   ],
+   [
+    "euh,",
+    20.843,
+    21.05
+   ],
+   [
+    "à",
+    21.07,
+    21.09
+   ],
+   [
+    "sortir",
+    21.11,
+    21.43
+   ],
+   [
+    "en",
+    21.51,
+    21.59
+   ],
+   [
+    "premier",
+    21.67,
+    21.91
+   ],
+   [
+    "sur",
+    21.99,
+    22.07
+   ],
+   [
+    "Google",
+    22.23,
+    22.39
+   ],
+   [
+    "quand",
+    22.47,
+    22.55
+   ],
+   [
+    "quelqu'un",
+    22.63,
+    22.87
+   ],
+   [
+    "tape",
+    22.99,
+    23.11
+   ],
+   [
+    "genre",
+    23.35,
+    23.59
+   ],
+   [
+    "«",
+    23.61,
+    23.63
+   ],
+   [
+    "rénovation",
+    23.65,
+    24.15
+   ],
+   [
+    "»",
+    24.182,
+    24.214
+   ],
+   [
+    "dans",
+    24.246,
+    24.31
+   ],
+   [
+    "sa",
+    24.39,
+    24.47
+   ],
+   [
+    "ville,",
+    24.71,
+    24.99
+   ],
+   [
+    "et",
+    25.03,
+    25.11
+   ],
+   [
+    "du",
+    25.15,
+    25.19
+   ],
+   [
+    "coup",
+    25.243,
+    25.35
+   ],
+   [
+    "ça",
+    25.39,
+    25.43
+   ],
+   [
+    "fait",
+    25.47,
+    25.51
+   ],
+   [
+    "des",
+    25.59,
+    25.67
+   ],
+   [
+    "appels",
+    25.75,
+    25.91
+   ],
+   [
+    "en",
+    25.95,
+    25.99
+   ],
+   [
+    "plus,",
+    26.07,
+    26.523
+   ],
+   [
+    "des",
+    26.577,
+    26.63
+   ],
+   [
+    "chantiers",
+    26.71,
+    26.87
+   ],
+   [
+    "en",
+    26.95,
+    27.03
+   ],
+   [
+    "plus,",
+    27.31,
+    27.617
+   ],
+   [
+    "et",
+    27.643,
+    27.67
+   ],
+   [
+    "en",
+    27.71,
+    27.75
+   ],
+   [
+    "fait",
+    27.83,
+    27.99
+   ],
+   [
+    "on...",
+    28.23,
+    28.63
+   ]
+  ]
+ },
+ {
+  "index": 5,
+  "speaker": "prospect",
+  "text": "Attendez, attendez. On a déjà quelqu'un pour ça. Le neveu du patron, c'est lui qui s'occupe du site, de tout ça.",
+  "start": 28.13,
+  "end": 34.93,
+  "emotion": "neutral",
+  "intensity": 0.5,
+  "delivery": [
+   "interrupting",
+   "skeptical"
+  ],
+  "step": "hook",
+  "objection": "has_provider",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Attendez,",
+    28.21,
+    28.65
+   ],
+   [
+    "attendez.",
+    28.69,
+    29.49
+   ],
+   [
+    "On",
+    29.57,
+    29.61
+   ],
+   [
+    "a",
+    29.65,
+    29.73
+   ],
+   [
+    "déjà",
+    29.81,
+    30.05
+   ],
+   [
+    "quelqu'un",
+    30.17,
+    30.53
+   ],
+   [
+    "pour",
+    30.61,
+    30.69
+   ],
+   [
+    "ça.",
+    30.77,
+    31.37
+   ],
+   [
+    "Le",
+    31.41,
+    31.49
+   ],
+   [
+    "neveu",
+    31.57,
+    31.81
+   ],
+   [
+    "du",
+    31.89,
+    31.97
+   ],
+   [
+    "patron,",
+    32.05,
+    32.65
+   ],
+   [
+    "c'est",
+    32.69,
+    32.77
+   ],
+   [
+    "lui",
+    32.85,
+    33.01
+   ],
+   [
+    "qui",
+    33.09,
+    33.17
+   ],
+   [
+    "s'occupe",
+    33.197,
+    33.49
+   ],
+   [
+    "du",
+    33.57,
+    33.73
+   ],
+   [
+    "site,",
+    33.93,
+    34.183
+   ],
+   [
+    "de",
+    34.237,
+    34.29
+   ],
+   [
+    "tout",
+    34.37,
+    34.45
+   ],
+   [
+    "ça.",
+    34.53,
+    34.93
+   ]
+  ]
+ },
+ {
+  "index": 6,
+  "speaker": "user",
+  "text": "Ah, d'accord, d'accord. Et euh... il gère aussi la fiche Google ? Les avis, les photos de chantiers, tout ça ?",
+  "start": 35.33,
+  "end": 41.41,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "curious"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ah,",
+    35.41,
+    35.73
+   ],
+   [
+    "d'accord,",
+    35.81,
+    36.17
+   ],
+   [
+    "d'accord.",
+    36.21,
+    37.01
+   ],
+   [
+    "Et",
+    37.09,
+    37.25
+   ],
+   [
+    "euh...",
+    37.33,
+    37.89
+   ],
+   [
+    "il",
+    37.97,
+    38.05
+   ],
+   [
+    "gère",
+    38.09,
+    38.21
+   ],
+   [
+    "aussi",
+    38.29,
+    38.41
+   ],
+   [
+    "la",
+    38.45,
+    38.53
+   ],
+   [
+    "fiche",
+    38.583,
+    38.69
+   ],
+   [
+    "Google",
+    38.85,
+    39.01
+   ],
+   [
+    "?",
+    39.41,
+    39.463
+   ],
+   [
+    "Les",
+    39.517,
+    39.57
+   ],
+   [
+    "avis,",
+    39.65,
+    40.05
+   ],
+   [
+    "les",
+    40.09,
+    40.13
+   ],
+   [
+    "photos",
+    40.21,
+    40.37
+   ],
+   [
+    "de",
+    40.41,
+    40.45
+   ],
+   [
+    "chantiers,",
+    40.57,
+    40.93
+   ],
+   [
+    "tout",
+    41.01,
+    41.09
+   ],
+   [
+    "ça",
+    41.17,
+    41.25
+   ],
+   [
+    "?",
+    41.33,
+    41.49
+   ]
+  ]
+ },
+ {
+  "index": 7,
+  "speaker": "prospect",
+  "text": "Euh... la fiche... Je sais pas, hein. Il a fait le site y a, quoi, trois ans. Depuis, bon...",
+  "start": 42.61,
+  "end": 50.69,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "thoughtful",
+   "hesitant"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Euh...",
+    42.77,
+    43.81
+   ],
+   [
+    "la",
+    43.93,
+    44.05
+   ],
+   [
+    "fiche...",
+    44.13,
+    45.33
+   ],
+   [
+    "Je",
+    45.37,
+    45.41
+   ],
+   [
+    "sais",
+    45.49,
+    45.65
+   ],
+   [
+    "pas,",
+    45.73,
+    45.89
+   ],
+   [
+    "hein.",
+    45.93,
+    46.61
+   ],
+   [
+    "Il",
+    46.69,
+    46.73
+   ],
+   [
+    "a",
+    46.77,
+    46.85
+   ],
+   [
+    "fait",
+    46.93,
+    47.01
+   ],
+   [
+    "le",
+    47.05,
+    47.09
+   ],
+   [
+    "site",
+    47.17,
+    47.41
+   ],
+   [
+    "y",
+    47.45,
+    47.49
+   ],
+   [
+    "a,",
+    47.57,
+    47.97
+   ],
+   [
+    "quoi,",
+    48.09,
+    48.45
+   ],
+   [
+    "trois",
+    48.53,
+    48.69
+   ],
+   [
+    "ans.",
+    48.77,
+    49.33
+   ],
+   [
+    "Depuis,",
+    49.45,
+    50.13
+   ],
+   [
+    "bon...",
+    50.29,
+    50.77
+   ]
+  ]
+ },
+ {
+  "index": 8,
+  "speaker": "user",
+  "text": "Parce que j'ai regardé avant d'appeler. Quand on tape « rénovation salle de bain » chez vous, ben vous sortez pas. Enfin si, mais en page deux.",
+  "start": 50.99,
+  "end": 58.43,
+  "emotion": "neutral",
+  "intensity": 0.4,
+  "delivery": [
+   "calm"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Parce",
+    51.127,
+    51.177
+   ],
+   [
+    "que",
+    51.203,
+    51.23
+   ],
+   [
+    "j'ai",
+    51.31,
+    51.39
+   ],
+   [
+    "regardé",
+    51.47,
+    51.79
+   ],
+   [
+    "avant",
+    51.83,
+    51.95
+   ],
+   [
+    "d'appeler.",
+    51.99,
+    52.75
+   ],
+   [
+    "Quand",
+    52.79,
+    52.91
+   ],
+   [
+    "on",
+    52.99,
+    53.07
+   ],
+   [
+    "tape",
+    53.19,
+    53.31
+   ],
+   [
+    "«",
+    53.47,
+    53.497
+   ],
+   [
+    "rénovation",
+    53.523,
+    54.03
+   ],
+   [
+    "salle",
+    54.11,
+    54.27
+   ],
+   [
+    "de",
+    54.31,
+    54.35
+   ],
+   [
+    "bain",
+    54.39,
+    54.51
+   ],
+   [
+    "»",
+    54.537,
+    54.563
+   ],
+   [
+    "chez",
+    54.59,
+    54.67
+   ],
+   [
+    "vous,",
+    54.75,
+    55.31
+   ],
+   [
+    "ben",
+    55.39,
+    55.47
+   ],
+   [
+    "vous",
+    55.55,
+    55.63
+   ],
+   [
+    "sortez",
+    55.75,
+    55.95
+   ],
+   [
+    "pas.",
+    56.03,
+    56.59
+   ],
+   [
+    "Enfin",
+    56.63,
+    56.83
+   ],
+   [
+    "si,",
+    56.99,
+    57.39
+   ],
+   [
+    "mais",
+    57.43,
+    57.71
+   ],
+   [
+    "en",
+    57.75,
+    57.79
+   ],
+   [
+    "page",
+    57.87,
+    58.03
+   ],
+   [
+    "deux.",
+    58.07,
+    58.51
+   ]
+  ]
+ },
+ {
+  "index": 9,
+  "speaker": "prospect",
+  "text": "Ah bon ? Page deux ? Ah ouais ?",
+  "start": 58.73,
+  "end": 61.21,
+  "emotion": "interest",
+  "intensity": 0.6,
+  "delivery": [
+   "curious"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ah",
+    58.81,
+    58.89
+   ],
+   [
+    "bon",
+    59.01,
+    59.13
+   ],
+   [
+    "?",
+    59.45,
+    59.49
+   ],
+   [
+    "Page",
+    59.53,
+    59.77
+   ],
+   [
+    "deux",
+    59.85,
+    60.01
+   ],
+   [
+    "?",
+    60.41,
+    60.45
+   ],
+   [
+    "Ah",
+    60.49,
+    60.57
+   ],
+   [
+    "ouais",
+    60.65,
+    60.89
+   ],
+   [
+    "?",
+    61.05,
+    61.21
+   ]
+  ]
+ },
+ {
+  "index": 10,
+  "speaker": "user",
+  "text": "Ouais. Et les gens, ils vont jamais en page deux. Par contre votre concurrent, euh, là, celui avec les cinquante avis, il est tout en haut, avec la carte et tout.",
+  "start": 61.41,
+  "end": 69.65,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "excited"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ouais.",
+    61.634,
+    62.13
+   ],
+   [
+    "Et",
+    62.17,
+    62.21
+   ],
+   [
+    "les",
+    62.29,
+    62.37
+   ],
+   [
+    "gens,",
+    62.45,
+    62.77
+   ],
+   [
+    "ils",
+    62.81,
+    62.85
+   ],
+   [
+    "vont",
+    62.93,
+    63.17
+   ],
+   [
+    "jamais",
+    63.25,
+    63.57
+   ],
+   [
+    "en",
+    63.65,
+    63.73
+   ],
+   [
+    "page",
+    63.85,
+    63.97
+   ],
+   [
+    "deux.",
+    64.01,
+    64.53
+   ],
+   [
+    "Par",
+    64.57,
+    64.61
+   ],
+   [
+    "contre",
+    64.69,
+    64.77
+   ],
+   [
+    "votre",
+    64.85,
+    65.01
+   ],
+   [
+    "concurrent,",
+    65.09,
+    65.49
+   ],
+   [
+    "euh,",
+    65.53,
+    65.73
+   ],
+   [
+    "là,",
+    65.81,
+    66.05
+   ],
+   [
+    "celui",
+    66.13,
+    66.29
+   ],
+   [
+    "avec",
+    66.37,
+    66.45
+   ],
+   [
+    "les",
+    66.53,
+    66.61
+   ],
+   [
+    "cinquante",
+    66.65,
+    66.93
+   ],
+   [
+    "avis,",
+    67.05,
+    67.41
+   ],
+   [
+    "il",
+    67.45,
+    67.49
+   ],
+   [
+    "est",
+    67.57,
+    67.65
+   ],
+   [
+    "tout",
+    67.73,
+    67.89
+   ],
+   [
+    "en",
+    67.97,
+    68.01
+   ],
+   [
+    "haut,",
+    68.05,
+    68.37
+   ],
+   [
+    "avec",
+    68.49,
+    68.61
+   ],
+   [
+    "la",
+    68.65,
+    68.69
+   ],
+   [
+    "carte",
+    68.85,
+    69.143
+   ],
+   [
+    "et",
+    69.197,
+    69.25
+   ],
+   [
+    "tout.",
+    69.33,
+    69.73
+   ]
+  ]
+ },
+ {
+  "index": 11,
+  "speaker": "prospect",
+  "text": "Ah, c'est Dumas Bâtiment, ça ! Ah ben ça, ça, ça va le rendre fou, le patron. Dumas devant nous, sérieux ?",
+  "start": 69.85,
+  "end": 77.53,
+  "emotion": "enthusiasm",
+  "intensity": 0.7,
+  "delivery": [
+   "laughs",
+   "excited"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ah,",
+    70.73,
+    71.05
+   ],
+   [
+    "c'est",
+    71.13,
+    71.29
+   ],
+   [
+    "Dumas",
+    71.37,
+    71.69
+   ],
+   [
+    "Bâtiment,",
+    71.73,
+    72.33
+   ],
+   [
+    "ça",
+    72.45,
+    72.57
+   ],
+   [
+    "!",
+    72.97,
+    72.997
+   ],
+   [
+    "Ah",
+    73.023,
+    73.05
+   ],
+   [
+    "ben",
+    73.13,
+    73.21
+   ],
+   [
+    "ça,",
+    73.29,
+    73.503
+   ],
+   [
+    "ça,",
+    73.557,
+    73.637
+   ],
+   [
+    "ça",
+    73.663,
+    73.69
+   ],
+   [
+    "va",
+    73.77,
+    73.85
+   ],
+   [
+    "le",
+    73.89,
+    73.93
+   ],
+   [
+    "rendre",
+    74.01,
+    74.33
+   ],
+   [
+    "fou,",
+    74.41,
+    74.61
+   ],
+   [
+    "le",
+    74.65,
+    74.73
+   ],
+   [
+    "patron.",
+    74.81,
+    75.61
+   ],
+   [
+    "Dumas",
+    75.65,
+    76.09
+   ],
+   [
+    "devant",
+    76.17,
+    76.41
+   ],
+   [
+    "nous,",
+    76.45,
+    76.89
+   ],
+   [
+    "sérieux",
+    76.93,
+    77.37
+   ],
+   [
+    "?",
+    77.45,
+    77.61
+   ]
+  ]
+ },
+ {
+  "index": 12,
+  "speaker": "user",
+  "text": "Voilà ! Et nous, en gros, on optimise la fiche, on, on vous aide à récupérer des avis clients, et en deux, trois mois vous passez devant.",
+  "start": 77.68,
+  "end": 84.0,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "rushed",
+   "excited"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Voilà",
+    77.76,
+    78.0
+   ],
+   [
+    "!",
+    78.32,
+    78.347
+   ],
+   [
+    "Et",
+    78.373,
+    78.4
+   ],
+   [
+    "nous,",
+    78.48,
+    78.68
+   ],
+   [
+    "en",
+    78.72,
+    78.8
+   ],
+   [
+    "gros,",
+    78.84,
+    79.2
+   ],
+   [
+    "on",
+    79.24,
+    79.28
+   ],
+   [
+    "optimise",
+    79.36,
+    79.68
+   ],
+   [
+    "la",
+    79.76,
+    79.84
+   ],
+   [
+    "fiche,",
+    79.92,
+    80.32
+   ],
+   [
+    "on,",
+    80.4,
+    80.64
+   ],
+   [
+    "on",
+    80.68,
+    80.72
+   ],
+   [
+    "vous",
+    80.8,
+    80.88
+   ],
+   [
+    "aide",
+    80.933,
+    81.04
+   ],
+   [
+    "à",
+    81.067,
+    81.093
+   ],
+   [
+    "récupérer",
+    81.12,
+    81.52
+   ],
+   [
+    "des",
+    81.56,
+    81.6
+   ],
+   [
+    "avis",
+    81.68,
+    81.84
+   ],
+   [
+    "clients,",
+    82.0,
+    82.48
+   ],
+   [
+    "et",
+    82.52,
+    82.56
+   ],
+   [
+    "en",
+    82.64,
+    82.72
+   ],
+   [
+    "deux,",
+    82.76,
+    82.88
+   ],
+   [
+    "trois",
+    82.92,
+    83.04
+   ],
+   [
+    "mois",
+    83.12,
+    83.2
+   ],
+   [
+    "vous",
+    83.28,
+    83.36
+   ],
+   [
+    "passez",
+    83.413,
+    83.6
+   ],
+   [
+    "devant.",
+    83.64,
+    84.08
+   ]
+  ]
+ },
+ {
+  "index": 13,
+  "speaker": "prospect",
+  "text": "Mm-hmm.",
+  "start": 84.3,
+  "end": 85.42,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "thoughtful"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Mm-hmm.",
+    84.38,
+    85.42
+   ]
+  ]
+ },
+ {
+  "index": 14,
+  "speaker": "user",
+  "text": "Et du coup, euh, je pourrais en parler directement avec monsieur Ferrand ?",
+  "start": 85.82,
+  "end": 89.66,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Et",
+    85.9,
+    86.06
+   ],
+   [
+    "du",
+    86.14,
+    86.3
+   ],
+   [
+    "coup,",
+    86.34,
+    86.7
+   ],
+   [
+    "euh,",
+    86.74,
+    87.18
+   ],
+   [
+    "je",
+    87.34,
+    87.5
+   ],
+   [
+    "pourrais",
+    87.58,
+    87.74
+   ],
+   [
+    "en",
+    87.82,
+    87.9
+   ],
+   [
+    "parler",
+    87.94,
+    88.14
+   ],
+   [
+    "directement",
+    88.3,
+    88.62
+   ],
+   [
+    "avec",
+    88.74,
+    88.86
+   ],
+   [
+    "monsieur",
+    88.94,
+    89.1
+   ],
+   [
+    "Ferrand",
+    89.18,
+    89.42
+   ],
+   [
+    "?",
+    89.58,
+    89.74
+   ]
+  ]
+ },
+ {
+  "index": 15,
+  "speaker": "prospect",
+  "text": "Écoutez, le plus simple, euh, vous m'envoyez un petit truc par mail, et moi je lui pose sur son bureau.",
+  "start": 90.56,
+  "end": 97.12,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "close",
+  "objection": "send_email",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Écoutez,",
+    90.64,
+    91.44
+   ],
+   [
+    "le",
+    91.68,
+    91.84
+   ],
+   [
+    "plus",
+    91.96,
+    92.08
+   ],
+   [
+    "simple,",
+    92.32,
+    92.587
+   ],
+   [
+    "euh,",
+    92.613,
+    92.88
+   ],
+   [
+    "vous",
+    93.04,
+    93.12
+   ],
+   [
+    "m'envoyez",
+    93.2,
+    93.6
+   ],
+   [
+    "un",
+    93.68,
+    93.76
+   ],
+   [
+    "petit",
+    93.84,
+    94.0
+   ],
+   [
+    "truc",
+    94.04,
+    94.24
+   ],
+   [
+    "par",
+    94.36,
+    94.48
+   ],
+   [
+    "mail,",
+    94.64,
+    95.2
+   ],
+   [
+    "et",
+    95.28,
+    95.36
+   ],
+   [
+    "moi",
+    95.44,
+    95.6
+   ],
+   [
+    "je",
+    95.68,
+    95.76
+   ],
+   [
+    "lui",
+    95.8,
+    95.92
+   ],
+   [
+    "pose",
+    96.0,
+    96.24
+   ],
+   [
+    "sur",
+    96.32,
+    96.4
+   ],
+   [
+    "son",
+    96.48,
+    96.56
+   ],
+   [
+    "bureau.",
+    96.64,
+    97.2
+   ]
+  ]
+ },
+ {
+  "index": 16,
+  "speaker": "user",
+  "text": "Je peux, hein. Mais honnêtement, un mail, il va le lire entre deux chantiers... Alors que si je lui montre en direct, sur l'écran, Dumas en haut et vous en page deux, euh, ça parle tout de suite.",
+  "start": 97.42,
+  "end": 107.5,
+  "emotion": "interest",
+  "intensity": 0.5,
+  "delivery": [
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Je",
+    97.5,
+    97.58
+   ],
+   [
+    "peux,",
+    97.66,
+    97.86
+   ],
+   [
+    "hein.",
+    97.9,
+    98.46
+   ],
+   [
+    "Mais",
+    98.58,
+    98.7
+   ],
+   [
+    "honnêtement,",
+    98.753,
+    99.34
+   ],
+   [
+    "un",
+    99.42,
+    99.5
+   ],
+   [
+    "mail,",
+    99.58,
+    99.98
+   ],
+   [
+    "il",
+    100.02,
+    100.06
+   ],
+   [
+    "va",
+    100.14,
+    100.22
+   ],
+   [
+    "le",
+    100.26,
+    100.3
+   ],
+   [
+    "lire",
+    100.353,
+    100.46
+   ],
+   [
+    "entre",
+    100.58,
+    100.7
+   ],
+   [
+    "deux",
+    100.727,
+    100.78
+   ],
+   [
+    "chantiers...",
+    100.86,
+    101.66
+   ],
+   [
+    "Alors",
+    101.7,
+    101.9
+   ],
+   [
+    "que",
+    101.94,
+    101.98
+   ],
+   [
+    "si",
+    102.14,
+    102.22
+   ],
+   [
+    "je",
+    102.3,
+    102.34
+   ],
+   [
+    "lui",
+    102.38,
+    102.46
+   ],
+   [
+    "montre",
+    102.54,
+    102.78
+   ],
+   [
+    "en",
+    102.86,
+    102.94
+   ],
+   [
+    "direct,",
+    103.14,
+    103.5
+   ],
+   [
+    "sur",
+    103.58,
+    103.66
+   ],
+   [
+    "l'écran,",
+    103.713,
+    104.3
+   ],
+   [
+    "Dumas",
+    104.34,
+    104.62
+   ],
+   [
+    "en",
+    104.66,
+    104.7
+   ],
+   [
+    "haut",
+    104.78,
+    104.94
+   ],
+   [
+    "et",
+    105.1,
+    105.18
+   ],
+   [
+    "vous",
+    105.26,
+    105.34
+   ],
+   [
+    "en",
+    105.42,
+    105.5
+   ],
+   [
+    "page",
+    105.62,
+    105.74
+   ],
+   [
+    "deux,",
+    105.78,
+    106.3
+   ],
+   [
+    "euh,",
+    106.34,
+    106.593
+   ],
+   [
+    "ça",
+    106.647,
+    106.7
+   ],
+   [
+    "parle",
+    106.74,
+    106.86
+   ],
+   [
+    "tout",
+    106.9,
+    106.94
+   ],
+   [
+    "de",
+    107.02,
+    107.06
+   ],
+   [
+    "suite.",
+    107.1,
+    107.58
+   ]
+  ]
+ },
+ {
+  "index": 17,
+  "speaker": "prospect",
+  "text": "Ha ! Ça c'est sûr. Lui montrer Dumas en premier, il va bondir de sa chaise.",
+  "start": 107.7,
+  "end": 113.38,
+  "emotion": "enthusiasm",
+  "intensity": 0.7,
+  "delivery": [
+   "laughs"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ha",
+    107.78,
+    108.02
+   ],
+   [
+    "!",
+    108.42,
+    108.46
+   ],
+   [
+    "Ça",
+    108.5,
+    108.66
+   ],
+   [
+    "c'est",
+    108.74,
+    108.9
+   ],
+   [
+    "sûr.",
+    108.98,
+    109.7
+   ],
+   [
+    "Lui",
+    109.78,
+    109.86
+   ],
+   [
+    "montrer",
+    109.94,
+    110.26
+   ],
+   [
+    "Dumas",
+    110.34,
+    110.66
+   ],
+   [
+    "en",
+    110.74,
+    110.82
+   ],
+   [
+    "premier,",
+    110.94,
+    111.54
+   ],
+   [
+    "il",
+    111.62,
+    111.7
+   ],
+   [
+    "va",
+    111.78,
+    112.02
+   ],
+   [
+    "bondir",
+    112.18,
+    112.5
+   ],
+   [
+    "de",
+    112.58,
+    112.66
+   ],
+   [
+    "sa",
+    112.7,
+    112.74
+   ],
+   [
+    "chaise.",
+    112.82,
+    113.46
+   ]
+  ]
+ },
+ {
+  "index": 18,
+  "speaker": "user",
+  "text": "Voilà, voilà.",
+  "start": 113.48,
+  "end": 115.16,
+  "emotion": "enthusiasm",
+  "intensity": 0.4,
+  "delivery": [
+   "laughs"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Voilà,",
+    114.28,
+    114.6
+   ],
+   [
+    "voilà.",
+    114.64,
+    115.24
+   ]
+  ]
+ },
+ {
+  "index": 19,
+  "speaker": "prospect",
+  "text": "Par contre, euh, je vous préviens, hein. Côté sous, c'est serré. On a racheté un camion en janvier, le patron il compte chaque euro, chaque euro.",
+  "start": 115.76,
+  "end": 125.04,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "close",
+  "objection": "no_budget",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Par",
+    115.84,
+    116.0
+   ],
+   [
+    "contre,",
+    116.2,
+    116.44
+   ],
+   [
+    "euh,",
+    116.48,
+    116.88
+   ],
+   [
+    "je",
+    117.04,
+    117.12
+   ],
+   [
+    "vous",
+    117.2,
+    117.28
+   ],
+   [
+    "préviens,",
+    117.4,
+    117.72
+   ],
+   [
+    "hein.",
+    117.76,
+    118.24
+   ],
+   [
+    "Côté",
+    118.28,
+    118.56
+   ],
+   [
+    "sous,",
+    118.64,
+    119.12
+   ],
+   [
+    "c'est",
+    119.2,
+    119.36
+   ],
+   [
+    "serré.",
+    119.44,
+    120.16
+   ],
+   [
+    "On",
+    120.24,
+    120.32
+   ],
+   [
+    "a",
+    120.36,
+    120.4
+   ],
+   [
+    "racheté",
+    120.453,
+    120.72
+   ],
+   [
+    "un",
+    120.76,
+    120.8
+   ],
+   [
+    "camion",
+    120.88,
+    121.12
+   ],
+   [
+    "en",
+    121.2,
+    121.28
+   ],
+   [
+    "janvier,",
+    121.4,
+    122.0
+   ],
+   [
+    "le",
+    122.08,
+    122.16
+   ],
+   [
+    "patron",
+    122.24,
+    122.56
+   ],
+   [
+    "il",
+    122.64,
+    122.8
+   ],
+   [
+    "compte",
+    122.88,
+    123.28
+   ],
+   [
+    "chaque",
+    123.36,
+    123.6
+   ],
+   [
+    "euro,",
+    123.64,
+    124.24
+   ],
+   [
+    "chaque",
+    124.32,
+    124.56
+   ],
+   [
+    "euro.",
+    124.64,
+    125.12
+   ]
+  ]
+ },
+ {
+  "index": 20,
+  "speaker": "user",
+  "text": "Ouais, je comprends. Mais c'est pas, c'est pas des milliers d'euros, hein. Et le rendez-vous, il coûte rien. Vingt minutes, on regarde ensemble si ça vaut le coup.",
+  "start": 125.34,
+  "end": 133.34,
+  "emotion": "neutral",
+  "intensity": 0.4,
+  "delivery": [
+   "calm",
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ouais,",
+    125.5,
+    125.98
+   ],
+   [
+    "je",
+    126.02,
+    126.06
+   ],
+   [
+    "comprends.",
+    126.14,
+    127.02
+   ],
+   [
+    "Mais",
+    127.06,
+    127.1
+   ],
+   [
+    "c'est",
+    127.14,
+    127.26
+   ],
+   [
+    "pas,",
+    127.34,
+    127.9
+   ],
+   [
+    "c'est",
+    127.953,
+    128.06
+   ],
+   [
+    "pas",
+    128.1,
+    128.14
+   ],
+   [
+    "des",
+    128.22,
+    128.3
+   ],
+   [
+    "milliers",
+    128.38,
+    128.62
+   ],
+   [
+    "d'euros,",
+    128.647,
+    128.967
+   ],
+   [
+    "hein.",
+    128.993,
+    129.5
+   ],
+   [
+    "Et",
+    129.54,
+    129.58
+   ],
+   [
+    "le",
+    129.62,
+    129.66
+   ],
+   [
+    "rendez-vous,",
+    129.74,
+    130.22
+   ],
+   [
+    "il",
+    130.26,
+    130.3
+   ],
+   [
+    "coûte",
+    130.38,
+    130.54
+   ],
+   [
+    "rien.",
+    130.66,
+    131.18
+   ],
+   [
+    "Vingt",
+    131.207,
+    131.26
+   ],
+   [
+    "minutes,",
+    131.34,
+    131.82
+   ],
+   [
+    "on",
+    131.9,
+    131.94
+   ],
+   [
+    "regarde",
+    131.98,
+    132.22
+   ],
+   [
+    "ensemble",
+    132.38,
+    132.54
+   ],
+   [
+    "si",
+    132.58,
+    132.62
+   ],
+   [
+    "ça",
+    132.7,
+    132.78
+   ],
+   [
+    "vaut",
+    132.807,
+    132.86
+   ],
+   [
+    "le",
+    132.9,
+    132.94
+   ],
+   [
+    "coup.",
+    132.98,
+    133.42
+   ]
+  ]
+ },
+ {
+  "index": 21,
+  "speaker": "prospect",
+  "text": "Vingt minutes... Bon. Ben, ça peut se faire, ouais. Il est au dépôt le jeudi matin, en général.",
+  "start": 134.84,
+  "end": 142.12,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "thoughtful",
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Vingt",
+    135.067,
+    135.24
+   ],
+   [
+    "minutes...",
+    135.32,
+    136.6
+   ],
+   [
+    "Bon.",
+    136.76,
+    137.24
+   ],
+   [
+    "Ben,",
+    137.56,
+    137.96
+   ],
+   [
+    "ça",
+    138.04,
+    138.12
+   ],
+   [
+    "peut",
+    138.16,
+    138.24
+   ],
+   [
+    "se",
+    138.28,
+    138.36
+   ],
+   [
+    "faire,",
+    138.4,
+    138.68
+   ],
+   [
+    "ouais.",
+    138.72,
+    139.48
+   ],
+   [
+    "Il",
+    139.56,
+    139.64
+   ],
+   [
+    "est",
+    139.72,
+    139.8
+   ],
+   [
+    "au",
+    139.84,
+    139.88
+   ],
+   [
+    "dépôt",
+    139.96,
+    140.2
+   ],
+   [
+    "le",
+    140.28,
+    140.36
+   ],
+   [
+    "jeudi",
+    140.44,
+    140.68
+   ],
+   [
+    "matin,",
+    140.76,
+    141.24
+   ],
+   [
+    "en",
+    141.32,
+    141.4
+   ],
+   [
+    "général.",
+    141.44,
+    142.2
+   ]
+  ]
+ },
+ {
+  "index": 22,
+  "speaker": "user",
+  "text": "Jeudi, euh, neuf heures, ça irait ?",
+  "start": 142.32,
+  "end": 145.12,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "excited"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Jeudi,",
+    142.54,
+    143.2
+   ],
+   [
+    "euh,",
+    143.24,
+    143.68
+   ],
+   [
+    "neuf",
+    143.76,
+    143.92
+   ],
+   [
+    "heures,",
+    144.0,
+    144.4
+   ],
+   [
+    "ça",
+    144.48,
+    144.56
+   ],
+   [
+    "irait",
+    144.64,
+    144.88
+   ],
+   [
+    "?",
+    144.96,
+    145.2
+   ]
+  ]
+ },
+ {
+  "index": 23,
+  "speaker": "prospect",
+  "text": "Neuf heures, oui oui, c'est bon, je le note. Et venez avec votre capture de Dumas, hein !",
+  "start": 145.52,
+  "end": 151.92,
+  "emotion": "enthusiasm",
+  "intensity": 0.7,
+  "delivery": [
+   "laughs",
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Neuf",
+    146.4,
+    146.56
+   ],
+   [
+    "heures,",
+    146.64,
+    147.12
+   ],
+   [
+    "oui",
+    147.2,
+    147.28
+   ],
+   [
+    "oui,",
+    147.36,
+    147.68
+   ],
+   [
+    "c'est",
+    147.76,
+    147.92
+   ],
+   [
+    "bon,",
+    148.0,
+    148.32
+   ],
+   [
+    "je",
+    148.4,
+    148.48
+   ],
+   [
+    "le",
+    148.52,
+    148.56
+   ],
+   [
+    "note.",
+    148.72,
+    149.36
+   ],
+   [
+    "Et",
+    149.48,
+    149.6
+   ],
+   [
+    "venez",
+    149.76,
+    150.0
+   ],
+   [
+    "avec",
+    150.12,
+    150.24
+   ],
+   [
+    "votre",
+    150.28,
+    150.56
+   ],
+   [
+    "capture",
+    150.76,
+    150.96
+   ],
+   [
+    "de",
+    151.04,
+    151.12
+   ],
+   [
+    "Dumas,",
+    151.16,
+    151.547
+   ],
+   [
+    "hein",
+    151.573,
+    151.68
+   ],
+   [
+    "!",
+    151.76,
+    152.0
+   ]
+  ]
+ },
+ {
+  "index": 24,
+  "speaker": "user",
+  "text": "Promis ! Bon ben, merci beaucoup Bastien, euh, à jeudi alors.",
+  "start": 152.12,
+  "end": 155.8,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "warm",
+   "excited"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Promis",
+    152.411,
+    152.6
+   ],
+   [
+    "!",
+    153.0,
+    153.04
+   ],
+   [
+    "Bon",
+    153.08,
+    153.16
+   ],
+   [
+    "ben,",
+    153.24,
+    153.52
+   ],
+   [
+    "merci",
+    153.56,
+    153.8
+   ],
+   [
+    "beaucoup",
+    153.84,
+    154.04
+   ],
+   [
+    "Bastien,",
+    154.12,
+    154.6
+   ],
+   [
+    "euh,",
+    154.68,
+    154.947
+   ],
+   [
+    "à",
+    154.973,
+    155.0
+   ],
+   [
+    "jeudi",
+    155.04,
+    155.32
+   ],
+   [
+    "alors.",
+    155.4,
+    155.88
+   ]
+  ]
+ },
+ {
+  "index": 25,
+  "speaker": "prospect",
+  "text": "À jeudi. Bonne journée !",
+  "start": 156.0,
+  "end": 158.08,
+  "emotion": "enthusiasm",
+  "intensity": 0.4,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "À",
+    156.08,
+    156.16
+   ],
+   [
+    "jeudi.",
+    156.24,
+    157.04
+   ],
+   [
+    "Bonne",
+    157.12,
+    157.28
+   ],
+   [
+    "journée",
+    157.36,
+    157.76
+   ],
+   [
+    "!",
+    157.92,
+    158.08
+   ]
+  ]
+ }
+]

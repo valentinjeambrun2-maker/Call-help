@@ -1,0 +1,2952 @@
+[
+ {
+  "index": 0,
+  "speaker": "user",
+  "text": "Hi, is this, uh, Dennis Halloway?",
+  "start": 0.3,
+  "end": 2.54,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "rushed"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hi,",
+    0.38,
+    0.62
+   ],
+   [
+    "is",
+    0.7,
+    0.86
+   ],
+   [
+    "this,",
+    0.94,
+    1.22
+   ],
+   [
+    "uh,",
+    1.26,
+    1.46
+   ],
+   [
+    "Dennis",
+    1.58,
+    1.82
+   ],
+   [
+    "Halloway?",
+    1.86,
+    2.38
+   ]
+  ]
+ },
+ {
+  "index": 1,
+  "speaker": "prospect",
+  "text": "Yeah, speaking. Who's this?",
+  "start": 3.04,
+  "end": 5.6,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Yeah,",
+    3.2,
+    3.76
+   ],
+   [
+    "speaking.",
+    3.84,
+    4.8
+   ],
+   [
+    "Who's",
+    4.88,
+    5.04
+   ],
+   [
+    "this?",
+    5.24,
+    5.68
+   ]
+  ]
+ },
+ {
+  "index": 2,
+  "speaker": "user",
+  "text": "Hey Dennis, it's Jake from The Herakles. Just so you know, uh, I've got an AI assistant that analyses the call, kind of helps me take notes. That okay?",
+  "start": 5.8,
+  "end": 14.52,
+  "emotion": "enthusiasm",
+  "intensity": 0.4,
+  "delivery": [
+   "rushed",
+   "warm"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hey",
+    5.88,
+    6.04
+   ],
+   [
+    "Dennis,",
+    6.12,
+    6.6
+   ],
+   [
+    "it's",
+    6.68,
+    6.92
+   ],
+   [
+    "Jake",
+    7.04,
+    7.16
+   ],
+   [
+    "from",
+    7.24,
+    7.32
+   ],
+   [
+    "The",
+    7.36,
+    7.4
+   ],
+   [
+    "Herakles.",
+    7.48,
+    8.28
+   ],
+   [
+    "Just",
+    8.36,
+    8.44
+   ],
+   [
+    "so",
+    8.52,
+    8.6
+   ],
+   [
+    "you",
+    8.68,
+    8.76
+   ],
+   [
+    "know,",
+    8.88,
+    9.16
+   ],
+   [
+    "uh,",
+    9.24,
+    9.4
+   ],
+   [
+    "I've",
+    9.453,
+    9.56
+   ],
+   [
+    "got",
+    9.6,
+    9.64
+   ],
+   [
+    "an",
+    9.72,
+    9.88
+   ],
+   [
+    "AI",
+    9.96,
+    10.2
+   ],
+   [
+    "assistant",
+    10.28,
+    10.76
+   ],
+   [
+    "that",
+    10.88,
+    11.0
+   ],
+   [
+    "analyses",
+    11.08,
+    11.56
+   ],
+   [
+    "the",
+    11.64,
+    11.72
+   ],
+   [
+    "call,",
+    11.88,
+    12.2
+   ],
+   [
+    "kind",
+    12.28,
+    12.36
+   ],
+   [
+    "of",
+    12.44,
+    12.68
+   ],
+   [
+    "helps",
+    12.76,
+    12.92
+   ],
+   [
+    "me",
+    13.0,
+    13.08
+   ],
+   [
+    "take",
+    13.16,
+    13.24
+   ],
+   [
+    "notes.",
+    13.32,
+    13.88
+   ],
+   [
+    "That",
+    13.96,
+    14.04
+   ],
+   [
+    "okay?",
+    14.12,
+    14.6
+   ]
+  ]
+ },
+ {
+  "index": 3,
+  "speaker": "prospect",
+  "text": "Uh... sure, I guess. What's this about?",
+  "start": 15.42,
+  "end": 19.66,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "announcement",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Uh...",
+    15.58,
+    16.62
+   ],
+   [
+    "sure,",
+    16.86,
+    17.5
+   ],
+   [
+    "I",
+    17.58,
+    17.66
+   ],
+   [
+    "guess.",
+    17.9,
+    18.22
+   ],
+   [
+    "What's",
+    18.62,
+    18.86
+   ],
+   [
+    "this",
+    18.94,
+    19.02
+   ],
+   [
+    "about?",
+    19.1,
+    19.74
+   ]
+  ]
+ },
+ {
+  "index": 4,
+  "speaker": "user",
+  "text": "Great, great. So, we're a digital studio and we build custom business software, like, tools made for your agency specifically, so instead of juggling spreadsheets and, and five different apps, you get one system that tracks your listings, your leads, your showings, your follow-ups, all of it, and the cool part is—",
+  "start": 19.81,
+  "end": 36.85,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "rushed",
+   "excited"
+  ],
+  "step": "hook",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Great,",
+    19.89,
+    20.21
+   ],
+   [
+    "great.",
+    20.37,
+    20.57
+   ],
+   [
+    "So,",
+    20.61,
+    21.01
+   ],
+   [
+    "we're",
+    21.05,
+    21.17
+   ],
+   [
+    "a",
+    21.21,
+    21.25
+   ],
+   [
+    "digital",
+    21.33,
+    21.57
+   ],
+   [
+    "studio",
+    21.73,
+    22.13
+   ],
+   [
+    "and",
+    22.21,
+    22.29
+   ],
+   [
+    "we",
+    22.37,
+    22.45
+   ],
+   [
+    "build",
+    22.57,
+    22.69
+   ],
+   [
+    "custom",
+    22.77,
+    23.09
+   ],
+   [
+    "business",
+    23.17,
+    23.49
+   ],
+   [
+    "software,",
+    23.57,
+    24.13
+   ],
+   [
+    "like,",
+    24.21,
+    24.45
+   ],
+   [
+    "tools",
+    24.61,
+    24.77
+   ],
+   [
+    "made",
+    24.85,
+    24.93
+   ],
+   [
+    "for",
+    25.01,
+    25.09
+   ],
+   [
+    "your",
+    25.17,
+    25.33
+   ],
+   [
+    "agency",
+    25.49,
+    25.81
+   ],
+   [
+    "specifically,",
+    25.89,
+    26.69
+   ],
+   [
+    "so",
+    26.89,
+    27.09
+   ],
+   [
+    "instead",
+    27.17,
+    27.41
+   ],
+   [
+    "of",
+    27.45,
+    27.49
+   ],
+   [
+    "juggling",
+    27.57,
+    27.89
+   ],
+   [
+    "spreadsheets",
+    27.97,
+    28.69
+   ],
+   [
+    "and,",
+    28.77,
+    28.93
+   ],
+   [
+    "and",
+    29.01,
+    29.09
+   ],
+   [
+    "five",
+    29.21,
+    29.33
+   ],
+   [
+    "different",
+    29.41,
+    29.65
+   ],
+   [
+    "apps,",
+    29.73,
+    30.21
+   ],
+   [
+    "you",
+    30.29,
+    30.33
+   ],
+   [
+    "get",
+    30.37,
+    30.69
+   ],
+   [
+    "one",
+    30.77,
+    30.85
+   ],
+   [
+    "system",
+    30.93,
+    31.33
+   ],
+   [
+    "that",
+    31.41,
+    31.49
+   ],
+   [
+    "tracks",
+    31.65,
+    31.81
+   ],
+   [
+    "your",
+    31.89,
+    31.97
+   ],
+   [
+    "listings,",
+    32.09,
+    32.53
+   ],
+   [
+    "your",
+    32.61,
+    32.69
+   ],
+   [
+    "leads,",
+    32.77,
+    33.17
+   ],
+   [
+    "your",
+    33.25,
+    33.41
+   ],
+   [
+    "showings,",
+    33.53,
+    33.943
+   ],
+   [
+    "your",
+    33.997,
+    34.05
+   ],
+   [
+    "follow-ups,",
+    34.17,
+    34.77
+   ],
+   [
+    "all",
+    34.85,
+    34.93
+   ],
+   [
+    "of",
+    35.01,
+    35.09
+   ],
+   [
+    "it,",
+    35.17,
+    35.49
+   ],
+   [
+    "and",
+    35.53,
+    35.57
+   ],
+   [
+    "the",
+    35.65,
+    35.73
+   ],
+   [
+    "cool",
+    35.81,
+    35.97
+   ],
+   [
+    "part",
+    36.05,
+    36.21
+   ],
+   [
+    "is—",
+    36.29,
+    36.85
+   ]
+  ]
+ },
+ {
+  "index": 5,
+  "speaker": "prospect",
+  "text": "Okay, hang on, hang on. I've got a showing in, like, twenty minutes. I really can't do a whole pitch right now.",
+  "start": 36.25,
+  "end": 41.93,
+  "emotion": "hesitation",
+  "intensity": 0.6,
+  "delivery": [
+   "interrupting",
+   "rushed"
+  ],
+  "step": "hook",
+  "objection": "no_time",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Okay,",
+    36.468,
+    36.57
+   ],
+   [
+    "hang",
+    36.65,
+    36.81
+   ],
+   [
+    "on,",
+    36.89,
+    37.01
+   ],
+   [
+    "hang",
+    37.05,
+    37.13
+   ],
+   [
+    "on.",
+    37.21,
+    37.69
+   ],
+   [
+    "I've",
+    37.73,
+    37.85
+   ],
+   [
+    "got",
+    37.93,
+    38.01
+   ],
+   [
+    "a",
+    38.09,
+    38.17
+   ],
+   [
+    "showing",
+    38.29,
+    38.49
+   ],
+   [
+    "in,",
+    38.57,
+    38.73
+   ],
+   [
+    "like,",
+    38.81,
+    38.93
+   ],
+   [
+    "twenty",
+    38.97,
+    39.21
+   ],
+   [
+    "minutes.",
+    39.29,
+    39.93
+   ],
+   [
+    "I",
+    40.09,
+    40.13
+   ],
+   [
+    "really",
+    40.17,
+    40.41
+   ],
+   [
+    "can't",
+    40.45,
+    40.57
+   ],
+   [
+    "do",
+    40.65,
+    40.73
+   ],
+   [
+    "a",
+    40.77,
+    40.81
+   ],
+   [
+    "whole",
+    40.93,
+    41.05
+   ],
+   [
+    "pitch",
+    41.17,
+    41.29
+   ],
+   [
+    "right",
+    41.37,
+    41.53
+   ],
+   [
+    "now.",
+    41.65,
+    42.01
+   ]
+  ]
+ },
+ {
+  "index": 6,
+  "speaker": "user",
+  "text": "Totally, totally fair. Sorry. Just, uh, one quick question then?",
+  "start": 42.33,
+  "end": 47.21,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "hesitant"
+  ],
+  "step": "hook",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Totally,",
+    42.41,
+    43.21
+   ],
+   [
+    "totally",
+    43.29,
+    43.61
+   ],
+   [
+    "fair.",
+    43.69,
+    44.25
+   ],
+   [
+    "Sorry.",
+    44.45,
+    44.97
+   ],
+   [
+    "Just,",
+    45.13,
+    45.33
+   ],
+   [
+    "uh,",
+    45.37,
+    45.77
+   ],
+   [
+    "one",
+    45.85,
+    45.93
+   ],
+   [
+    "quick",
+    46.17,
+    46.33
+   ],
+   [
+    "question",
+    46.41,
+    46.73
+   ],
+   [
+    "then?",
+    46.81,
+    47.29
+   ]
+  ]
+ },
+ {
+  "index": 7,
+  "speaker": "prospect",
+  "text": "...Go ahead.",
+  "start": 48.41,
+  "end": 50.57,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "sighs"
+  ],
+  "step": "hook",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "...Go",
+    49.49,
+    49.61
+   ],
+   [
+    "ahead.",
+    49.69,
+    50.65
+   ]
+  ]
+ },
+ {
+  "index": 8,
+  "speaker": "user",
+  "text": "How are you guys keeping track of leads right now?",
+  "start": 50.87,
+  "end": 53.43,
+  "emotion": "neutral",
+  "intensity": 0.3,
+  "delivery": [
+   "calm"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "How",
+    51.03,
+    51.19
+   ],
+   [
+    "are",
+    51.23,
+    51.27
+   ],
+   [
+    "you",
+    51.35,
+    51.43
+   ],
+   [
+    "guys",
+    51.47,
+    51.67
+   ],
+   [
+    "keeping",
+    51.75,
+    51.99
+   ],
+   [
+    "track",
+    52.07,
+    52.23
+   ],
+   [
+    "of",
+    52.31,
+    52.39
+   ],
+   [
+    "leads",
+    52.47,
+    52.71
+   ],
+   [
+    "right",
+    52.79,
+    52.95
+   ],
+   [
+    "now?",
+    53.03,
+    53.51
+   ]
+  ]
+ },
+ {
+  "index": 9,
+  "speaker": "prospect",
+  "text": "Honestly? Um, a shared spreadsheet and a CRM we kind of, kind of half use. Leads come in from the website, from email, from the portals, and somebody's supposed to copy them over, and... yeah. My agents hate it.",
+  "start": 54.23,
+  "end": 69.91,
+  "emotion": "interest",
+  "intensity": 0.4,
+  "delivery": [
+   "thoughtful"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Honestly?",
+    54.763,
+    55.27
+   ],
+   [
+    "Um,",
+    55.43,
+    55.95
+   ],
+   [
+    "a",
+    56.15,
+    56.23
+   ],
+   [
+    "shared",
+    56.31,
+    56.55
+   ],
+   [
+    "spreadsheet",
+    56.63,
+    57.35
+   ],
+   [
+    "and",
+    57.43,
+    57.67
+   ],
+   [
+    "a",
+    57.75,
+    57.83
+   ],
+   [
+    "CRM",
+    57.91,
+    58.47
+   ],
+   [
+    "we",
+    58.55,
+    58.63
+   ],
+   [
+    "kind",
+    58.71,
+    58.87
+   ],
+   [
+    "of,",
+    58.95,
+    59.39
+   ],
+   [
+    "kind",
+    59.43,
+    59.51
+   ],
+   [
+    "of",
+    59.59,
+    59.75
+   ],
+   [
+    "half",
+    59.91,
+    60.07
+   ],
+   [
+    "use.",
+    60.23,
+    61.11
+   ],
+   [
+    "Leads",
+    61.19,
+    61.43
+   ],
+   [
+    "come",
+    61.51,
+    61.59
+   ],
+   [
+    "in",
+    61.67,
+    61.75
+   ],
+   [
+    "from",
+    61.83,
+    61.91
+   ],
+   [
+    "the",
+    61.95,
+    61.99
+   ],
+   [
+    "website,",
+    62.35,
+    62.75
+   ],
+   [
+    "from",
+    62.79,
+    62.95
+   ],
+   [
+    "email,",
+    63.03,
+    63.723
+   ],
+   [
+    "from",
+    63.777,
+    63.83
+   ],
+   [
+    "the",
+    63.87,
+    63.91
+   ],
+   [
+    "portals,",
+    63.99,
+    64.91
+   ],
+   [
+    "and",
+    64.95,
+    65.19
+   ],
+   [
+    "somebody's",
+    65.27,
+    65.59
+   ],
+   [
+    "supposed",
+    65.67,
+    65.91
+   ],
+   [
+    "to",
+    65.99,
+    66.07
+   ],
+   [
+    "copy",
+    66.23,
+    66.39
+   ],
+   [
+    "them",
+    66.47,
+    66.55
+   ],
+   [
+    "over,",
+    66.63,
+    66.99
+   ],
+   [
+    "and...",
+    67.03,
+    67.79
+   ],
+   [
+    "yeah.",
+    67.83,
+    68.63
+   ],
+   [
+    "My",
+    68.71,
+    68.79
+   ],
+   [
+    "agents",
+    68.87,
+    69.27
+   ],
+   [
+    "hate",
+    69.35,
+    69.59
+   ],
+   [
+    "it.",
+    69.67,
+    69.99
+   ]
+  ]
+ },
+ {
+  "index": 10,
+  "speaker": "user",
+  "text": "Mm-hmm.",
+  "start": 70.01,
+  "end": 70.97,
+  "emotion": "neutral",
+  "intensity": 0.2,
+  "delivery": [],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": false,
+  "words": [
+   [
+    "Mm-hmm.",
+    70.01,
+    71.05
+   ]
+  ]
+ },
+ {
+  "index": 11,
+  "speaker": "prospect",
+  "text": "Why, what would you even do differently?",
+  "start": 71.27,
+  "end": 74.07,
+  "emotion": "interest",
+  "intensity": 0.5,
+  "delivery": [
+   "curious"
+  ],
+  "step": "qualify",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Why,",
+    71.43,
+    72.23
+   ],
+   [
+    "what",
+    72.39,
+    72.55
+   ],
+   [
+    "would",
+    72.63,
+    72.71
+   ],
+   [
+    "you",
+    72.79,
+    72.87
+   ],
+   [
+    "even",
+    72.99,
+    73.11
+   ],
+   [
+    "do",
+    73.19,
+    73.35
+   ],
+   [
+    "differently?",
+    73.39,
+    74.15
+   ]
+  ]
+ },
+ {
+  "index": 12,
+  "speaker": "user",
+  "text": "So, uh, we'd sit down with your team, see how they actually work, and build around that. Like, a lead comes in from your website, it gets assigned to an agent automatically, the agent gets a text, and you see the whole pipeline on one screen. No copying anything.",
+  "start": 74.32,
+  "end": 89.84,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "excited"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "So,",
+    74.4,
+    74.88
+   ],
+   [
+    "uh,",
+    74.96,
+    75.12
+   ],
+   [
+    "we'd",
+    75.2,
+    75.36
+   ],
+   [
+    "sit",
+    75.48,
+    75.6
+   ],
+   [
+    "down",
+    75.68,
+    75.76
+   ],
+   [
+    "with",
+    75.84,
+    75.92
+   ],
+   [
+    "your",
+    76.0,
+    76.08
+   ],
+   [
+    "team,",
+    76.24,
+    76.64
+   ],
+   [
+    "see",
+    76.72,
+    76.88
+   ],
+   [
+    "how",
+    76.96,
+    77.04
+   ],
+   [
+    "they",
+    77.16,
+    77.28
+   ],
+   [
+    "actually",
+    77.52,
+    77.76
+   ],
+   [
+    "work,",
+    77.92,
+    78.24
+   ],
+   [
+    "and",
+    78.32,
+    78.4
+   ],
+   [
+    "build",
+    78.52,
+    78.64
+   ],
+   [
+    "around",
+    78.8,
+    78.96
+   ],
+   [
+    "that.",
+    79.12,
+    79.68
+   ],
+   [
+    "Like,",
+    79.8,
+    80.16
+   ],
+   [
+    "a",
+    80.2,
+    80.24
+   ],
+   [
+    "lead",
+    80.32,
+    80.56
+   ],
+   [
+    "comes",
+    80.68,
+    80.8
+   ],
+   [
+    "in",
+    80.88,
+    80.96
+   ],
+   [
+    "from",
+    81.0,
+    81.04
+   ],
+   [
+    "your",
+    81.12,
+    81.2
+   ],
+   [
+    "website,",
+    81.28,
+    81.92
+   ],
+   [
+    "it",
+    81.96,
+    82.0
+   ],
+   [
+    "gets",
+    82.08,
+    82.24
+   ],
+   [
+    "assigned",
+    82.44,
+    82.64
+   ],
+   [
+    "to",
+    82.68,
+    82.72
+   ],
+   [
+    "an",
+    82.8,
+    82.88
+   ],
+   [
+    "agent",
+    83.04,
+    83.2
+   ],
+   [
+    "automatically,",
+    83.28,
+    84.24
+   ],
+   [
+    "the",
+    84.32,
+    84.4
+   ],
+   [
+    "agent",
+    84.56,
+    84.72
+   ],
+   [
+    "gets",
+    84.8,
+    84.88
+   ],
+   [
+    "a",
+    84.96,
+    85.04
+   ],
+   [
+    "text,",
+    85.24,
+    85.6
+   ],
+   [
+    "and",
+    85.64,
+    85.68
+   ],
+   [
+    "you",
+    85.76,
+    85.84
+   ],
+   [
+    "see",
+    85.92,
+    86.0
+   ],
+   [
+    "the",
+    86.12,
+    86.24
+   ],
+   [
+    "whole",
+    86.36,
+    86.48
+   ],
+   [
+    "pipeline",
+    86.56,
+    87.04
+   ],
+   [
+    "on",
+    87.12,
+    87.36
+   ],
+   [
+    "one",
+    87.44,
+    87.52
+   ],
+   [
+    "screen.",
+    87.68,
+    88.4
+   ],
+   [
+    "No",
+    88.48,
+    88.56
+   ],
+   [
+    "copying",
+    88.64,
+    89.12
+   ],
+   [
+    "anything.",
+    89.2,
+    89.84
+   ]
+  ]
+ },
+ {
+  "index": 13,
+  "speaker": "prospect",
+  "text": "Huh. Okay, that's... that's actually the exact thing I complain about every Monday.",
+  "start": 90.54,
+  "end": 96.54,
+  "emotion": "interest",
+  "intensity": 0.6,
+  "delivery": [
+   "laughs",
+   "curious"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Huh.",
+    90.76,
+    91.3
+   ],
+   [
+    "Okay,",
+    91.58,
+    92.14
+   ],
+   [
+    "that's...",
+    92.26,
+    92.94
+   ],
+   [
+    "that's",
+    93.02,
+    93.18
+   ],
+   [
+    "actually",
+    93.38,
+    93.58
+   ],
+   [
+    "the",
+    93.66,
+    93.74
+   ],
+   [
+    "exact",
+    94.02,
+    94.3
+   ],
+   [
+    "thing",
+    94.38,
+    94.54
+   ],
+   [
+    "I",
+    94.58,
+    94.62
+   ],
+   [
+    "complain",
+    94.7,
+    95.02
+   ],
+   [
+    "about",
+    95.1,
+    95.34
+   ],
+   [
+    "every",
+    95.5,
+    95.82
+   ],
+   [
+    "Monday.",
+    95.9,
+    96.62
+   ]
+  ]
+ },
+ {
+  "index": 14,
+  "speaker": "user",
+  "text": "Right, yeah, we hear that a lot from agencies.",
+  "start": 96.74,
+  "end": 100.42,
+  "emotion": "enthusiasm",
+  "intensity": 0.4,
+  "delivery": [
+   "warm"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Right,",
+    96.9,
+    97.62
+   ],
+   [
+    "yeah,",
+    97.7,
+    98.34
+   ],
+   [
+    "we",
+    98.42,
+    98.5
+   ],
+   [
+    "hear",
+    98.58,
+    98.74
+   ],
+   [
+    "that",
+    98.82,
+    98.9
+   ],
+   [
+    "a",
+    98.94,
+    98.98
+   ],
+   [
+    "lot",
+    99.14,
+    99.38
+   ],
+   [
+    "from",
+    99.46,
+    99.54
+   ],
+   [
+    "agencies.",
+    99.62,
+    100.5
+   ]
+  ]
+ },
+ {
+  "index": 15,
+  "speaker": "prospect",
+  "text": "But, uh, custom software, that sounds pricey. We're twelve people. I'm not exactly sitting on some big tech budget here.",
+  "start": 101.02,
+  "end": 109.58,
+  "emotion": "hesitation",
+  "intensity": 0.5,
+  "delivery": [
+   "skeptical"
+  ],
+  "step": "value",
+  "objection": "no_budget",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "But,",
+    101.1,
+    101.5
+   ],
+   [
+    "uh,",
+    101.58,
+    101.98
+   ],
+   [
+    "custom",
+    102.14,
+    102.54
+   ],
+   [
+    "software,",
+    102.7,
+    103.66
+   ],
+   [
+    "that",
+    103.74,
+    103.82
+   ],
+   [
+    "sounds",
+    103.98,
+    104.14
+   ],
+   [
+    "pricey.",
+    104.22,
+    105.18
+   ],
+   [
+    "We're",
+    105.22,
+    105.42
+   ],
+   [
+    "twelve",
+    105.5,
+    105.74
+   ],
+   [
+    "people.",
+    105.9,
+    106.62
+   ],
+   [
+    "I'm",
+    106.66,
+    106.78
+   ],
+   [
+    "not",
+    106.86,
+    106.94
+   ],
+   [
+    "exactly",
+    107.02,
+    107.34
+   ],
+   [
+    "sitting",
+    107.42,
+    107.66
+   ],
+   [
+    "on",
+    107.74,
+    107.82
+   ],
+   [
+    "some",
+    107.9,
+    108.06
+   ],
+   [
+    "big",
+    108.22,
+    108.38
+   ],
+   [
+    "tech",
+    108.54,
+    108.7
+   ],
+   [
+    "budget",
+    108.78,
+    109.1
+   ],
+   [
+    "here.",
+    109.26,
+    109.66
+   ]
+  ]
+ },
+ {
+  "index": 16,
+  "speaker": "user",
+  "text": "Yeah, no, I get it. So we usually start small, like a first version with just the lead piece, and it's priced more like, um, a few months of what you're probably paying for that CRM nobody uses.",
+  "start": 109.88,
+  "end": 123.16,
+  "emotion": "neutral",
+  "intensity": 0.4,
+  "delivery": [
+   "calm"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Yeah,",
+    110.04,
+    110.52
+   ],
+   [
+    "no,",
+    110.6,
+    111.08
+   ],
+   [
+    "I",
+    111.16,
+    111.24
+   ],
+   [
+    "get",
+    111.32,
+    111.4
+   ],
+   [
+    "it.",
+    111.48,
+    111.88
+   ],
+   [
+    "So",
+    112.0,
+    112.12
+   ],
+   [
+    "we",
+    112.36,
+    112.44
+   ],
+   [
+    "usually",
+    112.52,
+    112.84
+   ],
+   [
+    "start",
+    112.92,
+    113.16
+   ],
+   [
+    "small,",
+    113.24,
+    113.88
+   ],
+   [
+    "like",
+    114.04,
+    114.2
+   ],
+   [
+    "a",
+    114.36,
+    114.44
+   ],
+   [
+    "first",
+    114.52,
+    114.76
+   ],
+   [
+    "version",
+    114.84,
+    115.24
+   ],
+   [
+    "with",
+    115.36,
+    115.48
+   ],
+   [
+    "just",
+    115.56,
+    115.72
+   ],
+   [
+    "the",
+    115.8,
+    115.84
+   ],
+   [
+    "lead",
+    115.88,
+    116.12
+   ],
+   [
+    "piece,",
+    116.32,
+    116.76
+   ],
+   [
+    "and",
+    116.8,
+    116.84
+   ],
+   [
+    "it's",
+    116.92,
+    117.08
+   ],
+   [
+    "priced",
+    117.16,
+    117.48
+   ],
+   [
+    "more",
+    117.6,
+    117.72
+   ],
+   [
+    "like,",
+    117.92,
+    118.28
+   ],
+   [
+    "um,",
+    118.36,
+    118.68
+   ],
+   [
+    "a",
+    119.08,
+    119.24
+   ],
+   [
+    "few",
+    119.32,
+    119.4
+   ],
+   [
+    "months",
+    119.56,
+    119.88
+   ],
+   [
+    "of",
+    119.96,
+    120.04
+   ],
+   [
+    "what",
+    120.12,
+    120.2
+   ],
+   [
+    "you're",
+    120.24,
+    120.36
+   ],
+   [
+    "probably",
+    120.56,
+    120.76
+   ],
+   [
+    "paying",
+    120.84,
+    121.08
+   ],
+   [
+    "for",
+    121.16,
+    121.24
+   ],
+   [
+    "that",
+    121.32,
+    121.4
+   ],
+   [
+    "CRM",
+    121.56,
+    122.04
+   ],
+   [
+    "nobody",
+    122.12,
+    122.44
+   ],
+   [
+    "uses.",
+    122.52,
+    123.24
+   ]
+  ]
+ },
+ {
+  "index": 17,
+  "speaker": "prospect",
+  "text": "Wait, really? Okay. And it would, uh, talk to our website? And the portals?",
+  "start": 123.56,
+  "end": 129.16,
+  "emotion": "interest",
+  "intensity": 0.7,
+  "delivery": [
+   "curious"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Wait,",
+    123.64,
+    123.96
+   ],
+   [
+    "really?",
+    124.04,
+    124.84
+   ],
+   [
+    "Okay.",
+    124.92,
+    125.8
+   ],
+   [
+    "And",
+    125.96,
+    126.12
+   ],
+   [
+    "it",
+    126.2,
+    126.28
+   ],
+   [
+    "would,",
+    126.36,
+    126.64
+   ],
+   [
+    "uh,",
+    126.68,
+    127.0
+   ],
+   [
+    "talk",
+    127.12,
+    127.24
+   ],
+   [
+    "to",
+    127.28,
+    127.32
+   ],
+   [
+    "our",
+    127.4,
+    127.48
+   ],
+   [
+    "website?",
+    127.88,
+    128.333
+   ],
+   [
+    "And",
+    128.387,
+    128.44
+   ],
+   [
+    "the",
+    128.48,
+    128.52
+   ],
+   [
+    "portals?",
+    128.6,
+    129.24
+   ]
+  ]
+ },
+ {
+  "index": 18,
+  "speaker": "user",
+  "text": "Yep, yep. Website, email, and the listing portals too, as long as they've got some kind of export.",
+  "start": 129.36,
+  "end": 135.2,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "excited"
+  ],
+  "step": "value",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Yep,",
+    129.44,
+    129.72
+   ],
+   [
+    "yep.",
+    129.76,
+    130.32
+   ],
+   [
+    "Website,",
+    130.6,
+    131.04
+   ],
+   [
+    "email,",
+    131.12,
+    131.68
+   ],
+   [
+    "and",
+    131.76,
+    131.84
+   ],
+   [
+    "the",
+    131.88,
+    131.92
+   ],
+   [
+    "listing",
+    132.08,
+    132.24
+   ],
+   [
+    "portals",
+    132.32,
+    132.64
+   ],
+   [
+    "too,",
+    132.72,
+    133.2
+   ],
+   [
+    "as",
+    133.28,
+    133.36
+   ],
+   [
+    "long",
+    133.44,
+    133.52
+   ],
+   [
+    "as",
+    133.56,
+    133.6
+   ],
+   [
+    "they've",
+    133.64,
+    133.76
+   ],
+   [
+    "got",
+    133.84,
+    133.92
+   ],
+   [
+    "some",
+    134.0,
+    134.16
+   ],
+   [
+    "kind",
+    134.24,
+    134.4
+   ],
+   [
+    "of",
+    134.44,
+    134.48
+   ],
+   [
+    "export.",
+    134.56,
+    135.28
+   ]
+  ]
+ },
+ {
+  "index": 19,
+  "speaker": "prospect",
+  "text": "Okay, now I'm curious. Tell you what, just shoot me an email with some examples and I'll look at it tonight.",
+  "start": 135.7,
+  "end": 143.06,
+  "emotion": "interest",
+  "intensity": 0.6,
+  "delivery": [
+   "thoughtful"
+  ],
+  "step": "close",
+  "objection": "send_email",
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Okay,",
+    135.78,
+    136.66
+   ],
+   [
+    "now",
+    136.82,
+    137.06
+   ],
+   [
+    "I'm",
+    137.1,
+    137.3
+   ],
+   [
+    "curious.",
+    137.46,
+    138.3
+   ],
+   [
+    "Tell",
+    138.58,
+    138.74
+   ],
+   [
+    "you",
+    138.78,
+    138.82
+   ],
+   [
+    "what,",
+    138.9,
+    139.38
+   ],
+   [
+    "just",
+    139.46,
+    139.62
+   ],
+   [
+    "shoot",
+    139.74,
+    139.86
+   ],
+   [
+    "me",
+    139.9,
+    139.94
+   ],
+   [
+    "an",
+    140.02,
+    140.1
+   ],
+   [
+    "email",
+    140.18,
+    140.5
+   ],
+   [
+    "with",
+    140.58,
+    140.66
+   ],
+   [
+    "some",
+    140.74,
+    140.82
+   ],
+   [
+    "examples",
+    141.18,
+    141.54
+   ],
+   [
+    "and",
+    141.62,
+    141.86
+   ],
+   [
+    "I'll",
+    141.94,
+    142.1
+   ],
+   [
+    "look",
+    142.18,
+    142.26
+   ],
+   [
+    "at",
+    142.3,
+    142.34
+   ],
+   [
+    "it",
+    142.42,
+    142.5
+   ],
+   [
+    "tonight.",
+    142.62,
+    143.14
+   ]
+  ]
+ },
+ {
+  "index": 20,
+  "speaker": "user",
+  "text": "I can definitely do that. But, um, honestly, examples won't mean much without seeing your setup. Could we do a quick twenty-minute video call? I'd show you a demo we built for an agency, like, pretty much your size.",
+  "start": 143.36,
+  "end": 156.08,
+  "emotion": "hesitation",
+  "intensity": 0.4,
+  "delivery": [
+   "hesitant",
+   "warm"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "I",
+    143.52,
+    143.6
+   ],
+   [
+    "can",
+    143.68,
+    144.0
+   ],
+   [
+    "definitely",
+    144.12,
+    144.56
+   ],
+   [
+    "do",
+    144.64,
+    144.72
+   ],
+   [
+    "that.",
+    144.88,
+    145.24
+   ],
+   [
+    "But,",
+    145.44,
+    145.8
+   ],
+   [
+    "um,",
+    145.84,
+    146.2
+   ],
+   [
+    "honestly,",
+    146.4,
+    147.04
+   ],
+   [
+    "examples",
+    147.12,
+    147.68
+   ],
+   [
+    "won't",
+    147.76,
+    148.0
+   ],
+   [
+    "mean",
+    148.12,
+    148.24
+   ],
+   [
+    "much",
+    148.32,
+    148.48
+   ],
+   [
+    "without",
+    148.64,
+    148.8
+   ],
+   [
+    "seeing",
+    148.88,
+    149.12
+   ],
+   [
+    "your",
+    149.2,
+    149.28
+   ],
+   [
+    "setup.",
+    149.48,
+    150.08
+   ],
+   [
+    "Could",
+    150.16,
+    150.24
+   ],
+   [
+    "we",
+    150.32,
+    150.4
+   ],
+   [
+    "do",
+    150.44,
+    150.48
+   ],
+   [
+    "a",
+    150.64,
+    150.72
+   ],
+   [
+    "quick",
+    150.8,
+    150.88
+   ],
+   [
+    "twenty-minute",
+    150.96,
+    151.36
+   ],
+   [
+    "video",
+    151.44,
+    151.68
+   ],
+   [
+    "call?",
+    151.76,
+    152.32
+   ],
+   [
+    "I'd",
+    152.373,
+    152.48
+   ],
+   [
+    "show",
+    152.56,
+    152.64
+   ],
+   [
+    "you",
+    152.68,
+    152.72
+   ],
+   [
+    "a",
+    152.8,
+    152.88
+   ],
+   [
+    "demo",
+    153.0,
+    153.12
+   ],
+   [
+    "we",
+    153.2,
+    153.28
+   ],
+   [
+    "built",
+    153.4,
+    153.52
+   ],
+   [
+    "for",
+    153.56,
+    153.6
+   ],
+   [
+    "an",
+    153.68,
+    153.76
+   ],
+   [
+    "agency,",
+    154.04,
+    154.48
+   ],
+   [
+    "like,",
+    154.64,
+    154.88
+   ],
+   [
+    "pretty",
+    154.96,
+    155.04
+   ],
+   [
+    "much",
+    155.12,
+    155.2
+   ],
+   [
+    "your",
+    155.28,
+    155.44
+   ],
+   [
+    "size.",
+    155.68,
+    156.16
+   ]
+  ]
+ },
+ {
+  "index": 21,
+  "speaker": "prospect",
+  "text": "Hmm... Yeah. Yeah, okay, you're right, a PDF's not gonna sell me. What about Thursday morning?",
+  "start": 157.68,
+  "end": 165.44,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "thoughtful"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Hmm...",
+    157.76,
+    158.96
+   ],
+   [
+    "Yeah.",
+    159.12,
+    159.84
+   ],
+   [
+    "Yeah,",
+    160.16,
+    160.4
+   ],
+   [
+    "okay,",
+    160.48,
+    160.92
+   ],
+   [
+    "you're",
+    161.04,
+    161.12
+   ],
+   [
+    "right,",
+    161.2,
+    161.68
+   ],
+   [
+    "a",
+    161.76,
+    161.84
+   ],
+   [
+    "PDF's",
+    161.92,
+    162.48
+   ],
+   [
+    "not",
+    162.56,
+    162.72
+   ],
+   [
+    "gonna",
+    162.76,
+    162.96
+   ],
+   [
+    "sell",
+    163.04,
+    163.2
+   ],
+   [
+    "me.",
+    163.28,
+    163.92
+   ],
+   [
+    "What",
+    164.0,
+    164.08
+   ],
+   [
+    "about",
+    164.28,
+    164.48
+   ],
+   [
+    "Thursday",
+    164.68,
+    164.88
+   ],
+   [
+    "morning?",
+    164.96,
+    165.52
+   ]
+  ]
+ },
+ {
+  "index": 22,
+  "speaker": "user",
+  "text": "Thursday works! Ten o'clock?",
+  "start": 165.59,
+  "end": 167.59,
+  "emotion": "enthusiasm",
+  "intensity": 0.7,
+  "delivery": [
+   "excited"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Thursday",
+    165.99,
+    166.07
+   ],
+   [
+    "works!",
+    166.15,
+    166.75
+   ],
+   [
+    "Ten",
+    166.87,
+    166.95
+   ],
+   [
+    "o'clock?",
+    167.03,
+    167.67
+   ]
+  ]
+ },
+ {
+  "index": 23,
+  "speaker": "prospect",
+  "text": "Ten's great. And bring that lead routing thing, I wanna show my office manager. She's gonna love it, she's the one copying everything.",
+  "start": 167.79,
+  "end": 176.11,
+  "emotion": "enthusiasm",
+  "intensity": 0.8,
+  "delivery": [
+   "excited",
+   "laughs"
+  ],
+  "step": "close",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Ten's",
+    168.43,
+    168.75
+   ],
+   [
+    "great.",
+    168.99,
+    169.63
+   ],
+   [
+    "And",
+    169.71,
+    169.79
+   ],
+   [
+    "bring",
+    169.91,
+    170.03
+   ],
+   [
+    "that",
+    170.11,
+    170.19
+   ],
+   [
+    "lead",
+    170.27,
+    170.43
+   ],
+   [
+    "routing",
+    170.51,
+    170.83
+   ],
+   [
+    "thing,",
+    170.91,
+    171.39
+   ],
+   [
+    "I",
+    171.43,
+    171.47
+   ],
+   [
+    "wanna",
+    171.55,
+    171.71
+   ],
+   [
+    "show",
+    171.79,
+    171.87
+   ],
+   [
+    "my",
+    171.95,
+    172.03
+   ],
+   [
+    "office",
+    172.19,
+    172.35
+   ],
+   [
+    "manager.",
+    172.43,
+    173.15
+   ],
+   [
+    "She's",
+    173.19,
+    173.39
+   ],
+   [
+    "gonna",
+    173.43,
+    173.79
+   ],
+   [
+    "love",
+    173.87,
+    174.03
+   ],
+   [
+    "it,",
+    174.11,
+    174.43
+   ],
+   [
+    "she's",
+    174.47,
+    174.59
+   ],
+   [
+    "the",
+    174.67,
+    174.75
+   ],
+   [
+    "one",
+    174.83,
+    174.91
+   ],
+   [
+    "copying",
+    174.99,
+    175.39
+   ],
+   [
+    "everything.",
+    175.47,
+    176.19
+   ]
+  ]
+ },
+ {
+  "index": 24,
+  "speaker": "user",
+  "text": "Perfect. I'll send an invite to, uh, what's the best email for you?",
+  "start": 176.31,
+  "end": 181.03,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Perfect.",
+    176.39,
+    177.27
+   ],
+   [
+    "I'll",
+    177.31,
+    177.43
+   ],
+   [
+    "send",
+    177.55,
+    177.67
+   ],
+   [
+    "an",
+    177.71,
+    177.75
+   ],
+   [
+    "invite",
+    177.99,
+    178.23
+   ],
+   [
+    "to,",
+    178.39,
+    178.87
+   ],
+   [
+    "uh,",
+    178.99,
+    179.27
+   ],
+   [
+    "what's",
+    179.51,
+    179.71
+   ],
+   [
+    "the",
+    179.75,
+    179.83
+   ],
+   [
+    "best",
+    179.95,
+    180.07
+   ],
+   [
+    "email",
+    180.23,
+    180.39
+   ],
+   [
+    "for",
+    180.47,
+    180.63
+   ],
+   [
+    "you?",
+    180.71,
+    181.11
+   ]
+  ]
+ },
+ {
+  "index": 25,
+  "speaker": "prospect",
+  "text": "Just use the contact one on our website, it comes straight to me.",
+  "start": 181.33,
+  "end": 185.09,
+  "emotion": "enthusiasm",
+  "intensity": 0.5,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Just",
+    181.49,
+    181.65
+   ],
+   [
+    "use",
+    181.73,
+    181.89
+   ],
+   [
+    "the",
+    181.93,
+    181.97
+   ],
+   [
+    "contact",
+    182.05,
+    182.45
+   ],
+   [
+    "one",
+    182.61,
+    182.69
+   ],
+   [
+    "on",
+    182.73,
+    182.77
+   ],
+   [
+    "our",
+    182.85,
+    182.93
+   ],
+   [
+    "website,",
+    183.01,
+    183.73
+   ],
+   [
+    "it",
+    183.81,
+    183.89
+   ],
+   [
+    "comes",
+    183.97,
+    184.21
+   ],
+   [
+    "straight",
+    184.29,
+    184.53
+   ],
+   [
+    "to",
+    184.61,
+    184.69
+   ],
+   [
+    "me.",
+    184.81,
+    185.17
+   ]
+  ]
+ },
+ {
+  "index": 26,
+  "speaker": "user",
+  "text": "Got it. Thanks, Dennis, and good luck with the showing!",
+  "start": 185.24,
+  "end": 188.68,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Got",
+    185.4,
+    185.56
+   ],
+   [
+    "it.",
+    185.64,
+    186.12
+   ],
+   [
+    "Thanks,",
+    186.2,
+    186.48
+   ],
+   [
+    "Dennis,",
+    186.52,
+    187.08
+   ],
+   [
+    "and",
+    187.16,
+    187.4
+   ],
+   [
+    "good",
+    187.48,
+    187.56
+   ],
+   [
+    "luck",
+    187.64,
+    187.72
+   ],
+   [
+    "with",
+    187.8,
+    187.88
+   ],
+   [
+    "the",
+    187.96,
+    188.04
+   ],
+   [
+    "showing!",
+    188.16,
+    188.76
+   ]
+  ]
+ },
+ {
+  "index": 27,
+  "speaker": "prospect",
+  "text": "Thanks, Jake. See you Thursday.",
+  "start": 188.88,
+  "end": 191.04,
+  "emotion": "enthusiasm",
+  "intensity": 0.6,
+  "delivery": [
+   "warm"
+  ],
+  "step": "wrap_up",
+  "objection": null,
+  "acoustic_cue": true,
+  "words": [
+   [
+    "Thanks,",
+    188.96,
+    189.32
+   ],
+   [
+    "Jake.",
+    189.36,
+    190.0
+   ],
+   [
+    "See",
+    190.08,
+    190.16
+   ],
+   [
+    "you",
+    190.24,
+    190.32
+   ],
+   [
+    "Thursday.",
+    190.6,
+    191.12
+   ]
+  ]
+ }
+]

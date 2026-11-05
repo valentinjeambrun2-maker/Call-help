@@ -152,7 +152,7 @@ def test_out_of_range_numbers_are_clamped_not_rejected():
 def test_english_calls_replay_in_english(tmp_path):
     d = dialogue()
     turns = list(d.turns)
-    turns[2] = turns[2].model_copy(update={"text": "Sorry, I'm busy, call me back later."})
+    turns[2] = turns[2].model_copy(update={"text": "Sorry, I have no time for this right now."})
     write_call(tmp_path, d.model_copy(update={"call_id": "en-0001", "turns": turns}), None, language="en")
     replay = json.loads((tmp_path / "replay.json").read_text())
     assert replay["language"] == "en"

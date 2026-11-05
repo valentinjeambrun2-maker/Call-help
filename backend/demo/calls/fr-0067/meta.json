@@ -1,0 +1,21 @@
+{
+ "id": "fr-0067",
+ "language": "fr",
+ "duration": 158.1,
+ "turns": 26,
+ "objections": [
+  "has_provider",
+  "send_email",
+  "no_budget"
+ ],
+ "emotions": [
+  "hesitation",
+  "interest",
+  "enthusiasm"
+ ],
+ "outcome": "meeting_booked",
+ "offer": "Référencement SEO et visibilité locale : optimisation de la fiche Google, collecte d'avis clients et positionnement sur les recherches locales",
+ "prospect_company": "Ferrand Rénovation",
+ "seller_name": "Julien Morel",
+ "prospect_name": "Bastien Leroux"
+}

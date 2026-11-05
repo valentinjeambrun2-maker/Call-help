@@ -1,0 +1,234 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "fr",
+ "context": {
+  "user_name": "Léa Moreau",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Allô, bonjour ! Euh, je suis bien avec Monsieur Ferrand ?",
+   "start": 0.3,
+   "end": 3.34,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, c'est moi. C'est à quel sujet ?",
+   "start": 3.74,
+   "end": 6.46,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Super. Alors, Léa Moreau, du studio The Herakles. Et juste avant, je, je vous préviens, un assistant analyse l'appel pour m'aider, voilà, c'est tout.",
+   "start": 6.66,
+   "end": 15.38,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 15.38,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Un assistant ? Bon... d'accord. Allez-y.",
+   "start": 16.08,
+   "end": 20.08,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Alors, en fait, nous on développe des logiciels métier sur mesure, euh, beaucoup pour les restaurants, genre les réservations, la fidélité client, les campagnes, tout ça, et on a vu que Les Tables de Margaux ouvraient un troisième établissement, donc je me suis dit que, que ça pouvait vous parler.",
+   "start": 20.23,
+   "end": 35.43,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah. Vous avez vu ça où, le troisième resto ? Bon. Bref. La fidélité, ça, oui, c'est un sujet chez nous.",
+   "start": 36.03,
+   "end": 44.67,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ah génial ! Et aujourd'hui, euh, vous la gérez comment, la fidélité ?",
+   "start": 44.87,
+   "end": 49.27,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ben... on a un fichier Excel, une appli de cartes à tampons, et puis une newsletter qu'on envoie, enfin, quand on y pense, quoi.",
+   "start": 50.07,
+   "end": 58.79,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord, d'accord.",
+   "start": 58.89,
+   "end": 60.49,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Et vos réservations, elles remontent dans le même outil, ou euh...",
+   "start": 60.79,
+   "end": 64.79,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Non, non, rien ne se parle. C'est... c'est un peu le bazar, je vous cache pas. Chaque resto fait un peu à sa sauce.",
+   "start": 65.19,
+   "end": 74.07,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Alors justement, ce qu'on fait, c'est un outil qui centralise tout, euh, les réservations, la fidélité, l'envoi des campagnes, et en plus on peut le brancher sur votre caisse, et du coup le, le client, quand il revient, vous savez direct ce qu'il a pris la dernière fois et vous pouvez...",
+   "start": 74.22,
+   "end": 88.7,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Attendez, attendez. Là, j'ai le service de midi qui démarre dans dix minutes, hein. C'est pas vraiment le moment pour un grand exposé.",
+   "start": 88.1,
+   "end": 94.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Oui, oui, bien sûr, pardon. Euh, deux minutes alors ? Je vous donne juste l'essentiel.",
+   "start": 95.04,
+   "end": 100.64,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum... deux minutes, hein. Pas plus.",
+   "start": 101.84,
+   "end": 104.88,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Promis. En gros, nos clients restaurateurs gagnent, euh, plusieurs heures par semaine sur l'admin, et ils relancent leurs clients au bon moment. Une brasserie qu'on accompagne a fait revenir pas mal d'habitués qui, qui étaient partis.",
+   "start": 105.08,
+   "end": 116.84,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mouais. Écoutez, tout le monde me raconte ça. Mettez-moi plutôt tout ça par écrit, je regarderai à tête reposée.",
+   "start": 117.74,
+   "end": 125.1,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ah, oui, je peux, mais, euh, ce serait peut-être plus simple de caler vingt minutes avec notre chef de projet la semaine prochaine ? Comme ça il voit vraiment vos outils.",
+   "start": 125.5,
+   "end": 135.5,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Vingt minutes, oui, mais bon... du sur-mesure, je, je sais ce que ça coûte, hein. On vient d'ouvrir un troisième resto, les finances sont, comment dire, serrées. Le budget marketing, il est parti dans les travaux.",
+   "start": 137.0,
+   "end": 152.12,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je comprends, je comprends. Euh, en fait on peut commencer petit, juste la partie fidélité, et après on ajoute des briques quand vous voulez.",
+   "start": 152.42,
+   "end": 160.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum. Peut-être. Je sais pas. De toute façon faudrait que j'en parle à mon associé, c'est pas moi qui signe.",
+   "start": 162.74,
+   "end": 170.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Bon, alors, euh, je vous envoie une présentation avec un exemple de projet resto et une fourchette de prix, ça vous va ?",
+   "start": 170.58,
+   "end": 178.18,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, voilà. Faites ça. Et sans me relancer tous les deux jours, hein.",
+   "start": 178.88,
+   "end": 183.2,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Non non, promis ! Je l'envoie sur quelle adresse ?",
+   "start": 183.4,
+   "end": 186.92,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Celle du site, la générale. Enfin, mettez à mon nom en objet, ça arrivera jusqu'à moi.",
+   "start": 187.42,
+   "end": 192.3,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Parfait. Merci beaucoup, Monsieur Ferrand, et euh, bon service !",
+   "start": 192.5,
+   "end": 196.82,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ouais. Merci. Au revoir.",
+   "start": 197.12,
+   "end": 198.8,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

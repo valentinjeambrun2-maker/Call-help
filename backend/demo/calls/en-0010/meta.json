@@ -1,0 +1,20 @@
+{
+ "id": "en-0010",
+ "language": "en",
+ "duration": 168.7,
+ "turns": 22,
+ "objections": [
+  "no_time",
+  "send_email",
+  "has_provider"
+ ],
+ "emotions": [
+  "hesitation",
+  "annoyance"
+ ],
+ "outcome": "refused",
+ "offer": "A full website redesign by The Herakles: a mobile-friendly site with a project portfolio, a quote-request form and basic local SEO, built in about six weeks.",
+ "prospect_company": "Kowalczyk & Reid Builders",
+ "seller_name": "Jake Morrow",
+ "prospect_name": "Denise Kowalczyk"
+}

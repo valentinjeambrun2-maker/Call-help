@@ -1,0 +1,226 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "en",
+ "context": {
+  "user_name": "Claire Donovan",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi, uh, is this Marisa Kettering? This is Claire Donovan, from The Herakles.",
+   "start": 0.3,
+   "end": 5.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Yep, that's me. Hi, Claire.",
+   "start": 6.14,
+   "end": 8.54,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Hi! Just so you know, I've got an assistant running that analyses the call. It helps me with my notes. Is that okay with you?",
+   "start": 8.84,
+   "end": 16.68,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 16.68,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oh, sure, that's fine.",
+   "start": 17.08,
+   "end": 19.24,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Thanks. So, we're a digital studio. I was looking at contractor sites around here and, um, yours came up. I'm curious. How do most of your new clients find you these days?",
+   "start": 19.54,
+   "end": 31.06,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hm. Honestly? Mostly word of mouth. Referrals. Some from the website, I guess, but... yeah. Mostly referrals.",
+   "start": 31.96,
+   "end": 41.88,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm. And when someone does land on your site, what do you want them to do?",
+   "start": 42.18,
+   "end": 47.38,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Well, call us, ideally. But, uh, look, my nephew actually built our site. He kind of looks after it, so we're, we're covered there.",
+   "start": 47.98,
+   "end": 57.66,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Oh, that's great, family helping out. Does he, um, update it much? Like, with your new projects?",
+   "start": 58.06,
+   "end": 64.94,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ha. No. Not really. The last project on there is, gosh, the Halvorsen kitchen. That was, what, four years ago?",
+   "start": 65.64,
+   "end": 75.48,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Right. And that's, that's something we hear a lot. Contractors do beautiful work, but the site doesn't show it. So we build sites where you snap a photo on the job, and it's in your portfolio in, like, two minutes. Plus a quote request form that sorts leads by job size.",
+   "start": 75.78,
+   "end": 92.9,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oh, huh. By job size? That'd, that'd actually help. We get a lot of, um, can-you-fix-my-fence calls.",
+   "start": 93.3,
+   "end": 102.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Exactly. You'd see the big jobs first. And your nephew can stay in the loop if he wants.",
+   "start": 102.32,
+   "end": 107.84,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mm. Okay, but honestly, I'm on site six days a week. I just don't have the, the bandwidth to babysit a big project right now.",
+   "start": 108.64,
+   "end": 118.96,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Totally fair. It's about three hours of your time, total. We do the photos, we do the writing. You just tell us yes or no.",
+   "start": 119.26,
+   "end": 127.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Three hours? Really?",
+   "start": 127.22,
+   "end": 129.78,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Really. Two short calls and one review.",
+   "start": 129.98,
+   "end": 133.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Okay. And... the cost? Because, uh, we just bought a new excavator, so money's kind of, kind of tight this quarter.",
+   "start": 134.62,
+   "end": 143.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Understood. Projects start around six thousand, and we can split that over six months. And honestly? One extra kitchen job usually pays for the whole thing.",
+   "start": 144.38,
+   "end": 153.74,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oh, well, yeah, one kitchen is way more than that. Okay. I'm, I'm actually kind of excited about this!",
+   "start": 154.34,
+   "end": 161.86,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Wonderful. So how about a thirty-minute call where I show you a couple of contractor sites we've done? Thursday morning, maybe?",
+   "start": 162.16,
+   "end": 169.44,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Thursday... hmm, mornings I'm on site. Could we do Thursday at, like, four?",
+   "start": 170.14,
+   "end": 177.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Four on Thursday works perfectly.",
+   "start": 177.22,
+   "end": 179.78,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Great! Oh, and can I bring my nephew? He'll want to see it. He'll probably want to steal ideas, honestly.",
+   "start": 180.08,
+   "end": 188.0,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Absolutely, bring him. I'll send an invite to the email on your site. Thanks so much, Marisa.",
+   "start": 188.3,
+   "end": 194.62,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Thank you, Claire! Talk Thursday.",
+   "start": 194.82,
+   "end": 197.7,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

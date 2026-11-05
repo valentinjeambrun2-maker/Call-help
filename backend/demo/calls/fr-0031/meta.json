@@ -1,0 +1,20 @@
+{
+ "id": "fr-0031",
+ "language": "fr",
+ "duration": 198.8,
+ "turns": 27,
+ "objections": [
+  "no_time",
+  "send_email",
+  "no_budget"
+ ],
+ "emotions": [
+  "hesitation",
+  "interest"
+ ],
+ "outcome": "send_info",
+ "offer": "Logiciel métier sur mesure pour restaurants : centralisation des réservations, de la fidélité client et des campagnes marketing, connectable à la caisse",
+ "prospect_company": "Les Tables de Margaux",
+ "seller_name": "Léa Moreau",
+ "prospect_name": "Julien Ferrand"
+}

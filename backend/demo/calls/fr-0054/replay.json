@@ -1,0 +1,242 @@
+{
+ "scenario_id": "cold_call_fr",
+ "language": "fr",
+ "context": {
+  "user_name": "Claire Vasseur",
+  "company": "The Herakles"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Bonjour, madame Duverger ? Claire Vasseur, du studio The Herakles.",
+   "start": 0.3,
+   "end": 5.1,
+   "final": true
+  },
+  {
+   "type": "announcement_done",
+   "ts": 5.1,
+   "consent": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, c'est moi. Bonjour.",
+   "start": 5.5,
+   "end": 7.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je vous préviens juste, euh, un assistant analyse notre appel, pour m'aider à prendre des notes. Ça vous va ?",
+   "start": 7.67,
+   "end": 13.75,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Euh... oui, oui, pas de souci.",
+   "start": 14.45,
+   "end": 17.41,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Merci. Alors je serai brève. On conçoit des logiciels métier sur mesure, et on travaille pas mal avec des cabinets comptables en ce moment. Je me demandais, euh, comment vous gérez aujourd'hui la collecte des pièces de vos clients ?",
+   "start": 17.71,
+   "end": 30.51,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah, ben... c'est drôle que vous demandiez ça, parce que c'est, c'est un peu notre casse-tête, justement. On a des clients qui envoient tout par mail, d'autres qui déposent des cartons, euh...",
+   "start": 31.01,
+   "end": 41.33,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Des cartons, carrément ?",
+   "start": 41.48,
+   "end": 43.24,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, oui, des vrais cartons ! Bon, pas tous, hein, mais... voilà, quoi.",
+   "start": 43.44,
+   "end": 48.56,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Et vous êtes combien au cabinet ?",
+   "start": 48.86,
+   "end": 50.7,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Euh, on est neuf. Enfin, dix avec l'apprentie.",
+   "start": 51.1,
+   "end": 54.86,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Et ce tri-là, les relances, tout ça, ça prend combien de temps à votre équipe, à peu près, sur une semaine ?",
+   "start": 55.16,
+   "end": 63.08,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Hum... je sais pas, honnêtement. Une journée ? Peut-être plus en période fiscale. Je, j'ai jamais vraiment compté.",
+   "start": 64.58,
+   "end": 72.42,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Mm-hmm.",
+   "start": 72.62,
+   "end": 73.66,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mais bon, enfin, je vous arrête tout de suite, euh, là on a pas vraiment de, de marge pour un gros projet cette année. On a déjà refait tous les postes informatiques, alors...",
+   "start": 74.26,
+   "end": 83.38,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je comprends tout à fait. Et justement, on part pas forcément sur un gros projet. Souvent on commence par un petit module, par exemple un portail où vos clients déposent leurs pièces, avec des relances automatiques. Si ça vous fait gagner une journée par semaine, euh, ça se rembourse assez vite.",
+   "start": 83.78,
+   "end": 100.1,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui... oui, sûrement.",
+   "start": 101.0,
+   "end": 103.8,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Vous voyez ce que je veux dire, ou c'est un peu flou, là ?",
+   "start": 104.3,
+   "end": 107.98,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Non non, je vois. Mais euh... en fait, on a déjà un logiciel, hein. Notre éditeur comptable, il a un, comment ils appellent ça, un espace client. Bon, on s'en sert pas beaucoup, mais il existe.",
+   "start": 108.78,
+   "end": 121.9,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "D'accord. Et qu'est-ce qui fait que vous vous en servez peu, à votre avis ?",
+   "start": 122.2,
+   "end": 126.92,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ben... je sais pas. Les clients le trouvent compliqué, je crois. Enfin, c'est ce qu'on me dit.",
+   "start": 128.12,
+   "end": 135.0,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "C'est très fréquent, ça. Les outils des éditeurs sont faits pour tout le monde, donc, euh, pour personne en particulier. Nous, l'idée, c'est de se brancher sur votre logiciel existant, pas de le remplacer, et de faire une interface que vos clients ont vraiment envie d'utiliser.",
+   "start": 135.3,
+   "end": 151.06,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Mm.",
+   "start": 151.76,
+   "end": 152.96,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ce que je vous propose, c'est un échange de trente minutes avec notre chef de projet, la semaine prochaine. Il vous montre deux, trois exemples de cabinets comme le vôtre, et vous jugez. Mardi ou jeudi, ça vous irait mieux ?",
+   "start": 153.36,
+   "end": 165.68,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Euh, mardi... non, attendez. Écoutez, je, je préfère pas m'engager comme ça. Envoyez-moi plutôt un mail avec, euh, vos tarifs, vos exemples, et je regarderai.",
+   "start": 167.08,
+   "end": 177.32,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Bien sûr, je vous envoie ça. Juste pour que le mail vous serve vraiment, c'est plutôt la partie relances ou la partie dépôt de pièces qui vous...",
+   "start": 177.62,
+   "end": 186.02,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Non mais, madame, je vous ai dit, envoyez un mail. J'ai un client qui attend, là.",
+   "start": 185.42,
+   "end": 189.58,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je comprends, je vous laisse. Je vous envoie ça dans l'après-midi, et je me permettrai de vous rappeler en fin de sem...",
+   "start": 189.88,
+   "end": 196.44,
+   "final": true
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui, oui, c'est ça. Au revoir.",
+   "start": 195.94,
+   "end": 197.86,
+   "final": true
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}
