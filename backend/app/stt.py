@@ -155,9 +155,11 @@ class ScribeChannel:
         backoff = 0.25
         failures = 0
         while True:
-            # Connexion paresseuse : on attend le premier audio (ou la fin d'appel), sauf s'il reste
-            # de l'audio envoyé mais pas encore transcrit (coupure juste avant de raccrocher).
-            if self.queue.empty() and not self._replayable():
+            # Connexion paresseuse : on attend le premier audio, ou la fin d'appel. Sans audio
+            # nouveau, on ne se reconnecte pas (pas de rejeu facturé en boucle si le son s'arrête),
+            # sauf à la fin d'appel s'il reste de l'audio envoyé mais pas encore transcrit
+            # (coupure juste avant de raccrocher) : une dernière session le vide.
+            if self.queue.empty() and not (self._closing.is_set() and self._replayable()):
                 getter = asyncio.create_task(self.queue.get())
                 closer = asyncio.create_task(self._closing.wait())
                 done, _ = await asyncio.wait({getter, closer}, return_when=asyncio.FIRST_COMPLETED)
@@ -166,8 +168,9 @@ class ScribeChannel:
                     self._requeue_front(getter.result())
                 else:
                     getter.cancel()
-                    self._flushed.set()
-                    return
+                    if not self._replayable():
+                        self._flushed.set()
+                        return
             try:
                 await self._session()
                 backoff = 0.25

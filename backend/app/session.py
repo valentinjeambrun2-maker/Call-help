@@ -47,6 +47,7 @@ class CallSession:
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
         self.provisional: dict[float, str] = {}  # fin de tour -> objection des mots-clés à confirmer
         self.stt = None  # SttHub quand le backend transcrit lui-même
+        self._llm_problem_reported = False
         self.stt_requested = False  # transcription demandée (même si indisponible : erreur déjà signalée)
         self._stt_cost: float | None = None
         self.summary_task: asyncio.Task | None = None
@@ -147,7 +148,9 @@ class CallSession:
             log.exception("Bilan IA")
             result = None
         if result is None:
-            await self.send({"type": "ai_summary", "summary": None, "error": "Bilan IA indisponible."})
+            reason = getattr(self.summary_provider, "last_error", None)
+            message = f"Bilan IA indisponible ({reason})." if reason else "Bilan IA indisponible."
+            await self.send({"type": "ai_summary", "summary": None, "error": message})
         else:
             await self.send({"type": "ai_summary", "summary": result.model_dump(), "error": None})
 
@@ -329,6 +332,11 @@ class CallSession:
     async def _on_unclassified(self, ts: float) -> None:
         """Le LLM n'a pas répondu pour ce tour (panne, quota, délai) : repli sur les mots-clés,
         pour que l'objection et l'étape restent suivies même sans IA."""
+        reason = getattr(self.provider, "disabled_reason", None)
+        if reason and not self._llm_problem_reported:
+            self._llm_problem_reported = True  # dit une fois, pas à chaque tour
+            await self.send({"type": "error", "message": f"Conseils IA indisponibles ({reason}) : "
+                                                         "seuls les conseils par mots-clés s'affichent."})
         text = self.pending_turns.pop(ts, None)
         provisional = self.provisional.pop(ts, None)
         changed = False

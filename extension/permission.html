@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Call-help · Micro</title>
+  </head>
+  <body>
+    <main class="permission">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>Autoriser le micro.</h1>
+      <p class="lead">
+        Call-help écoute votre voix pendant l'appel pour suivre le fil directeur et vous souffler les bons conseils.
+      </p>
+      <ul class="sub-list">
+        <li>Le micro n'est utilisé que pendant un appel que vous démarrez.</li>
+        <li>Le son est transcrit en direct puis analysé ; Call-help ne l'enregistre pas.</li>
+        <li>Vous pouvez retirer l'accès à tout moment dans les réglages de Chrome.</li>
+      </ul>
+      <button id="ask" class="btn primary">Autoriser le micro</button>
+      <p id="result" class="sub" role="status"></p>
+    </main>
+    <script type="module" src="/src/permission/main.ts"></script>
+  </body>
+</html>

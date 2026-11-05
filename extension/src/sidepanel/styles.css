@@ -450,3 +450,48 @@ blockquote::after { content: "\202f»"; color: var(--accent); }
 .sum-email pre { white-space: pre-wrap; font: inherit; font-size: 14px; line-height: 1.5; background: var(--surface-2);
   border-radius: var(--r-s); padding: 12px; margin: 10px 0; }
 .btn.small { min-height: 34px; padding: 6px 14px; font-size: 13px; }
+
+/* ---- Réglages de l'appel ------------------------------------------------- */
+.settings-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.segmented { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.segmented button { border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text-2); padding: 6px 12px;
+  border-radius: 999px; cursor: pointer; }
+.segmented button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+.segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-top: 14px; }
+@media (max-width: 380px) { .fields { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-2); min-width: 0; }
+.field input, .demo-pick select {
+  font: inherit; font-size: 14px; color: var(--text); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0;
+}
+.field input::placeholder { color: var(--muted); }
+.field input:focus, .demo-pick select:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.demo-pick { display: flex; gap: 8px; width: 100%; }
+.demo-pick select { flex: 1 1 auto; border-radius: 999px; padding: 8px 14px; }
+.demo-pick .btn { flex: 0 0 auto; }
+
+/* ---- Écoute (captation en direct) ---------------------------------------- */
+.listen-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.listen-state { font-size: 12px; color: var(--ok); text-align: right; }
+.listen-state.warn { color: var(--warn); }
+.listen-state.bad { color: var(--danger); }
+.level { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; margin-bottom: 6px; }
+.level-label { font-size: 12px; color: var(--text-2); }
+.level .meter { margin: 0; }
+.level .meter span { background: var(--accent); transition: width 0.15s linear; }
+.heard-line { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--text); }
+.heard-line .who { display: inline-block; margin-right: 6px; font-weight: 600; color: var(--accent); }
+.heard-line.partial { color: var(--text-2); }
+
+.notice { padding: 12px 16px; border-radius: var(--r-s); background: var(--warn-soft); color: var(--warn); font-size: 14px; }
+
+/* ---- Page d'autorisation du micro ---------------------------------------- */
+.permission { max-width: 520px; margin: 12vh auto; padding: 0 16px; }
+.permission .mark { display: inline-block; width: 28px; height: 28px; margin-bottom: 18px; }
+.permission h1 { font-size: 34px; letter-spacing: -0.03em; }
+.permission .btn { margin-top: 22px; }
+.sub-list { margin: 18px 0 0; padding-left: 18px; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+.sub.ok { color: var(--ok); }
+.sub.bad { color: var(--danger); }
+.permission .sub { margin-top: 14px; font-size: 14px; }

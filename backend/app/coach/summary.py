@@ -102,6 +102,7 @@ class ClaudeSummary:
         self.client = AsyncAnthropic()
         self.model = model
         self.cost_usd = 0.0
+        self.last_error: str | None = None  # raison lisible d'un échec, pour le vendeur
 
     async def summarize(self, data: SummaryInput) -> AiSummary | None:
         import anthropic
@@ -117,6 +118,10 @@ class ClaudeSummary:
                 fallbacks="default",
                 messages=[{"role": "user", "content": data.model_dump_json(indent=1)}],
             )
+        except anthropic.AuthenticationError as exc:
+            self.last_error = "clé Anthropic refusée"
+            log.error("Bilan IA indisponible : %s", exc)
+            return None
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
             log.warning("Bilan IA indisponible : %s", exc)
             return None

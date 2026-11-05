@@ -160,10 +160,14 @@ class ClaudeProvider:
         self.client = AsyncAnthropic(timeout=10.0, max_retries=1)
         self.model = model
         self.usage = {"requests": 0, "input_tokens": 0, "output_tokens": 0}
+        # Clé refusée : inutile de réessayer à chaque tour (latence, bruit) ; signalé au vendeur.
+        self.disabled_reason: str | None = None
 
     async def suggest(self, ctx: CoachContext) -> LLMHint | None:
         import anthropic
 
+        if self.disabled_reason:
+            return None
         try:
             response = await self.client.messages.create(
                 model=self.model,
@@ -178,6 +182,11 @@ class ClaudeProvider:
                 },
                 messages=[{"role": "user", "content": ctx.model_dump_json(indent=1)}],
             )
+        except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as exc:
+            self.disabled_reason = "clé Anthropic refusée" if isinstance(exc, anthropic.AuthenticationError) \
+                else "accès Anthropic refusé"
+            log.error("Conseils IA désactivés pour cet appel : %s", exc)
+            return None
         except anthropic.RateLimitError:
             log.warning("LLM rate limited, conseil ignoré")
             return None

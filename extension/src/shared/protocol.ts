@@ -113,13 +113,29 @@ export type ClientMsg =
   | { type: "announcement_done"; ts: number; consent: boolean }
   | { type: "stop" };
 
-// Messages internes à l'extension (panneau <-> service worker <-> offscreen).
+export type CaptureStatus = "running" | "warning" | "stopped" | "error";
+
+// Messages internes à l'extension (panneau <-> service worker <-> offscreen) pour la
+// captation d'un vrai appel. `captureId` identifie une captation : les messages d'une
+// captation précédente sont ignorés. (La démo, elle, est jouée et captée dans le panneau.)
 export type ExtensionMsg =
-  | { target: "background"; action: "start-capture"; tabId: number }
+  | { target: "background"; action: "start-capture"; tabId: number; captureId: string }
   | { target: "background"; action: "stop-capture" }
-  | { target: "offscreen"; action: "start"; streamId: string; backendUrl: string }
+  | { target: "offscreen"; action: "start"; streamId: string; captureId: string }
   | { target: "offscreen"; action: "stop" }
-  | { target: "sidepanel"; action: "capture-status"; status: "running" | "stopped" | "error"; detail?: string };
+  | { target: "sidepanel"; action: "capture-status"; status: CaptureStatus; detail?: string; captureId?: string };
+
+// Audio du document offscreen vers le panneau (même origine) : blocs de 100 ms, PCM 16 bits
+// à 16 kHz, micro (vous) et onglet (prospect) sur la même horloge.
+export const AUDIO_BUS = "callhelp-audio";
+export type AudioBusMsg = {
+  type: "frame";
+  captureId: string;
+  seq: number;
+  mic: ArrayBuffer;
+  tab: ArrayBuffer;
+  level: { mic: number; tab: number };
+};
 
 export const DEFAULT_BACKEND = "ws://localhost:8000/ws/session";
 

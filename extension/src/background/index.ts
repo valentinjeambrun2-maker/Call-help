@@ -1,6 +1,6 @@
-// Service worker : ouvre le panneau, pilote la capture de l'onglet d'appel et
-// garantit qu'aucune capture ne survit au panneau.
-import { DEFAULT_BACKEND, PANEL_PORT, type ExtensionMsg } from "../shared/protocol";
+// Service worker : ouvre le panneau, pilote la captation (document offscreen) et
+// garantit qu'aucune captation ne survit au panneau ni à l'onglet d'appel.
+import { PANEL_PORT, type CaptureStatus, type ExtensionMsg } from "../shared/protocol";
 
 // L'API tabCapture n'accepte qu'un onglet où l'extension a été invoquée (activeTab) :
 // on ouvre donc le panneau nous-mêmes au clic sur l'icône, et on retient l'onglet.
@@ -12,8 +12,9 @@ chrome.action.onClicked.addListener((tab) => {
   if (tab.id !== undefined) void chrome.storage.session.set({ invokedTabId: tab.id });
 });
 
-function notifyPanel(status: "running" | "stopped" | "error", detail?: string) {
-  chrome.runtime.sendMessage({ target: "sidepanel", action: "capture-status", status, detail }).catch(() => {});
+function notifyPanel(status: CaptureStatus, detail?: string, captureId?: string) {
+  const msg: ExtensionMsg = { target: "sidepanel", action: "capture-status", status, detail, captureId };
+  chrome.runtime.sendMessage(msg).catch(() => {});
 }
 
 async function hasOffscreen(): Promise<boolean> {
@@ -23,52 +24,65 @@ async function hasOffscreen(): Promise<boolean> {
   return contexts.length > 0;
 }
 
-async function stopCapture(): Promise<void> {
-  // Fermer le document offscreen libère le flux de l'onglet, même s'il ne répond plus.
-  if (await hasOffscreen()) await chrome.offscreen.closeDocument();
-  notifyPanel("stopped");
+async function closeOffscreen(): Promise<boolean> {
+  // Fermer le document offscreen libère l'onglet et le micro, même s'il ne répond plus.
+  if (!(await hasOffscreen())) return false;
+  await chrome.offscreen.closeDocument();
+  return true;
 }
 
-async function startCapture(tabId: number): Promise<void> {
+async function startCapture(tabId: number, captureId: string): Promise<void> {
+  await closeOffscreen(); // une seule captation à la fois
   const { invokedTabId } = await chrome.storage.session.get("invokedTabId");
   if (invokedTabId !== tabId) {
-    throw new Error("cliquez sur l'icône Call-help depuis l'onglet de l'appel, puis relancez");
+    throw new Error("cliquez sur l'icône Call-help depuis l'onglet de l'appel (Meet, Teams…), puis relancez");
   }
-  await stopCapture(); // une seule capture à la fois
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
   await chrome.offscreen.createDocument({
     url: "offscreen.html",
     reasons: [chrome.offscreen.Reason.USER_MEDIA],
-    justification: "Capture du son et de l'image de l'onglet d'appel pour l'analyse en direct.",
+    justification: "Captation du son de l'appel (onglet et micro) pour la transcription et l'analyse en direct.",
   });
-  const stored = await chrome.storage.local.get("backendUrl");
-  const backendUrl = typeof stored.backendUrl === "string" ? stored.backendUrl : DEFAULT_BACKEND;
-  await chrome.runtime.sendMessage({ target: "offscreen", action: "start", streamId, backendUrl });
+  const msg: ExtensionMsg = { target: "offscreen", action: "start", streamId, captureId };
+  await chrome.runtime.sendMessage(msg);
+}
+
+async function stopCapture(): Promise<void> {
+  if (await closeOffscreen()) notifyPanel("stopped");
+}
+
+// Les demandes sont traitées une à une : un démarrage et un arrêt rapprochés ne se
+// chevauchent jamais (un seul document offscreen peut exister).
+let queue: Promise<void> = Promise.resolve();
+function enqueue(task: () => Promise<void>) {
+  queue = queue.then(task, task).catch(console.error);
 }
 
 chrome.runtime.onMessage.addListener((msg: ExtensionMsg) => {
   if (msg.target !== "background") return;
-  void (async () => {
-    try {
-      if (msg.action === "start-capture") await startCapture(msg.tabId);
-      else if (msg.action === "stop-capture") await stopCapture();
-    } catch (err) {
-      notifyPanel("error", err instanceof Error ? err.message : String(err));
-    }
-  })();
+  if (msg.action === "start-capture") {
+    enqueue(async () => {
+      try {
+        await startCapture(msg.tabId, msg.captureId);
+      } catch (err) {
+        await closeOffscreen().catch(() => false);
+        notifyPanel("error", err instanceof Error ? err.message : String(err), msg.captureId);
+      }
+    });
+  } else if (msg.action === "stop-capture") {
+    enqueue(stopCapture);
+  }
 });
 
-// Panneau fermé ou rechargé : la capture s'arrête avec lui.
+// Panneau fermé ou rechargé : la captation s'arrête avec lui.
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== PANEL_PORT) return;
-  port.onDisconnect.addListener(() => {
-    void stopCapture().catch(console.error);
-  });
+  port.onDisconnect.addListener(() => enqueue(stopCapture));
 });
 
-// Onglet capturé fermé : on libère aussi la capture.
+// Onglet capté fermé : on libère aussi la captation.
 chrome.tabs.onRemoved.addListener((tabId) => {
   void chrome.storage.session.get("invokedTabId").then(({ invokedTabId }) => {
-    if (invokedTabId === tabId) void stopCapture().catch(console.error);
+    if (invokedTabId === tabId) enqueue(stopCapture);
   });
 });

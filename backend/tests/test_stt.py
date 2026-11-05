@@ -352,3 +352,33 @@ async def test_cut_just_before_hang_up_still_transcribes_the_pending_audio():
         await asyncio.sleep(0.6)  # coupure détectée, aucun nouvel audio
         await ch.close(timeout=3)
     assert sessions[0] == 2 and any(m.final and m.text == "fin" for m in out)
+
+
+async def test_no_reconnect_loop_when_audio_stops_and_the_server_closes():
+    """Le son s'arrête (onglet fermé, capture interrompue) et le serveur ferme la session
+    inactive : on attend du nouvel audio au lieu de rejouer l'historique en boucle (facturé)."""
+    from websockets.asyncio.server import serve
+
+    sessions = [0]
+
+    async def handler(ws):
+        sessions[0] += 1
+        await ws.send(json.dumps({"message_type": "session_started"}))
+        try:
+            await asyncio.wait_for(ws.recv(), 0.3)
+            while True:
+                await asyncio.wait_for(ws.recv(), 0.3)
+        except asyncio.TimeoutError:
+            await ws.close(1000)  # inactivité
+
+    async with serve(handler, "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        ch = ScribeChannel("k", Speaker.USER, "fr", lambda m: asyncio.sleep(0), url=f"ws://127.0.0.1:{port}/rt")
+        ch.start()
+        for _ in range(10):
+            ch.push(bytes(FRAME_BYTES))
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(3.0)  # plus d'audio
+        idle_sessions = sessions[0]
+        await ch.close(timeout=2)
+    assert idle_sessions == 1  # avant : reconnexion et rejeu de 15 s toutes les quelques secondes

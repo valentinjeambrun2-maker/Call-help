@@ -128,3 +128,41 @@ async def test_missing_stt_key_is_reported_once_and_audio_is_then_ignored(monkey
     plain = CallSession(collector()[1])
     await plain.handle({"type": "start"})
     assert plain.push_audio(b"\x01" + bytes(3200)) is False
+
+
+async def test_refused_anthropic_key_is_reported_once_and_not_retried_every_turn(monkeypatch):
+    import anthropic
+    import httpx2
+
+    from app.coach.providers import ClaudeProvider
+    from app.coach.summary import ClaudeSummary
+
+    calls = []
+
+    def refuse(request):
+        calls.append(request.url.path)
+        return httpx2.Response(401, json={"type": "error", "error": {"type": "authentication_error",
+                                                                      "message": "invalid x-api-key"}})
+
+    def client():
+        return anthropic.AsyncAnthropic(api_key="test", max_retries=0,
+                                        http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(refuse)))
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test")
+    provider, summary = ClaudeProvider(), ClaudeSummary()
+    provider.client, summary.client = client(), client()
+    out, send = collector()
+    s = CallSession(send, provider=provider, summary_provider=summary)
+    await s.handle({"type": "start"})
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
+    for i in range(4):
+        await s.handle({"type": "transcript", "speaker": "prospect", "text": f"Réponse {i}.", "start": 3 * i + 1,
+                        "end": 3 * i + 2})
+        await s.coach.wait_llm()
+    errors = [m["message"] for m in out if m["type"] == "error"]
+    assert len(errors) == 1 and "clé Anthropic refusée" in errors[0]
+    assert len(calls) == 1  # les tours suivants ne retentent pas une clé refusée
+    await s.handle({"type": "stop"})
+    await s.summary_task
+    ai = next(m for m in out if m["type"] == "ai_summary")
+    assert ai["error"] == "Bilan IA indisponible (clé Anthropic refusée)."
