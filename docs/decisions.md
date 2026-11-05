@@ -33,17 +33,17 @@ Synthèse des réponses aux 50 questions (`docs/questions-projet.md`). Ce fichie
 ## Émotions (voix + visage)
 
 - États : intérêt, hésitation, agacement, ennui, enthousiasme.
-- Analysés : **le prospect et l'utilisateur**.
+- Analysés : **le prospect et l'utilisateur**. L'analyse du ton de l'utilisateur est **active par défaut** (Q36), désactivable par l'utilisateur (case à cocher) et, plus tard, par l'admin de la structure.
 - Seuil d'affichage 70 %, libellé « probable » en dessous ; calibration sur les 30 premières secondes.
 - Voix : service externe remplaçable au départ, cible **modèle full duplex** (écoute et génération en parallèle).
 - Visage : sourire, froncement, hochements, regard ; « visage non analysable » quand la caméra est coupée.
-- Objectif de données : **1 000 appels annotés** à la fin du MVP, avec entraînement continu.
+- Objectif de données : **1 000 appels annotés** à la fin du MVP, **générés de façon synthétique avec ElevenLabs** (dialogues écrits par Claude, étiquetés par tour), avec entraînement continu.
 
 ## Données, équipe et conformité
 
 - Stockage : ni image ni audio ; transcription et scores 30 jours, effaçables.
 - Le manager/admin voit des **bilans simplifiés avec métriques, jamais les émotions**.
-- Information des participants **au moment de l'invitation** ; l'utilisateur coupe l'analyse en un clic.
+- Information des participants **au moment de l'invitation** pour les meetings ; pour les **cold calls**, **message d'information dit en début d'appel** (affiché dans le panneau). L'analyse émotionnelle ne démarre qu'après confirmation « message dit », et l'heure est tracée dans le bilan. L'utilisateur coupe l'analyse en un clic.
 - Cadre : France/UE (RGPD + AI Act) ; validation juriste/DPO avant tout appel réel.
 
 ## IA
@@ -62,8 +62,8 @@ Synthèse des réponses aux 50 questions (`docs/questions-projet.md`). Ce fichie
 
 ## Points de vigilance (à trancher avant un appel réel)
 
-1. **Q36 sans réponse : statut des utilisateurs.** Pour les salariés d'une structure, l'AI Act interdit la reconnaissance des émotions sur le lieu de travail. Analyser **l'émotion de l'utilisateur salarié** (Q22 « les deux ») est la partie la plus exposée. Choix technique retenu : l'auto-analyse de l'utilisateur est une **option désactivable par l'admin**, désactivée par défaut pour les comptes entreprise, et jamais remontée au manager (cohérent avec Q38).
+1. **Q36 : analyse du ton de l'utilisateur active par défaut (décidé).** Reste le point le plus exposé face à l'AI Act pour des utilisateurs salariés : à faire valider par le juriste avant un déploiement en entreprise. Elle n'est jamais remontée au manager (Q38).
 2. **Q32 « bypass » des biais.** Les expressions faciales se lisent mal selon l'éclairage, la peau, un handicap ou la culture. Sans mesure contre les biais, l'outil risque de donner de mauvais conseils sur certaines personnes. Minimum conservé dans le code : seuil de confiance, libellé « probable », et pas d'affichage sans calibration.
-3. **Q34 : information à l'invitation seulement.** Pour un cold call, il n'y a pas d'invitation. Il faudra une autre forme d'information (annonce en début d'appel) pour ce cas.
-4. **Q27 : 1 000 appels annotés et entraînement auto.** Utiliser les appels pour entraîner un modèle demande une base légale distincte et l'accord des personnes enregistrées. Cela contredit aussi « aucun audio stocké » (Q37) : il faut un mode « collecte d'entraînement » séparé, opt-in.
+3. **Q34 : réglé pour les cold calls** par un message d'information en début d'appel. À valider par le juriste : la formulation du message, et ce qui se passe si le prospect refuse (bouton « Couper l'analyse »).
+4. **Q27 : 1 000 appels synthétiques (ElevenLabs).** Règle le conflit avec « aucun audio stocké » (aucune vraie personne enregistrée). Limite : des émotions jouées par une voix de synthèse ne valent pas des émotions réelles. Il faudra un petit lot d'appels réels, avec accord, pour valider le modèle d'émotion avant de lui faire confiance.
 5. **Q43 : 5-6 conseils / 20 s.** C'est beaucoup à lire en parlant. Le paramètre est configurable ; je propose de le mesurer en test et d'ajuster.

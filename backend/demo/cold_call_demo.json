@@ -10,6 +10,10 @@
  },
  "events": [
   {
+   "type": "announcement_done",
+   "ts": 0
+  },
+  {
    "type": "transcript",
    "speaker": "user",
    "text": "Bonjour, ici Léa de Herakles, vous avez trente secondes ?",

@@ -11,8 +11,8 @@ from .coach import CoachContext, CoachEngine, HintProvider
 from .emotion import EmotionFusion
 from .metrics import ConversationMetrics
 from .models import (
-    CallSummary, ClientMsg, FaceMsg, FeedbackMsg, Hint, HintMsg, PauseAnalysisMsg, Speaker,
-    StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptMsg, VoiceMsg,
+    AnnouncementDoneMsg, CallSummary, ClientMsg, FaceMsg, FeedbackMsg, Hint, HintMsg,
+    PauseAnalysisMsg, Speaker, StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptMsg, VoiceMsg,
 )
 from .scenario import ScenarioTracker, load_scenario
 
@@ -35,6 +35,7 @@ class CallSession:
         self.now = 0.0
         self.feedback: dict[str, bool] = {}
         self.transcript: deque[str] = deque(maxlen=12)
+        self.announcement_at: float | None = None
 
     async def _emit_hint(self, hint: Hint) -> None:
         await self.send(HintMsg(hint=hint).model_dump(mode="json"))
@@ -63,6 +64,8 @@ class CallSession:
         elif isinstance(msg, PauseAnalysisMsg):
             self.emotions.paused = True
             await self._send_state()
+        elif isinstance(msg, AnnouncementDoneMsg):
+            await self._on_announcement_done(msg.ts)
         elif isinstance(msg, StopMsg):
             await self.close()
             await self.send(SummaryMsg(summary=self.summary()).model_dump(mode="json"))
@@ -80,7 +83,28 @@ class CallSession:
         self.coach = CoachEngine(self._emit_hint, language=msg.language,
                                  provider=self.provider, context_vars=self.context_vars)
         self.started = True
-        await self.coach.on_step(self.tracker.step, 0.0)
+        if self.scenario.announcement:
+            # Cold call : pas d'invitation, donc message d'information en début
+            # d'appel. L'analyse émotionnelle attend sa confirmation.
+            await self.coach.on_announcement(self.scenario.announcement, 0.0)
+        else:
+            self.emotions.start(0.0)
+            await self.coach.on_step(self.tracker.step, 0.0)
+        await self._send_state()
+
+    @property
+    def announcement_pending(self) -> bool:
+        return bool(self.scenario.announcement) and self.announcement_at is None
+
+    async def _on_announcement_done(self, ts: float) -> None:
+        if not self.announcement_pending:
+            return
+        ts = max(ts, self.now)
+        self.now = ts
+        self.announcement_at = ts
+        self.emotions.start(ts)
+        self.tracker.step_started_at = ts
+        await self.coach.on_step(self.tracker.step, ts)
         await self._send_state()
 
     async def _on_transcript(self, msg: TranscriptMsg) -> None:
@@ -134,6 +158,7 @@ class CallSession:
             metrics=self.metrics.snapshot(self.now),
             emotions=[self.emotions.reading(sp, self.now) for sp in speakers],
             analysis_paused=self.emotions.paused,
+            announcement_pending=self.announcement_pending,
         )
         await self.send(state.model_dump(mode="json"))
 
@@ -146,6 +171,8 @@ class CallSession:
             hints_given=self.coach.hints_given,
             hints_useful=sum(self.feedback.values()),
             hints_not_useful=sum(not v for v in self.feedback.values()),
+            announcement_at=self.announcement_at,
+            emotion_analysis_used=self.emotions.active_since is not None,
         )
 
     async def close(self) -> None:

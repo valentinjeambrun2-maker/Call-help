@@ -28,8 +28,9 @@ class StartMsg(BaseModel):
     type: Literal["start"] = "start"
     scenario_id: str = "cold_call_fr"
     language: Literal["fr", "en"] = "fr"
-    # Analyse émotionnelle de l'utilisateur lui-même (désactivable par l'admin).
-    self_analysis: bool = False
+    # Analyse émotionnelle de l'utilisateur lui-même : active par défaut (Q36),
+    # désactivable par l'utilisateur ou, plus tard, par l'admin de la structure.
+    self_analysis: bool = True
     # Variables du scénario : {user_name}, {company}, {topic}...
     context: dict[str, str] = {}
 
@@ -77,12 +78,20 @@ class PauseAnalysisMsg(BaseModel):
     type: Literal["pause_analysis"] = "pause_analysis"
 
 
+class AnnouncementDoneMsg(BaseModel):
+    """L'utilisateur confirme avoir dit le message d'information au début de l'appel."""
+
+    type: Literal["announcement_done"] = "announcement_done"
+    ts: float = Field(0, ge=0)
+
+
 class StopMsg(BaseModel):
     type: Literal["stop"] = "stop"
 
 
 ClientMsg = Annotated[
-    StartMsg | TranscriptMsg | VoiceMsg | FaceMsg | FeedbackMsg | PauseAnalysisMsg | StopMsg,
+    StartMsg | TranscriptMsg | VoiceMsg | FaceMsg | FeedbackMsg | PauseAnalysisMsg
+    | AnnouncementDoneMsg | StopMsg,
     Field(discriminator="type"),
 ]
 
@@ -110,7 +119,7 @@ class Metrics(BaseModel):
 
 class Hint(BaseModel):
     id: str
-    kind: Literal["objection", "step", "pace", "emotion", "question", "closing"]
+    kind: Literal["announcement", "objection", "step", "pace", "emotion", "question", "closing"]
     text: str  # indication courte
     say: str | None = None  # phrase prête à dire
     source: Literal["rule", "llm"] = "rule"
@@ -134,6 +143,9 @@ class StateMsg(BaseModel):
     metrics: Metrics
     emotions: list[EmotionReading]
     analysis_paused: bool = False
+    # Vrai tant que le message d'information n'a pas été dit : l'analyse
+    # émotionnelle (voix + visage) ne démarre qu'après.
+    announcement_pending: bool = False
 
 
 class HintMsg(BaseModel):
@@ -151,6 +163,9 @@ class CallSummary(BaseModel):
     hints_given: int
     hints_useful: int
     hints_not_useful: int
+    # Trace de conformité : moment où le message d'information a été dit.
+    announcement_at: float | None = None
+    emotion_analysis_used: bool = False
 
     def team_view(self) -> dict:
         return self.model_dump()

@@ -7,6 +7,7 @@ HESITANT = {E.INTEREST: 0.1, E.HESITATION: 0.95, E.ANNOYANCE: 0.2, E.BOREDOM: 0.
 
 def calibrated() -> EmotionFusion:
     f = EmotionFusion()
+    f.start(0)
     for ts in range(0, 30, 2):
         f.add_voice(Speaker.PROSPECT, NEUTRAL, ts)
     return f
@@ -14,8 +15,26 @@ def calibrated() -> EmotionFusion:
 
 def test_nothing_shown_before_calibration():
     f = EmotionFusion()
+    f.start(0)
     f.add_voice(Speaker.PROSPECT, HESITANT, 5)
     assert f.reading(Speaker.PROSPECT, 5).state is None
+
+
+def test_nothing_analysed_before_start():
+    f = EmotionFusion()
+    for ts in range(0, 60):
+        f.add_voice(Speaker.PROSPECT, HESITANT, ts)
+    r = f.reading(Speaker.PROSPECT, 60)
+    assert r.state is None and not r.calibrated
+    assert f.people[Speaker.PROSPECT].voice.current == {}
+
+
+def test_calibration_window_starts_with_analysis():
+    f = EmotionFusion()
+    f.start(100)
+    f.add_voice(Speaker.PROSPECT, NEUTRAL, 110)
+    assert not f.reading(Speaker.PROSPECT, 125).calibrated
+    assert f.reading(Speaker.PROSPECT, 131).calibrated
 
 
 def test_strong_signal_shown_after_calibration():

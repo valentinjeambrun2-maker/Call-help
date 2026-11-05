@@ -1,8 +1,9 @@
 """Fusion des indices émotionnels voix + visage, avec calibration et seuils.
 
 Principes (docs/decisions.md) :
+- l'analyse ne démarre qu'une fois le message d'information dit (`start`) ;
 - un indice est une hypothèse, jamais un fait : il porte toujours une confiance ;
-- rien n'est affiché avant la fin de la calibration (30 s par défaut) ;
+- rien n'est affiché avant la fin de la calibration (30 s après le démarrage) ;
 - >= 70 % : affiché ; 50-70 % : affiché avec le libellé « probable » ; < 50 % : rien.
 """
 
@@ -43,9 +44,9 @@ class _Channel:
     baseline_sum: dict[EmotionState, float] = field(default_factory=dict)
     baseline_n: int = 0
 
-    def update(self, scores: dict[EmotionState, float], ts: float) -> None:
+    def update(self, scores: dict[EmotionState, float], calibrating: bool) -> None:
         self.current = _ema(self.current, scores) if self.current else dict(scores)
-        if ts < CALIBRATION_SECONDS:
+        if calibrating:
             for s in STATES:
                 self.baseline_sum[s] = self.baseline_sum.get(s, 0.0) + scores.get(s, 0.0)
             self.baseline_n += 1
@@ -73,26 +74,39 @@ class EmotionFusion:
     def __init__(self) -> None:
         self.people = {sp: _Person() for sp in Speaker}
         self.paused = False
+        self.active_since: float | None = None  # None = analyse pas encore démarrée
+
+    def start(self, ts: float) -> None:
+        """Démarre l'analyse (après le message d'information). Idempotent."""
+        if self.active_since is None:
+            self.active_since = ts
+
+    @property
+    def running(self) -> bool:
+        return self.active_since is not None and not self.paused
+
+    def _calibrating(self, ts: float) -> bool:
+        return self.active_since is not None and ts < self.active_since + CALIBRATION_SECONDS
 
     def add_voice(self, speaker: Speaker, scores: dict[EmotionState, float], ts: float) -> None:
-        if not self.paused:
-            self.people[speaker].voice.update(scores, ts)
+        if self.running:
+            self.people[speaker].voice.update(scores, self._calibrating(ts))
 
     def add_face(self, face: FaceMsg) -> None:
-        if self.paused:
+        if not self.running:
             return
         person = self.people[face.speaker]
         person.face_visible = face.visible
         if face.visible:
-            person.face.update(face_to_scores(face), face.ts)
+            person.face.update(face_to_scores(face), self._calibrating(face.ts))
 
     def reading(self, speaker: Speaker, now: float) -> EmotionReading:
         person = self.people[speaker]
-        calibrated = now >= CALIBRATION_SECONDS
+        calibrated = self.active_since is not None and not self._calibrating(now)
         empty = EmotionReading(
             speaker=speaker, state=None, face_visible=person.face_visible, calibrated=calibrated
         )
-        if self.paused or not calibrated:
+        if not self.running or not calibrated:
             return empty
 
         voice = person.voice.relative()

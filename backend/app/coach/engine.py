@@ -100,6 +100,12 @@ class CoachEngine:
                          priority=3, ts=ts)
         return await self._send(f"objection:{objection.id}", hint)
 
+    async def on_announcement(self, says: dict[str, str], ts: float) -> Hint | None:
+        hint = self._new(kind="announcement",
+                         text="Avant tout : dis ce message d'information, puis confirme.",
+                         say=self._say(says), priority=3, ts=ts)
+        return await self._send("announcement", hint)
+
     async def on_step(self, step: Step, ts: float) -> Hint | None:
         hint = self._new(kind="step", text=f"Étape « {step.title} » : {step.goal}",
                          say=self._say(step.say), priority=2, ts=ts)

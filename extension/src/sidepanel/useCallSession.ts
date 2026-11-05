@@ -11,6 +11,7 @@ export interface CallState {
   metrics: Metrics | null;
   emotions: EmotionReading[];
   analysisPaused: boolean;
+  announcementPending: boolean;
   current: Hint | null;
   history: Hint[];
   summary: CallSummary | null;
@@ -19,7 +20,7 @@ export interface CallState {
 }
 
 const INITIAL: CallState = {
-  phase: "idle", step: null, metrics: null, emotions: [], analysisPaused: false,
+  phase: "idle", step: null, metrics: null, emotions: [], analysisPaused: false, announcementPending: false,
   current: null, history: [], summary: null, error: null, feedback: {},
 };
 
@@ -30,6 +31,7 @@ export function useCallSession(backendUrl: string) {
   const [state, setState] = useState<CallState>(INITIAL);
   const ws = useRef<WebSocket | null>(null);
   const shownAt = useRef(0);
+  const connectedAt = useRef(0);
 
   const current = useRef<Hint | null>(null);
 
@@ -39,6 +41,8 @@ export function useCallSession(backendUrl: string) {
     const shown = current.current;
     const canShow =
       !shown ||
+      // Le conseil suivant n'arrive qu'après confirmation du message d'information.
+      shown.kind === "announcement" ||
       (hint.replaces !== null && shown.id === hint.replaces) ||
       hint.priority > shown.priority ||
       Date.now() - shownAt.current > MIN_DISPLAY_MS;
@@ -69,6 +73,7 @@ export function useCallSession(backendUrl: string) {
         const socket = new WebSocket(backendUrl);
         ws.current = socket;
         socket.onopen = () => {
+          connectedAt.current = Date.now();
           socket.send(JSON.stringify(start));
           setState((s) => ({ ...s, phase: "live" }));
           resolve();
@@ -82,7 +87,7 @@ export function useCallSession(backendUrl: string) {
           if (msg.type === "state") {
             setState((s) => ({
               ...s, step: msg.step, metrics: msg.metrics, emotions: msg.emotions,
-              analysisPaused: msg.analysis_paused,
+              analysisPaused: msg.analysis_paused, announcementPending: msg.announcement_pending,
             }));
           } else if (msg.type === "hint") {
             onHint(msg.hint);
@@ -105,7 +110,14 @@ export function useCallSession(backendUrl: string) {
     [send],
   );
 
+  // Secondes écoulées depuis le début de l'appel (horloge du protocole).
+  const elapsed = useCallback(() => (Date.now() - connectedAt.current) / 1000, []);
+
+  const confirmAnnouncement = useCallback(() => {
+    send({ type: "announcement_done", ts: elapsed() });
+  }, [send, elapsed]);
+
   useEffect(() => () => ws.current?.close(), []);
 
-  return { state, connect, send, giveFeedback };
+  return { state, connect, send, giveFeedback, confirmAnnouncement };
 }

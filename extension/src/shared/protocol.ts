@@ -5,7 +5,7 @@ export type EmotionState = "interest" | "hesitation" | "annoyance" | "boredom" |
 
 export interface Hint {
   id: string;
-  kind: "objection" | "step" | "pace" | "emotion" | "question" | "closing";
+  kind: "announcement" | "objection" | "step" | "pace" | "emotion" | "question" | "closing";
   text: string;
   say: string | null;
   source: "rule" | "llm";
@@ -49,10 +49,19 @@ export interface CallSummary {
   hints_given: number;
   hints_useful: number;
   hints_not_useful: number;
+  announcement_at: number | null;
+  emotion_analysis_used: boolean;
 }
 
 export type ServerMsg =
-  | { type: "state"; step: StepState; metrics: Metrics; emotions: EmotionReading[]; analysis_paused: boolean }
+  | {
+      type: "state";
+      step: StepState;
+      metrics: Metrics;
+      emotions: EmotionReading[];
+      analysis_paused: boolean;
+      announcement_pending: boolean;
+    }
   | { type: "hint"; hint: Hint }
   | { type: "summary"; summary: CallSummary }
   | { type: "error"; message: string };
@@ -73,6 +82,7 @@ export type ClientMsg =
     }
   | { type: "feedback"; hint_id: string; useful: boolean }
   | { type: "pause_analysis" }
+  | { type: "announcement_done"; ts: number }
   | { type: "stop" };
 
 // Messages internes à l'extension (panneau <-> service worker <-> offscreen).

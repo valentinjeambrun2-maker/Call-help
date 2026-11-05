@@ -36,6 +36,9 @@ class Scenario(BaseModel):
     id: str
     title: str
     target_duration: float
+    # Message d'information dit au prospect avant l'analyse (cold call : pas
+    # d'invitation pour l'informer). None = information déjà faite (invitation).
+    announcement: dict[str, str] | None = None
     steps: list[Step]
     objections: list[Objection] = []
 

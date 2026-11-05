@@ -11,7 +11,7 @@ const EMOTION_LABELS: Record<string, { label: string; tone: "good" | "warn" | "b
 };
 
 const KIND_LABELS: Record<string, string> = {
-  objection: "Objection", step: "Étape", pace: "Rythme", emotion: "Ressenti",
+  announcement: "Message d'information", objection: "Objection", step: "Étape", pace: "Rythme", emotion: "Ressenti",
   question: "Question", closing: "Closing",
 };
 
@@ -29,9 +29,9 @@ const hasChrome = typeof chrome !== "undefined" && !!chrome.runtime?.id;
 
 export function App() {
   const [backendUrl, setBackendUrl] = useState(DEFAULT_BACKEND);
-  const [selfAnalysis, setSelfAnalysis] = useState(false);
+  const [selfAnalysis, setSelfAnalysis] = useState(true); // Q36 : actif par défaut
   const [capture, setCapture] = useState<string | null>(null);
-  const { state, connect, send, giveFeedback } = useCallSession(backendUrl);
+  const { state, connect, send, giveFeedback, confirmAnnouncement } = useCallSession(backendUrl);
   const timers = useRef<number[]>([]);
 
   useEffect(() => {
@@ -110,14 +110,19 @@ export function App() {
           </div>
           <p className="hint-text">{state.current.text}</p>
           {state.current.say && <blockquote>« {state.current.say} »</blockquote>}
-          <Feedback id={state.current.id} value={state.feedback[state.current.id]} onFeedback={giveFeedback} />
+          {state.current.kind === "announcement" && state.announcementPending && (
+            <button className="primary confirm" onClick={confirmAnnouncement}>Message dit, démarrer l'analyse</button>
+          )}
+          {state.current.kind !== "announcement" && (
+            <Feedback id={state.current.id} value={state.feedback[state.current.id]} onFeedback={giveFeedback} />
+          )}
         </section>
       )}
 
       {(live || state.phase === "ended") && (
         <section className="row">
-          <EmotionPill who="Prospect" reading={prospect} paused={state.analysisPaused} />
-          {selfAnalysis && <EmotionPill who="Vous" reading={user} paused={state.analysisPaused} />}
+          <EmotionPill who="Prospect" reading={prospect} paused={state.analysisPaused} pending={state.announcementPending} />
+          {selfAnalysis && <EmotionPill who="Vous" reading={user} paused={state.analysisPaused} pending={state.announcementPending} />}
         </section>
       )}
 
@@ -182,10 +187,11 @@ export function App() {
   );
 }
 
-function EmotionPill({ who, reading, paused }: { who: string; reading?: EmotionReading; paused: boolean }) {
+function EmotionPill({ who, reading, paused, pending }: { who: string; reading?: EmotionReading; paused: boolean; pending: boolean }) {
   let text = "Calibration…";
   let tone = "neutral";
-  if (paused) text = "Analyse coupée";
+  if (pending) text = "En attente du message";
+  else if (paused) text = "Analyse coupée";
   else if (reading?.calibrated && !reading.state) text = reading.face_visible === false ? "Visage non analysable" : "Neutre";
   else if (reading?.state) {
     const e = EMOTION_LABELS[reading.state];
