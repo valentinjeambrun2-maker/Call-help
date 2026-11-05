@@ -7,6 +7,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
+    "websockets>=13",  # transcription en direct (ElevenLabs Scribe v2 Realtime)
 ]
 
 [project.optional-dependencies]
