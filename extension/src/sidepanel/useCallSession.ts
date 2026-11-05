@@ -119,5 +119,5 @@ export function useCallSession(backendUrl: string) {
 
   useEffect(() => () => ws.current?.close(), []);
 
-  return { state, connect, send, giveFeedback, confirmAnnouncement };
+  return { state, connect, send, giveFeedback, confirmAnnouncement, elapsed };
 }
