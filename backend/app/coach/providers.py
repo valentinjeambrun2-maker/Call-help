@@ -54,27 +54,31 @@ class HintProvider(Protocol):
 
 
 def hint_schema(ctx: CoachContext) -> dict:
-    """Schéma de sortie, avec les objections et étapes propres au scénario."""
+    """Schéma de sortie, avec les objections et étapes propres au scénario.
+
+    Ordre voulu : le conseil d'abord, le classement ensuite. Les champs sont produits dans
+    cet ordre, et le classement suit alors ce que le modèle vient d'écrire. Mesuré en démo :
+    quand `objection` venait en premier, le conseil disait « objection budget » alors que le
+    champ restait vide."""
     objection_ids = [o["id"] for o in ctx.objections] + ["other"]
     step_ids = [st["id"] for st in ctx.steps]
     props: dict = {
-        "objection": {"anyOf": [{"type": "string", "enum": objection_ids}, {"type": "null"}],
-                      "description": "Objection exprimée dans le DERNIER tour du prospect, sinon null"},
-        "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]},
         "text": {"type": "string", "description": "Indication de 12 mots maximum"},
         "say": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Phrase prête à dire, 25 mots maximum"},
-        "confidence": {"type": "number"},
+        "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]},
+        "objection": {"anyOf": [{"type": "string", "enum": objection_ids}, {"type": "null"}],
+                      "description": "Objection NOUVELLE exprimée dans le dernier tour du prospect, sinon null"},
     }
+    if step_ids:
+        props["step"] = {"type": "string", "enum": step_ids, "description": "Étape où en est l'appel"}
     props["prospect_state"] = {
         "anyOf": [{"type": "string", "enum": ["neutral", "interest", "hesitation", "annoyance", "boredom",
                                               "enthusiasm"]}, {"type": "null"}],
         "description": "État du prospect lu dans ses mots, null si emotion_allowed est faux"}
     props["state_confidence"] = {"type": "number"}
-    required = ["objection", "kind", "text", "say", "confidence", "prospect_state", "state_confidence"]
-    if step_ids:
-        props["step"] = {"type": "string", "enum": step_ids, "description": "Étape où en est l'appel"}
-        required.insert(1, "step")
-    return {"type": "object", "properties": props, "required": required, "additionalProperties": False}
+    props["confidence"] = {"type": "number"}
+    return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+
 
 SYSTEM_PROMPT = """Tu es un coach commercial qui souffle des conseils à un vendeur pendant un appel en direct.
 Le vendeur lit ton conseil en parlant : il doit pouvoir le lire en deux secondes.
@@ -106,7 +110,9 @@ Classement (en plus du conseil) :
 - `prospect_state` : l'état du prospect tel qu'on le perçoit dans ses mots (dernier tour du prospect
   et contexte) : neutral, interest, hesitation, annoyance, boredom, enthusiasm ; `state_confidence`
   entre 0 et 1. C'est une hypothèse. Si `emotion_allowed` est faux : null et 0.
-- Si `objection` n'est pas null, `kind` vaut "objection" et le conseil y répond."""
+- Cohérence : si ton conseil répond à une objection (temps, budget, prestataire, demande de mail…),
+  `kind` vaut "objection" ET `objection` contient son identifiant ; sinon `objection` vaut null.
+  Le dernier tour du prospect peut être un fragment de sa phrase : juge-le avec ce qui précède."""
 
 
 class NullProvider:

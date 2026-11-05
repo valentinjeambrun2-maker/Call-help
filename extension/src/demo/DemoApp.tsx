@@ -534,6 +534,8 @@ function TurnRow({ turn, row, done, heard }: { turn: TurnLabel; row?: Row; done:
         )}
         {row?.hints.map((o) => (
           <span key={o.hint.id} className={`chip hint-chip ${o.hint.source} ${row.replaced.has(o.hint.id) ? "struck" : ""}`}
+            data-kind={o.hint.kind} data-ref={o.hint.ref ?? ""} data-ts={o.hint.ts} data-id={o.hint.id}
+            data-replaces={o.hint.replaces ?? ""}
             title={row.replaced.has(o.hint.id) ? "Remplacée par la version de l'IA" : undefined}>
             {o.hint.source === "llm" ? "IA" : "Règle"} · {fr(o.hint.text).slice(0, 70)}
           </span>

@@ -78,3 +78,23 @@ async def test_ai_summary_follows_the_stats_summary_and_has_no_emotions():
     assert "Pas le temps" in data.objections_raised
     ai = next(m for m in out if m["type"] == "ai_summary")
     assert ai["summary"]["follow_up_email"]["subject"] and ai["error"] is None
+
+
+async def test_stt_fragments_of_one_reply_are_merged_for_the_llm():
+    seen = []
+
+    class Spy:
+        async def suggest(self, ctx):
+            seen.append(list(ctx.recent_transcript))
+            return None
+
+    out, send = collector()
+    s = CallSession(send, provider=Spy())
+    await s.handle({"type": "start"})
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "On a explosé le budget.", "start": 1, "end": 3})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "Il reste plus rien.", "start": 3.7, "end": 5})
+    await s.handle({"type": "transcript", "speaker": "user", "text": "Je comprends.", "start": 6, "end": 7})
+    await s.coach.wait_llm()
+    assert seen[1][-1] == "prospect: On a explosé le budget. Il reste plus rien."
+    assert seen[2][-2:] == ["prospect: On a explosé le budget. Il reste plus rien.", "user: Je comprends."]

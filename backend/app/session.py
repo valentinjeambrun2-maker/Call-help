@@ -37,6 +37,7 @@ class CallSession:
         self.feedback: dict[str, bool] = {}
         self.transcript: deque[str] = deque(maxlen=12)
         self.full_transcript: list[str] = []  # pour le bilan de fin d'appel
+        self._last_segment: tuple[Speaker, float] | None = None
         self.summary_provider = summary_provider
         self.announcement_at: float | None = None
         self.prospect_consent: bool | None = None
@@ -194,9 +195,7 @@ class CallSession:
         if not msg.final:
             return  # les résultats partiels servent à l'affichage, pas aux règles
         self.metrics.add_segment(msg.speaker, msg.text, msg.start, msg.end)
-        self.transcript.append(f"{msg.speaker.value}: {msg.text}")
-        who = "vendeur" if msg.speaker is Speaker.USER else "prospect"
-        self.full_transcript.append(f"[{int(msg.start // 60):02d}:{int(msg.start % 60):02d}] {who} : {msg.text}")
+        self._append_transcript(msg)
 
         if self.announcement_pending:
             # Tant que le message d'information n'est pas confirmé, on ne fait
@@ -231,6 +230,23 @@ class CallSession:
             await self.coach.on_overtime(self.tracker.step, self.now)
         await self.coach.on_metrics(self.metrics.snapshot(self.now), self.now)
         await self._send_state()
+
+    MERGE_GAP = 1.5  # s : fragments d'une même réplique coupés par la transcription
+
+    def _append_transcript(self, msg: TranscriptMsg) -> None:
+        """Ajoute un énoncé au contexte du LLM et au bilan. La transcription en direct coupe une
+        réplique à chaque pause (~0,6 s) : on recolle les fragments du même locuteur pour que
+        le LLM juge la phrase entière (objection coupée en deux mesurée en démo)."""
+        who = "vendeur" if msg.speaker is Speaker.USER else "prospect"
+        last = self._last_segment
+        if (last is not None and last[0] is msg.speaker and msg.start - last[1] <= self.MERGE_GAP
+                and self.transcript and self.full_transcript):
+            self.transcript[-1] = f"{self.transcript[-1]} {msg.text}"
+            self.full_transcript[-1] = f"{self.full_transcript[-1]} {msg.text}"
+        else:
+            self.transcript.append(f"{msg.speaker.value}: {msg.text}")
+            self.full_transcript.append(f"[{int(msg.start // 60):02d}:{int(msg.start % 60):02d}] {who} : {msg.text}")
+        self._last_segment = (msg.speaker, msg.end)
 
     async def _on_emotion_update(self, ts: float) -> None:
         self.now = max(self.now, ts)
