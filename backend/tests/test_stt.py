@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import json
+from array import array
 
 import pytest
 
@@ -318,11 +319,10 @@ async def test_frame_in_flight_during_a_network_cut_is_not_lost(monkeypatch):
     assert sessions[0] == 2 and set(range(1, 31)) <= seen  # aucun bloc perdu à la coupure
 
 
-async def test_cut_just_before_hang_up_still_transcribes_the_pending_audio():
-    from websockets.asyncio.server import serve
+SPEECH = array("h", [3000, -3000] * (FRAME_BYTES // 4)).tobytes()  # bloc de 100 ms « parlé »
 
-    sessions = [0]
 
+def _cut_then_hang_up_server(sessions, cut_after):
     async def handler(ws):
         sessions[0] += 1
         await ws.send(json.dumps({"message_type": "session_started"}))
@@ -330,28 +330,68 @@ async def test_cut_just_before_hang_up_still_transcribes_the_pending_audio():
         async for raw in ws:
             n += 1
             m = json.loads(raw)
-            if sessions[0] == 1 and n == 20:
+            if sessions[0] == 1 and n == cut_after:
                 await ws.close(1000)  # coupure, puis plus aucun audio : l'appel se termine
                 return
             if m.get("commit"):
                 await ws.send(json.dumps({"message_type": "committed_transcript_with_timestamps", "text": "fin",
                                           "words": [{"type": "word", "text": "fin", "start": 0.2, "end": n * 0.1 - 0.1}]}))
+    return handler
 
-    out = []
+
+@pytest.mark.parametrize("pending_frames", [20, 80])
+async def test_cut_just_before_hang_up_still_transcribes_the_pending_audio(pending_frames):
+    """Avec le délai de fermeture de la production (celui de SttHub.close) : 8 s d'audio non
+    transcrit se rejouent à ~4x, ce qui dépassait l'ancien délai fixe de 2 s (dernière phrase perdue)."""
+    from websockets.asyncio.server import serve
+
+    sessions, out = [0], []
 
     async def on_t(msg):
         out.append(msg)
 
-    async with serve(handler, "127.0.0.1", 0) as server:
+    async with serve(_cut_then_hang_up_server(sessions, pending_frames), "127.0.0.1", 0) as server:
         port = server.sockets[0].getsockname()[1]
         ch = ScribeChannel("k", Speaker.USER, "fr", on_t, url=f"ws://127.0.0.1:{port}/rt")
         ch.start()
+        for _ in range(pending_frames):
+            ch.push(SPEECH)
+            await asyncio.sleep(0.005)
+        await asyncio.sleep(0.6)  # coupure détectée, aucun nouvel audio
+        await ch.close()
+    assert sessions[0] == 2 and any(m.final and m.text == "fin" for m in out)
+
+
+async def test_no_flush_session_at_hang_up_when_only_silence_is_pending():
+    """Rejouer du silence en fin d'appel serait facturé sans rien transcrire."""
+    from websockets.asyncio.server import serve
+
+    sessions = [0]
+    async with serve(_cut_then_hang_up_server(sessions, 20), "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        ch = ScribeChannel("k", Speaker.USER, "fr", lambda m: asyncio.sleep(0), url=f"ws://127.0.0.1:{port}/rt")
+        ch.start()
         for _ in range(20):
             ch.push(bytes(FRAME_BYTES))
-            await asyncio.sleep(0.02)
-        await asyncio.sleep(0.6)  # coupure détectée, aucun nouvel audio
-        await ch.close(timeout=3)
-    assert sessions[0] == 2 and any(m.final and m.text == "fin" for m in out)
+            await asyncio.sleep(0.005)
+        await asyncio.sleep(0.6)
+        await ch.close()
+    assert sessions[0] == 1
+
+
+def test_zero_retention_is_requested_only_when_configured(monkeypatch):
+    monkeypatch.delenv("ELEVENLABS_ZERO_RETENTION", raising=False)
+    assert "enable_logging" not in ScribeChannel("k", Speaker.USER, "fr", None)._url()
+    monkeypatch.setenv("ELEVENLABS_ZERO_RETENTION", "1")
+    assert "enable_logging=false" in ScribeChannel("k", Speaker.USER, "fr", None)._url()
+
+
+def test_names_help_both_channels():
+    from app.stt import SttHub
+
+    hub = SttHub("k", "fr", None, None, keyterms=["Léa", "The Herakles"])
+    for ch in hub.channels.values():
+        assert ch.keyterms == ["Léa", "The Herakles"] and "keyterms=The+Herakles" in ch._url()
 
 
 async def test_no_reconnect_loop_when_audio_stops_and_the_server_closes():

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { playRecordedCall, type Frame } from "../shared/capture";
 import {
-  AUDIO_BUS, DEFAULT_BACKEND, PANEL_PORT,
-  type AudioBusMsg, type CaptureStatus, type ClientMsg, type ExtensionMsg, type ServerMsg, type Speaker,
+  AUDIO_BUS, DEFAULT_BACKEND, PANEL_PORT, invokedKey,
+  type AudioBusMsg, type CaptureStatus, type ClientMsg, type ExtensionMsg, type InvokedTab, type ServerMsg, type Speaker,
 } from "../shared/protocol";
 import { clock, fr, httpBase } from "../shared/format";
 import { CopilotView } from "./CopilotView";
@@ -18,6 +18,13 @@ const hasChrome = typeof chrome !== "undefined" && !!chrome.runtime?.id;
 const FRAME_BYTES = 3200; // 100 ms de PCM 16 bits à 16 kHz
 const MAX_PAD_FRAMES = 300; // 30 s au plus de silence de calage
 const STALL_MS = 5000; // plus de son depuis ce délai : la captation est perdue
+const HEARTBEAT_MS = 1000; // « j'écoute » envoyé au document offscreen
+const PORT_PING_MS = 20000; // garde le service worker éveillé (Chrome l'endort après 30 s)
+const SILENT_TAB_MS = 20000; // rien entendu sur l'onglet capté : est-ce le bon ?
+const HEARD_LEVEL = 0.003; // ~ -50 dB
+
+// Ce panneau (un par fenêtre) : seul lui peut arrêter la captation qu'il a lancée.
+const PANEL_ID = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Math.random());
 
 interface DemoCall {
   id: string;
@@ -43,6 +50,9 @@ interface ActiveCapture {
   started: boolean; // premier bloc audio reçu
   lastFrameAt: number;
   levelsShownAt: number;
+  heartbeatAt: number;
+  tabHeardAt: number; // dernier son entendu sur l'onglet (ou début de la captation)
+  silentWarned: boolean;
   stop?: () => void;
   onFirstFrame?: (offset: number) => void;
   onEnded?: () => void;
@@ -67,6 +77,24 @@ function eventTime(e: ClientMsg): number {
 function shifted(e: ClientMsg, offset: number): ClientMsg {
   if (e.type === "voice" || e.type === "face" || e.type === "announcement_done") return { ...e, ts: e.ts + offset };
   return e;
+}
+
+interface AudioDevice {
+  id: string;
+  label: string;
+}
+
+// Périphériques audio, avec leur nom (connu seulement une fois le micro autorisé).
+async function audioDevices(): Promise<{ mics: AudioDevice[]; speakers: AudioDevice[] }> {
+  try {
+    const all = await navigator.mediaDevices.enumerateDevices();
+    const pick = (kind: MediaDeviceKind) =>
+      all.filter((d) => d.kind === kind && d.deviceId && d.deviceId !== "default" && d.deviceId !== "communications" && d.label)
+        .map((d) => ({ id: d.deviceId, label: d.label }));
+    return { mics: pick("audioinput"), speakers: pick("audiooutput") };
+  } catch {
+    return { mics: [], speakers: [] };
+  }
 }
 
 async function micPermission(): Promise<PermissionState | "unknown"> {
@@ -107,6 +135,15 @@ export function App() {
   const [levels, setLevels] = useState<{ mic: number; tab: number } | null>(null);
   const [heard, setHeard] = useState<Partial<Record<Speaker, { text: string; final: boolean }>>>({});
   const [now, setNow] = useState(0);
+  const [starting, setStarting] = useState(false); // démarrage en cours : pas de double clic
+  const startingRef = useRef(false);
+  const [micMuted, setMicMuted] = useState(false);
+  // Lecture du ton de l'utilisateur pour l'appel en cours : démos seulement pour l'instant.
+  const [callSelfAnalysis, setCallSelfAnalysis] = useState(false);
+  const micMutedRef = useRef(false);
+  const [invoked, setInvoked] = useState<InvokedTab | null>(null);
+  const [devices, setDevices] = useState<{ mics: AudioDevice[]; speakers: AudioDevice[] }>({ mics: [], speakers: [] });
+  const bus = useRef<BroadcastChannel | null>(null);
 
   const onServer = useCallback((msg: ServerMsg) => {
     if (msg.type === "transcript") setHeard((h) => ({ ...h, [msg.speaker]: { text: msg.text, final: msg.final } }));
@@ -116,7 +153,7 @@ export function App() {
   const timers = useRef<number[]>([]);
   const active = useRef<ActiveCapture | null>(null);
   const live = state.phase === "live";
-  const busy = state.phase === "connecting";
+  const busy = state.phase === "connecting" || starting;
   const api = httpBase(backendUrl);
   const demoCalls = calls.filter((c) => c.language === settings.language);
 
@@ -142,24 +179,39 @@ export function App() {
     active.current = null;
     setLevels(null);
     cap?.stop?.();
-    if (hasChrome && cap?.kind !== "file") {
-      void chrome.runtime.sendMessage({ target: "background", action: "stop-capture" }).catch(() => {});
+    if (hasChrome && cap?.kind === "call") {
+      const msg: ExtensionMsg = { target: "background", action: "stop-capture", captureId: cap.id };
+      void chrome.runtime.sendMessage(msg).catch(() => {});
     }
   }, []);
 
   const newCapture = (kind: ActiveCapture["kind"], hooks: Pick<ActiveCapture, "onFirstFrame" | "onEnded"> = {}) => {
-    const cap: ActiveCapture = { id: crypto.randomUUID(), kind, started: false, lastFrameAt: 0, levelsShownAt: 0, ...hooks };
+    if (active.current) endCapture(); // jamais deux captations (ni deux démos) à la fois
+    clearTimers();
+    const cap: ActiveCapture = {
+      id: crypto.randomUUID(), kind, started: false, lastFrameAt: 0, levelsShownAt: 0, heartbeatAt: 0,
+      tabHeardAt: 0, silentWarned: false, ...hooks,
+    };
     active.current = cap;
     setLevels(null);
     setHeard({});
+    setMuted(false);
     setCapture({ tone: "ok", text: kind === "call" ? "Connexion à l'onglet et au micro…" : "Préparation de l'appel de démo…" });
     return cap;
+  };
+
+  const setMuted = (on: boolean) => {
+    micMutedRef.current = on;
+    setMicMuted(on);
   };
 
   // Vrai appel : le service worker ouvre le document offscreen, qui capte l'onglet et le micro.
   const captureCall = (tabId: number) => {
     const cap = newCapture("call");
-    const msg: ExtensionMsg = { target: "background", action: "start-capture", tabId, captureId: cap.id };
+    const msg: ExtensionMsg = {
+      target: "background", action: "start-capture", tabId, captureId: cap.id, panelId: PANEL_ID,
+      devices: { micId: settings.micId || undefined, speakerId: settings.speakerId || undefined },
+    };
     void chrome.runtime.sendMessage(msg).catch(() => {});
   };
 
@@ -200,13 +252,37 @@ export function App() {
       }
       cap.onFirstFrame?.(pad / 10);
     }
-    sendAudio(frameBytes(0, frame.mic));
+    // Micro coupé par le vendeur : du silence à la place (l'horloge de son canal reste juste).
+    const muted = micMutedRef.current;
+    sendAudio(frameBytes(0, muted ? new ArrayBuffer(frame.mic.byteLength) : frame.mic));
     sendAudio(frameBytes(1, frame.tab));
     const t = performance.now();
     cap.lastFrameAt = t;
+    if (!cap.tabHeardAt || frame.level.tab > HEARD_LEVEL) {
+      cap.tabHeardAt = t;
+      if (cap.silentWarned) {
+        cap.silentWarned = false; // le prospect est bien entendu, finalement
+        onCaptureStatus.current("running");
+      }
+    }
+    if (cap.kind === "call" && !cap.silentWarned && t - cap.tabHeardAt > SILENT_TAB_MS) {
+      // Icône cliquée sur un autre onglet, appel pas encore commencé, son coupé dans l'outil d'appel…
+      cap.silentWarned = true;
+      setCapture({
+        tone: "warn",
+        text: `Rien n'est entendu sur l'onglet ${invokedRef.current?.host ?? "capté"} : est-ce bien celui de l'appel ?`,
+      });
+    }
+    if (cap.kind === "call" && t - cap.heartbeatAt > HEARTBEAT_MS) {
+      // Sur réception d'un bloc (événement), pas sur minuteur : un panneau en arrière-plan
+      // continue de répondre, et seul un panneau fermé se tait.
+      cap.heartbeatAt = t;
+      const beat: AudioBusMsg = { type: "heartbeat", captureId: cap.id };
+      bus.current?.postMessage(beat);
+    }
     if (t - cap.levelsShownAt > 200) {
       cap.levelsShownAt = t; // vu-mètres rafraîchis 5 fois par seconde
-      setLevels(frame.level);
+      setLevels(muted ? { ...frame.level, mic: 0 } : frame.level);
     }
   };
 
@@ -222,7 +298,10 @@ export function App() {
     const cap = active.current;
     if (!cap) return;
     if (status === "running") {
-      setCapture({ tone: "ok", text: cap.kind === "call" ? "Onglet d'appel et micro captés" : "Lecture de l'appel de démo" });
+      setCapture({
+        tone: "ok",
+        text: cap.kind === "call" ? `Onglet ${invokedRef.current?.host ?? "d'appel"} et micro captés` : "Lecture de l'appel de démo",
+      });
     } else if (status === "warning") {
       setCapture({ tone: "warn", text: detail ?? "Captation partielle." });
     } else {
@@ -236,6 +315,9 @@ export function App() {
     }
   };
 
+  const invokedRef = useRef<InvokedTab | null>(null);
+  invokedRef.current = invoked;
+
   useEffect(() => {
     if (!hasChrome) return;
     chrome.storage.local.get("backendUrl").then((v) => {
@@ -245,17 +327,69 @@ export function App() {
       if (msg.target !== "sidepanel" || msg.action !== "capture-status") return;
       const cap = active.current;
       if (cap?.kind !== "call") return; // la démo est captée dans le panneau
-      if (msg.captureId && msg.captureId !== cap.id) return; // captation précédente
+      if (msg.captureId !== cap.id) return; // captation précédente, ou d'un autre panneau
       onCaptureStatus.current(msg.status, msg.detail);
     };
     chrome.runtime.onMessage.addListener(listener);
-    // Lien permanent avec le service worker : panneau fermé = captation arrêtée.
-    const port = chrome.runtime.connect({ name: PANEL_PORT });
+
+    // Lien avec le service worker : panneau fermé = captation arrêtée. Chrome endort le
+    // service worker après 30 s sans événement (le port tombe avec lui) : on le garde éveillé
+    // par un « ping » régulier, et on rouvre le port s'il tombe quand même.
+    let port: chrome.runtime.Port | null = null;
+    let closed = false;
+    const open = () => {
+      port = chrome.runtime.connect({ name: `${PANEL_PORT}:${PANEL_ID}` });
+      port.onDisconnect.addListener(() => {
+        port = null;
+        if (!closed) window.setTimeout(() => !closed && open(), 250);
+      });
+    };
+    open();
+    const ping = window.setInterval(() => port?.postMessage("ping"), PORT_PING_MS);
+    // Panneau qui se ferme : on arrête sa captation sans attendre (le document offscreen,
+    // qui n'entend plus le panneau, s'arrête de toute façon en quelques secondes).
+    const onHide = () => {
+      const cap = active.current;
+      if (cap?.kind === "call") {
+        const msg: ExtensionMsg = { target: "background", action: "stop-capture", captureId: cap.id };
+        void chrome.runtime.sendMessage(msg).catch(() => {});
+      }
+    };
+    window.addEventListener("pagehide", onHide);
+
+    // Onglet de l'appel : celui où l'icône a été cliquée dans cette fenêtre.
+    let key: string | null = null;
+    const onStorage = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area === "session" && key && key in changes) setInvoked((changes[key].newValue as InvokedTab | undefined) ?? null);
+    };
+    chrome.storage.onChanged.addListener(onStorage);
+    void chrome.windows.getCurrent().then(async (w) => {
+      if (w.id === undefined) return;
+      key = invokedKey(w.id);
+      setInvoked(((await chrome.storage.session.get(key))[key] as InvokedTab | undefined) ?? null);
+    });
     return () => {
+      closed = true;
       chrome.runtime.onMessage.removeListener(listener);
-      port.disconnect();
+      chrome.storage.onChanged.removeListener(onStorage);
+      window.removeEventListener("pagehide", onHide);
+      clearInterval(ping);
+      port?.disconnect();
     };
   }, []);
+
+  // Micro et sortie : la liste suit les branchements (casque connecté en cours de route).
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.enumerateDevices) return;
+    const refresh = () => void audioDevices().then(setDevices);
+    refresh();
+    navigator.mediaDevices.addEventListener?.("devicechange", refresh);
+    window.addEventListener("focus", refresh); // retour de la page d'autorisation du micro
+    return () => {
+      navigator.mediaDevices.removeEventListener?.("devicechange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [state.phase]);
 
   // Appels de démo disponibles (générés avec Claude et ElevenLabs).
   useEffect(() => {
@@ -274,9 +408,15 @@ export function App() {
   // Audio d'un vrai appel, capté par le document offscreen.
   useEffect(() => {
     if (typeof BroadcastChannel === "undefined") return;
-    const bus = new BroadcastChannel(AUDIO_BUS);
-    bus.onmessage = (ev: MessageEvent<AudioBusMsg>) => relay.current(ev.data.captureId, ev.data);
-    return () => bus.close();
+    const channel = new BroadcastChannel(AUDIO_BUS);
+    bus.current = channel;
+    channel.onmessage = (ev: MessageEvent<AudioBusMsg>) => {
+      if (ev.data.type === "frame" && active.current?.kind === "call") relay.current(ev.data.captureId, ev.data);
+    };
+    return () => {
+      bus.current = null;
+      channel.close();
+    };
   }, []);
 
   // Plus de son depuis quelques secondes (onglet fermé, document de captation arrêté par
@@ -306,7 +446,20 @@ export function App() {
     return () => clearInterval(id);
   }, [live, elapsed]);
 
-  const startCall = async () => {
+  // Un seul démarrage à la fois : un double clic ne lance ni deux appels ni deux démos.
+  const once = (run: () => Promise<void>) => async () => {
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setStarting(true);
+    try {
+      await run();
+    } finally {
+      startingRef.current = false;
+      setStarting(false);
+    }
+  };
+
+  const startCall = once(async () => {
     clearTimers();
     setNotice(null);
     setCapture(null);
@@ -314,9 +467,10 @@ export function App() {
       fail("Ouvrez Call-help depuis l'icône de l'extension, dans l'onglet de l'appel.");
       return;
     }
-    // L'onglet de l'appel est celui où l'icône a été cliquée (seul onglet que Chrome laisse capter).
-    const { invokedTabId } = await chrome.storage.session.get("invokedTabId");
-    const tab = typeof invokedTabId === "number" ? await chrome.tabs.get(invokedTabId).catch(() => null) : null;
+    setCallSelfAnalysis(false);
+    // L'onglet de l'appel est celui où l'icône a été cliquée dans cette fenêtre (seul onglet
+    // que Chrome laisse capter).
+    const tab = invoked ? await chrome.tabs.get(invoked.tabId).catch(() => null) : null;
     if (!tab?.id) {
       setNotice("Ouvrez l'onglet de l'appel (Meet, Teams…), cliquez sur l'icône Call-help, puis démarrez.");
       return;
@@ -332,8 +486,9 @@ export function App() {
       return;
     }
     try {
+      // Lecture du ton de l'utilisateur : pas encore branchée sur un vrai appel (démos seulement).
       await connect({
-        type: "start", scenario_id: "cold_call_fr", language: settings.language, self_analysis: selfAnalysis,
+        type: "start", scenario_id: "cold_call_fr", language: settings.language, self_analysis: false,
         context: scriptContext(settings), transcription: "server",
         keyterms: [settings.userName, settings.company].map((s) => s.trim()).filter(Boolean),
       });
@@ -341,9 +496,10 @@ export function App() {
       return; // l'erreur est déjà affichée par la session
     }
     captureCall(tab.id);
-  };
+  });
 
-  const startDemo = async () => {
+  const startDemo = once(async () => {
+    setCallSelfAnalysis(selfAnalysis);
     clearTimers();
     setNotice(null);
     setCapture(null);
@@ -386,7 +542,7 @@ export function App() {
         },
       },
     );
-  };
+  });
 
   const idle = !live && !busy;
 
@@ -412,7 +568,7 @@ export function App() {
           </section>
         )}
 
-        <CopilotView state={state} selfAnalysis={selfAnalysis} onAnswer={answerAnnouncement} onFeedback={giveFeedback} />
+        <CopilotView state={state} selfAnalysis={callSelfAnalysis} onAnswer={answerAnnouncement} onFeedback={giveFeedback} />
 
         {live && (
           <section className="card listen" aria-label="Écoute">
@@ -420,7 +576,7 @@ export function App() {
               <span className="eyebrow">Écoute</span>
               {capture && <span className={`listen-state ${capture.tone}`}>{capture.text}</span>}
             </div>
-            <Level label="Vous" value={levels?.mic} />
+            <Level label={micMuted ? "Vous (coupé)" : "Vous"} value={micMuted ? 0 : levels?.mic} />
             <Level label="Prospect" value={levels?.tab} />
             {(["prospect", "user"] as const).map((sp) => {
               const line = heard[sp];
@@ -431,6 +587,11 @@ export function App() {
                 </p>
               ) : null;
             })}
+            {active.current?.kind === "call" && (
+              <button className={`btn secondary small ${micMuted ? "on" : ""}`} aria-pressed={micMuted} onClick={() => setMuted(!micMuted)}>
+                {micMuted ? "Réactiver mon micro" : "Couper mon micro"}
+              </button>
+            )}
           </section>
         )}
 
@@ -451,6 +612,17 @@ export function App() {
                 ))}
               </div>
             </div>
+            <p className={`call-tab ${invoked ? "" : "missing"}`}>
+              {invoked ? (
+                <>
+                  <span className="who">Onglet de l'appel</span>
+                  {invoked.host ?? invoked.title ?? "onglet choisi"}
+                  {invoked.host && invoked.title ? <span className="sub"> · {invoked.title}</span> : null}
+                </>
+              ) : (
+                "Ouvrez l'onglet de l'appel (Meet, Teams…) et cliquez sur l'icône Call-help pour le choisir."
+              )}
+            </p>
             <div className="fields">
               <Field label="Votre prénom" placeholder="Léa" value={settings.userName} onChange={(v) => setSettings({ userName: v })} />
               <Field label="Votre société" placeholder="The Herakles" value={settings.company} onChange={(v) => setSettings({ company: v })} />
@@ -458,6 +630,14 @@ export function App() {
                 onChange={(v) => setSettings({ segment: v })} />
               <Field label="Ce que vous leur apportez" placeholder="gagner deux heures par semaine" value={settings.benefit}
                 onChange={(v) => setSettings({ benefit: v })} />
+              {devices.mics.length > 0 && (
+                <DeviceField label="Micro (celui de votre casque)" value={settings.micId} options={devices.mics}
+                  onChange={(v) => setSettings({ micId: v })} />
+              )}
+              {devices.speakers.length > 0 && (
+                <DeviceField label="Sortie du son de l'appel" value={settings.speakerId} options={devices.speakers}
+                  onChange={(v) => setSettings({ speakerId: v })} />
+              )}
             </div>
           </section>
         )}
@@ -483,7 +663,9 @@ export function App() {
                 <span className="track" aria-hidden />
                 <span>
                   Analyser aussi mon ton
-                  <span className="sub block">Visible par vous seul, jamais par un manager.</span>
+                  <span className="sub block">
+                    Visible par vous seul, jamais par un manager. Pour l'instant dans les démos seulement.
+                  </span>
                 </span>
               </label>
             </>
@@ -498,8 +680,8 @@ export function App() {
         </section>
 
         <p className="footnote">
-          Le son de l'appel est transcrit en direct ; Call-help ne l'enregistre pas. Les indices émotionnels sont des
-          hypothèses, pas des faits. Un casque évite que votre micro reprenne la voix du prospect.
+          Le son de l'appel est transcrit en direct par ElevenLabs ; Call-help ne l'enregistre pas. Les indices
+          émotionnels sont des hypothèses, pas des faits. Un casque évite que votre micro reprenne la voix du prospect.
         </p>
       </main>
     </div>
@@ -516,6 +698,23 @@ function Level({ label, value }: { label: string; value: number | undefined }) {
         <span style={{ width: `${pct}%` }} />
       </div>
     </div>
+  );
+}
+
+function DeviceField({ label, value, options, onChange }: {
+  label: string; value: string; options: AudioDevice[]; onChange: (v: string) => void;
+}) {
+  // Un périphérique retenu mais débranché reste affiché, pour ne pas changer de choix en silence.
+  const known = !value || options.some((o) => o.id === value);
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Celui du système</option>
+        {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+        {!known && <option value={value}>Périphérique débranché</option>}
+      </select>
+    </label>
   );
 }
 

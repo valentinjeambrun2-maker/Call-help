@@ -216,10 +216,17 @@ class CallSession:
         # qu'il a lui-même choisie, continue.
         if not consent:
             self.emotions.blocked.add(Speaker.PROSPECT)
+            # Aucun conseil fondé sur son ressenti, même si le modèle en proposait un.
+            self.coach.emotion_suppressed = True
         self.emotions.start(ts)
         self.tracker.step_started_at = ts
         await self.coach.on_step(self.tracker.step, ts)
         await self._send_state()
+
+    CONSENT_MARGIN = 0.3  # s : l'horloge audio retarde de 0,1 à 0,2 s sur celle du clic
+
+    def _said_before_consent(self, msg: TranscriptMsg) -> bool:
+        return self.announcement_at is not None and msg.start < self.announcement_at + self.CONSENT_MARGIN
 
     async def _on_transcript(self, msg: TranscriptMsg) -> None:
         self.now = max(self.now, msg.end)
@@ -228,10 +235,12 @@ class CallSession:
         self.metrics.add_segment(msg.speaker, msg.text, msg.start, msg.end)
         self._append_transcript(msg)
 
-        if self.announcement_pending:
+        if self.announcement_pending or self._said_before_consent(msg):
             # Tant que le message d'information n'est pas confirmé, on ne fait
             # qu'écouter : pas d'avancée de scénario ni de conseil qui masquerait
             # le message (le « d'accord » du prospect y répond, il ne clôt pas l'accroche).
+            # La transcription en direct rend souvent ce « d'accord » après le clic du vendeur
+            # (~1 s) : c'est l'heure à laquelle il a été dit qui compte, pas celle de son arrivée.
             await self._send_state()
             return
 

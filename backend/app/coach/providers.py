@@ -82,15 +82,19 @@ def hint_schema(ctx: CoachContext) -> dict:
     props |= {
         "text": {"type": "string", "description": "Indication de 12 mots maximum"},
         "say": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Phrase prête à dire, 25 mots maximum"},
-        "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]},
+        "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]
+                 if ctx.emotion_allowed else ["objection", "step", "question", "closing"]},
         "objection": {"anyOf": [{"type": "string", "enum": objection_ids}, {"type": "null"}],
                       "description": "Objection NOUVELLE exprimée dans le dernier tour du prospect, sinon null"},
     }
-    props["prospect_state"] = {
-        "anyOf": [{"type": "string", "enum": ["neutral", "interest", "hesitation", "annoyance", "boredom",
-                                              "enthusiasm"]}, {"type": "null"}],
-        "description": "État du prospect lu dans ses mots, null si emotion_allowed est faux"}
-    props["state_confidence"] = {"type": "number"}
+    if ctx.emotion_allowed:
+        # Sans l'accord du prospect, on ne demande même pas son état au modèle (et aucun
+        # conseil de type « emotion » n'est possible) : la consigne seule ne suffit pas.
+        props["prospect_state"] = {
+            "anyOf": [{"type": "string", "enum": ["neutral", "interest", "hesitation", "annoyance", "boredom",
+                                                  "enthusiasm"]}, {"type": "null"}],
+            "description": "État du prospect lu dans ses mots"}
+        props["state_confidence"] = {"type": "number"}
     props["confidence"] = {"type": "number"}
     return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
 

@@ -113,7 +113,9 @@ export function CopilotView({ state, selfAnalysis, onAnswer, onFeedback }: Props
           <p className="sub">Rédaction du bilan et de l'email de suivi…</p>
         </section>
       )}
-      {state.aiSummaryState === "failed" && <p className="sub center">Bilan IA indisponible pour cet appel.</p>}
+      {state.aiSummaryState === "failed" && (
+        <p className="sub center">{state.aiSummaryError ?? "Bilan IA indisponible pour cet appel."}</p>
+      )}
       {state.aiSummary && <AiSummaryCard s={state.aiSummary} />}
 
       {past.length > 0 && (

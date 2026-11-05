@@ -115,29 +115,57 @@ export type ClientMsg =
 
 export type CaptureStatus = "running" | "warning" | "stopped" | "error";
 
+// Périphériques choisis pour l'appel (identifiants de navigator.mediaDevices, communs au
+// panneau et au document offscreen, de même origine). Vide : ceux du système.
+export interface CaptureDevices {
+  micId?: string;
+  speakerId?: string;
+}
+
 // Messages internes à l'extension (panneau <-> service worker <-> offscreen) pour la
 // captation d'un vrai appel. `captureId` identifie une captation : les messages d'une
-// captation précédente sont ignorés. (La démo, elle, est jouée et captée dans le panneau.)
+// captation précédente sont ignorés. `panelId` identifie le panneau qui l'a lancée : seul
+// lui peut l'arrêter (un panneau par fenêtre). (La démo, elle, est jouée et captée dans le panneau.)
 export type ExtensionMsg =
-  | { target: "background"; action: "start-capture"; tabId: number; captureId: string }
-  | { target: "background"; action: "stop-capture" }
-  | { target: "offscreen"; action: "start"; streamId: string; captureId: string }
+  | { target: "background"; action: "start-capture"; tabId: number; captureId: string; panelId: string; devices: CaptureDevices }
+  | { target: "background"; action: "stop-capture"; captureId: string }
+  | { target: "offscreen"; action: "start"; streamId: string; captureId: string; devices: CaptureDevices }
   | { target: "offscreen"; action: "stop" }
-  | { target: "sidepanel"; action: "capture-status"; status: CaptureStatus; detail?: string; captureId?: string };
+  | { target: "sidepanel"; action: "capture-status"; status: CaptureStatus; detail?: string; captureId: string };
 
 // Audio du document offscreen vers le panneau (même origine) : blocs de 100 ms, PCM 16 bits
-// à 16 kHz, micro (vous) et onglet (prospect) sur la même horloge.
+// à 16 kHz, micro (vous) et onglet (prospect) sur la même horloge. En retour, le panneau
+// signale qu'il écoute toujours (« heartbeat ») : sans lui, le document offscreen coupe la
+// captation de lui-même (panneau fermé, même si le service worker s'est endormi entre-temps).
 export const AUDIO_BUS = "callhelp-audio";
-export type AudioBusMsg = {
-  type: "frame";
-  captureId: string;
-  seq: number;
-  mic: ArrayBuffer;
-  tab: ArrayBuffer;
-  level: { mic: number; tab: number };
-};
+export type AudioBusMsg =
+  | {
+      type: "frame";
+      captureId: string;
+      seq: number;
+      mic: ArrayBuffer;
+      tab: ArrayBuffer;
+      level: { mic: number; tab: number };
+    }
+  | { type: "heartbeat"; captureId: string };
+export const HEARTBEAT_TIMEOUT_MS = 4000;
 
 export const DEFAULT_BACKEND = "ws://localhost:8000/ws/session";
 
-// Nom du port qui relie le panneau au service worker : sa fermeture arrête la capture.
+// Préfixe du port qui relie un panneau au service worker (« callhelp-sidepanel:<panelId> ») :
+// sa fermeture arrête la captation lancée par ce panneau.
 export const PANEL_PORT = "callhelp-sidepanel";
+
+// Onglet où l'icône a été cliquée, par fenêtre (storage.session « invoked:<windowId> ») :
+// seul onglet que Chrome laisse capter. Et captation en cours (« capture »).
+export interface InvokedTab {
+  tabId: number;
+  title?: string;
+  host?: string;
+}
+export interface RunningCapture {
+  captureId: string;
+  panelId: string;
+  tabId: number;
+}
+export const invokedKey = (windowId: number) => `invoked:${windowId}`;

@@ -8,9 +8,14 @@ export interface Settings {
   company: string;
   segment: string; // qui vous appelez (« agences immobilières »)
   benefit: string; // ce que vous leur apportez (« gagner deux heures par semaine »)
+  // Micro et sortie de l'appel : ceux du casque, comme dans l'outil d'appel. Vide : ceux du système.
+  micId: string;
+  speakerId: string;
 }
 
-export const DEFAULT_SETTINGS: Settings = { language: "fr", userName: "", company: "", segment: "", benefit: "" };
+export const DEFAULT_SETTINGS: Settings = {
+  language: "fr", userName: "", company: "", segment: "", benefit: "", micId: "", speakerId: "",
+};
 
 const KEY = "callhelp.settings";
 

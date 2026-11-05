@@ -13,7 +13,10 @@ compris. Choix et corrections issus de la vérification croisée :
 - horloge de l'appel attachée à chaque bloc audio à sa réception : ni reconnexion ni
   retard d'envoi ne décalent les temps ;
 - reconnexion avec rejeu de l'audio non encore transcrit, sur toute fermeture non voulue ;
-- en fin d'appel, envoi du reste + validation, et attente du dernier texte (~1,5 s).
+- en fin d'appel, envoi du reste + validation, et attente du dernier texte (~1,5 s) ;
+- conservation : ElevenLabs garde par défaut l'audio et le texte (historique du compte).
+  ELEVENLABS_ZERO_RETENTION=1 demande le mode sans conservation (enable_logging=false),
+  réservé aux comptes entreprise : un compte qui ne l'autorise pas refuse la session.
 """
 
 from __future__ import annotations
@@ -22,8 +25,10 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import re
 import urllib.parse
+from array import array
 from collections import deque
 from collections.abc import Awaitable, Callable
 
@@ -36,6 +41,8 @@ FRAME_SECONDS = 0.1
 FRAME_BYTES = int(SR * 2 * FRAME_SECONDS)  # 100 ms de PCM 16 bits mono
 URL = "wss://api.elevenlabs.io/v1/speech-to-text/realtime"
 PRICE_PER_HOUR = 0.39
+REPLAY_PACE = 0.025  # s par bloc de 100 ms rejoué : rattrapage ~4x temps réel
+SPEECH_PEAK = 300  # crête (sur 32768) en dessous de laquelle un bloc est du silence (~ -40 dBFS)
 
 FATAL = {"auth_error", "quota_exceeded", "unaccepted_terms", "invalid_request", "input_error",
          "chunk_size_exceeded"}
@@ -68,12 +75,22 @@ def sanitize_keyterms(names: list[str], limit: int = 50) -> list[str]:
     return out[:limit]
 
 
+def zero_retention_requested() -> bool:
+    return os.environ.get("ELEVENLABS_ZERO_RETENTION", "").strip().lower() in ("1", "true", "yes", "oui")
+
+
+def has_speech(frame: bytes) -> bool:
+    samples = array("h", frame[: len(frame) - len(frame) % 2])
+    return bool(samples) and max(max(samples), -min(samples)) >= SPEECH_PEAK
+
+
 class ScribeChannel:
     """Une session de transcription en direct pour un canal (un locuteur)."""
 
     def __init__(self, api_key: str, speaker: Speaker, language: str, on_transcript: OnTranscript,
                  on_status: OnStatus | None = None, vad_silence_secs: float = 0.6,
-                 keyterms: list[str] | None = None, url: str = URL, max_queue_seconds: float = 60.0) -> None:
+                 keyterms: list[str] | None = None, url: str = URL, max_queue_seconds: float = 60.0,
+                 zero_retention: bool | None = None) -> None:
         self.api_key = api_key
         self.speaker = speaker
         self.language = language
@@ -82,6 +99,7 @@ class ScribeChannel:
         self.vad = vad_silence_secs
         self.keyterms = sanitize_keyterms(keyterms or [])
         self.url = url
+        self.zero_retention = zero_retention_requested() if zero_retention is None else zero_retention
         self.queue: asyncio.Queue[tuple[float, bytes]] = asyncio.Queue(maxsize=int(max_queue_seconds / FRAME_SECONDS))
         self._pending = bytearray()
         self.received = 0.0  # horloge de l'appel : secondes d'audio reçues sur ce canal
@@ -113,10 +131,19 @@ class ScribeChannel:
                 self.queue.get_nowait()
             self.queue.put_nowait(item)
 
-    async def close(self, timeout: float = 2.0) -> None:
+    def _close_budget(self) -> float:
+        """Temps laissé à la fin d'appel : 2 s (validation et dernier texte), plus le rejeu de
+        l'audio pas encore transcrit si la connexion est tombée juste avant (jusqu'à 15 s
+        d'audio, rejoué à ~4x), borné à 6 s pour ne pas faire attendre le bilan."""
+        pending = len(self._uncommitted())
+        return min(6.0, 2.0 + (0.5 + pending * REPLAY_PACE if pending else 0.0))
+
+    async def close(self, timeout: float | None = None) -> None:
         """Fin d'appel : envoie le reste, valide, attend le dernier texte, puis ferme."""
         if self._task is not None and self._task.done():
             return
+        if timeout is None:
+            timeout = self._close_budget()
         if self._pending and not self.fatal:
             pad = bytes(self._pending) + bytes(FRAME_BYTES - len(self._pending))
             self._pending.clear()
@@ -138,6 +165,8 @@ class ScribeChannel:
         q = [("model_id", "scribe_v2_realtime"), ("audio_format", "pcm_16000"), ("commit_strategy", "vad"),
              ("vad_silence_threshold_secs", str(self.vad)), ("language_code", self.language),
              ("include_timestamps", "true"), ("keepalive_interval_ms", "1000")]
+        if self.zero_retention:
+            q.append(("enable_logging", "false"))
         q += [("keyterms", k) for k in self.keyterms]  # forme répétée (keyterms[] est ignoré)
         return self.url + "?" + urllib.parse.urlencode(q)
 
@@ -211,8 +240,14 @@ class ScribeChannel:
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 4.0)
 
+    def _uncommitted(self) -> list[tuple[float, bytes]]:
+        """Audio envoyé mais pas encore couvert par un texte définitif (à rejouer après une coupure)."""
+        return [(t, b) for t, b in self.history if t >= self.committed_until - 0.05]
+
     def _replayable(self) -> bool:
-        return bool(self.history) and self.history[-1][0] >= self.committed_until - 0.05
+        """Une dernière session vaut-elle la peine en fin d'appel ? Seulement s'il reste de la
+        parole non transcrite : rejouer du silence serait facturé pour rien."""
+        return any(has_speech(b) for _, b in self._uncommitted())
 
     def _requeue_front(self, item: tuple[float, bytes]) -> None:
         rest = []
@@ -226,7 +261,7 @@ class ScribeChannel:
         from websockets.asyncio.client import connect
 
         # Rejeu : l'audio envoyé mais pas encore transcrit avant la coupure.
-        replay = [(t, b) for t, b in self.history if t >= self.committed_until - 0.05]
+        replay = self._uncommitted()
         async with connect(self._url(), additional_headers={"xi-api-key": self.api_key},
                            open_timeout=5, ping_interval=10, close_timeout=1, max_size=2**22) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
@@ -258,10 +293,10 @@ class ScribeChannel:
 
             async def sender() -> None:
                 first_chunk = True
-                for t, frame in replay:  # rattrapage ~4x temps réel
+                for t, frame in replay:
                     await send(t, frame, first_chunk, record=False)
                     first_chunk = False
-                    await asyncio.sleep(0.025)
+                    await asyncio.sleep(REPLAY_PACE)
                 while True:
                     if self._closing.is_set() and self.queue.empty():
                         # Fin d'appel : validation du dernier énoncé, puis attente de son texte.
@@ -366,8 +401,10 @@ class SttHub:
 
     def __init__(self, api_key: str, language: str, on_transcript: OnTranscript, on_status: OnStatus,
                  keyterms: list[str] | None = None, url: str = URL) -> None:
+        # Les noms propres servent aux deux canaux : le vendeur dit le sien et celui de sa société
+        # dès l'accroche, et chacun peut nommer l'autre ou son entreprise.
         self.channels = {
-            0: ScribeChannel(api_key, Speaker.USER, language, on_transcript, on_status, url=url),
+            0: ScribeChannel(api_key, Speaker.USER, language, on_transcript, on_status, keyterms=keyterms, url=url),
             1: ScribeChannel(api_key, Speaker.PROSPECT, language, on_transcript, on_status,
                              keyterms=keyterms, url=url),
         }

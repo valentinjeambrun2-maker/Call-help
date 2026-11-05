@@ -19,13 +19,14 @@ export interface CallState {
   summary: CallSummary | null;
   aiSummary: AiSummary | null;
   aiSummaryState: "none" | "pending" | "ready" | "failed";
+  aiSummaryError: string | null; // raison donnée par le backend (« clé Anthropic refusée »…)
   error: string | null;
   feedback: Record<string, boolean>;
 }
 
 const INITIAL: CallState = {
   phase: "idle", step: null, metrics: null, emotions: [], analysisPaused: false, announcementPending: false,
-  prospectConsent: null, announcement: null, current: null, history: [], summary: null, aiSummary: null, aiSummaryState: "none", error: null, feedback: {},
+  prospectConsent: null, announcement: null, current: null, history: [], summary: null, aiSummary: null, aiSummaryState: "none", aiSummaryError: null, error: null, feedback: {},
 };
 
 // Un conseil reste à l'écran au moins ce temps, sauf s'il est plus urgent.
@@ -212,7 +213,9 @@ export function useCallSession(
           } else if (msg.type === "ai_summary_pending") {
             setState((s) => ({ ...s, aiSummaryState: "pending" }));
           } else if (msg.type === "ai_summary") {
-            setState((s) => ({ ...s, aiSummary: msg.summary, aiSummaryState: msg.summary ? "ready" : "failed" }));
+            setState((s) => ({
+              ...s, aiSummary: msg.summary, aiSummaryState: msg.summary ? "ready" : "failed", aiSummaryError: msg.error,
+            }));
             socket.close();
           } else if (msg.type === "error") {
             setState((s) => ({ ...s, error: msg.message }));

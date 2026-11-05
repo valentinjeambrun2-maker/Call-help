@@ -87,7 +87,9 @@ Plus tard, le client enverra l'audio brut (binaire, PCM 16 kHz) et la transcript
 - Les émotions sont exclues des données visibles par un admin/manager (Q38).
 - L'analyse du ton de l'utilisateur se fait sur son accord explicite (`self_analysis`, mémorisé par le panneau). Elle n'est jamais visible par un manager ou un admin.
 - L'analyse émotionnelle du prospect exige son accord (`announcement_done.consent`). En cas de refus, elle est bloquée pour lui seul pendant tout l'appel, et Claude reçoit `emotion_allowed = false`.
-- La capture de l'onglet s'arrête dès que le panneau se ferme, que l'onglet d'appel se ferme ou que la connexion au backend tombe.
+- La capture de l'onglet s'arrête dès que le panneau qui l'a lancée se ferme, que l'onglet d'appel se ferme ou que la connexion au backend tombe. Chrome endort le service worker après 30 s sans événement. Deux mécanismes couvrent ce cas :
+  - le panneau garde le service worker éveillé (un message toutes les 20 s) et rouvre son port s'il tombe ;
+  - le document offscreen coupe le micro et l'onglet de lui-même s'il n'entend plus le panneau pendant 4 s. Le panneau répond à chaque seconde d'audio reçue.
 - Un bouton « couper l'analyse » arrête voix et visage pour le reste de l'appel.
 
 ## 6. Open source : viable ou pas ? (Q40)

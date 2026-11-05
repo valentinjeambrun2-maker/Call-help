@@ -118,8 +118,9 @@ class ClaudeSummary:
                 fallbacks="default",
                 messages=[{"role": "user", "content": data.model_dump_json(indent=1)}],
             )
-        except anthropic.AuthenticationError as exc:
-            self.last_error = "clé Anthropic refusée"
+        except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as exc:
+            self.last_error = "clé Anthropic refusée" if isinstance(exc, anthropic.AuthenticationError) \
+                else "accès Anthropic refusé"
             log.error("Bilan IA indisponible : %s", exc)
             return None
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
