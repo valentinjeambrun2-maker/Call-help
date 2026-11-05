@@ -12,7 +12,7 @@ from .emotion import EmotionFusion
 from .metrics import ConversationMetrics
 from .models import (
     AnnouncementDoneMsg, CallSummary, ClientMsg, FaceMsg, FeedbackMsg, Hint, HintMsg,
-    PauseAnalysisMsg, Speaker, StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptMsg, VoiceMsg,
+    PauseAnalysisMsg, Speaker, StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptEcho, TranscriptMsg, VoiceMsg,
 )
 from .scenario import ScenarioTracker, load_scenario
 
@@ -39,6 +39,7 @@ class CallSession:
         self.prospect_consent: bool | None = None
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
         self.provisional: dict[float, str] = {}  # fin de tour -> objection des mots-clés à confirmer
+        self.stt = None  # SttHub quand le backend transcrit lui-même
 
     async def _emit_hint(self, hint: Hint) -> None:
         if hint.replaces:
@@ -75,6 +76,8 @@ class CallSession:
         elif isinstance(msg, AnnouncementDoneMsg):
             await self._on_announcement_done(msg.ts, msg.consent)
         elif isinstance(msg, StopMsg):
+            if self.stt is not None:
+                await self.stt.close()  # derniers énoncés transcrits avant le bilan
             await self.close()
             await self.send(SummaryMsg(summary=self.summary()).model_dump(mode="json"))
             return False
@@ -93,6 +96,8 @@ class CallSession:
                                  on_classified=self._on_classified,
                                  objection_ids={o.id for o in self.scenario.objections})
         self.started = True
+        if msg.transcription == "server":
+            await self._start_stt(msg)
         if self.scenario.announcement:
             # Cold call : pas d'invitation, donc message d'information en début
             # d'appel. L'analyse émotionnelle attend sa confirmation.
@@ -103,6 +108,37 @@ class CallSession:
             self.emotions.start(0.0)
             await self.coach.on_step(self.tracker.step, 0.0)
         await self._send_state()
+
+    async def _start_stt(self, msg: StartMsg) -> None:
+        import os
+
+        from .stt import SttHub
+
+        key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+        if not key:
+            await self.send({"type": "error", "message": "Transcription en direct indisponible : "
+                                                        "ELEVENLABS_API_KEY absente du backend."})
+            return
+        names = msg.keyterms + [v for k, v in self.context_vars.items() if k in ("company", "user_name")]
+        self.stt = SttHub(key, msg.language, self._on_stt_transcript, self._on_stt_status, keyterms=names)
+        self.stt.start()
+
+    def push_audio(self, data: bytes) -> bool:
+        """Trame audio binaire du client (1 octet de canal + PCM 16 kHz).
+        Retourne False si la transcription en direct n'est pas active pour cet appel."""
+        if self.stt is None:
+            return False
+        self.stt.push(data)
+        return True
+
+    async def _on_stt_transcript(self, msg: TranscriptMsg) -> None:
+        await self.send(TranscriptEcho(**msg.model_dump(exclude={"type"})).model_dump(mode="json"))
+        if msg.final:
+            await self._on_transcript(msg)
+
+    async def _on_stt_status(self, level: str, message: str) -> None:
+        if level == "error":
+            await self.send({"type": "error", "message": message})
 
     @property
     def announcement_pending(self) -> bool:
@@ -231,9 +267,12 @@ class CallSession:
             hints_not_useful=sum(not v for v in self.feedback.values()),
             announcement_at=self.announcement_at,
             prospect_consent=self.prospect_consent,
+            transcription_cost_usd=round(self.stt.cost_usd, 4) if self.stt is not None else None,
             emotion_analysis_used=self.emotions.samples_used > 0,
         )
 
     async def close(self) -> None:
+        if self.stt is not None:
+            await self.stt.close()
         if self.started:
             await self.coach.close()

@@ -53,6 +53,7 @@ export interface CallSummary {
   announcement_at: number | null;
   prospect_consent: boolean | null;
   emotion_analysis_used: boolean;
+  transcription_cost_usd: number | null;
 }
 
 export type ServerMsg =
@@ -67,10 +68,20 @@ export type ServerMsg =
     }
   | { type: "hint"; hint: Hint }
   | { type: "summary"; summary: CallSummary }
+  | { type: "transcript"; speaker: Speaker; text: string; start: number; end: number; final: boolean }
   | { type: "error"; message: string };
 
 export type ClientMsg =
-  | { type: "start"; scenario_id: string; language: "fr" | "en"; self_analysis: boolean; context?: Record<string, string> }
+  | {
+      type: "start";
+      scenario_id: string;
+      language: "fr" | "en";
+      self_analysis: boolean;
+      context?: Record<string, string>;
+      // "server" : le client envoie l'audio (trames binaires) et le backend transcrit en direct.
+      transcription?: "client" | "server";
+      keyterms?: string[];
+    }
   | { type: "transcript"; speaker: Speaker; text: string; start: number; end: number; final: boolean }
   | { type: "voice"; speaker: Speaker; ts: number; scores: Record<EmotionState, number> }
   | {

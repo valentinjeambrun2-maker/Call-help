@@ -128,6 +128,11 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
     if (ws.current?.readyState === WebSocket.OPEN) ws.current.send(JSON.stringify(msg));
   }, []);
 
+  // Audio pour la transcription en direct : 1 octet de canal (0 = vous, 1 = prospect) + PCM 16 kHz.
+  const sendAudio = useCallback((frame: Uint8Array) => {
+    if (ws.current?.readyState === WebSocket.OPEN) ws.current.send(frame);
+  }, []);
+
   const resetDisplay = () => {
     clearTimer();
     queue.current = [];
@@ -227,5 +232,5 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
     [],
   );
 
-  return { state, connect, send, giveFeedback, answerAnnouncement, elapsed, fail };
+  return { state, connect, send, sendAudio, giveFeedback, answerAnnouncement, elapsed, fail };
 }

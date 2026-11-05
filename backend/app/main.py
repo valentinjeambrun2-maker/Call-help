@@ -76,13 +76,30 @@ def demo_call_data(call_id: str, kind: str):
 @app.websocket("/ws/session")
 async def ws_session(ws: WebSocket) -> None:
     await ws.accept()
-    session = CallSession(ws.send_json, provider=default_provider())
+
+    async def safe_send(msg: dict) -> None:
+        # La transcription en direct peut produire un texte après la fermeture du client.
+        try:
+            await ws.send_json(msg)
+        except (RuntimeError, WebSocketDisconnect):
+            pass
+
+    session = CallSession(safe_send, provider=default_provider())
+    audio_refused = False
     try:
         while True:
             try:
-                # receive_text lève KeyError sur une trame binaire ; json.loads,
-                # ValueError sur du JSON invalide : l'appel continue dans les deux cas.
-                data = json.loads(await ws.receive_text())
+                frame = await ws.receive()
+                if frame["type"] == "websocket.disconnect":
+                    break
+                if frame.get("bytes") is not None:
+                    # Audio (1 octet de canal + PCM 16 kHz) pour la transcription en direct.
+                    if not session.push_audio(frame["bytes"]) and not audio_refused:
+                        audio_refused = True  # signalé une fois, pas à chaque bloc de 100 ms
+                        await safe_send({"type": "error", "message": "Audio reçu sans transcription en direct : "
+                                         "démarrez l'appel avec transcription='server'."})
+                    continue
+                data = json.loads(frame.get("text") or "")
                 if not isinstance(data, dict):
                     raise ValueError("Message JSON attendu (objet)")
                 if not await session.handle(data):
@@ -93,4 +110,7 @@ async def ws_session(ws: WebSocket) -> None:
         pass
     finally:
         await session.close()
-    await ws.close()
+    try:
+        await ws.close()
+    except RuntimeError:
+        pass  # déjà fermée par le client

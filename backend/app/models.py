@@ -33,6 +33,11 @@ class StartMsg(BaseModel):
     self_analysis: bool = False
     # Variables du scénario : {user_name}, {company}, {topic}...
     context: dict[str, str] = {}
+    # "client" : le client envoie la transcription (rejeu, démo de référence).
+    # "server" : le client envoie l'audio (trames binaires), le backend transcrit en direct.
+    transcription: Literal["client", "server"] = "client"
+    # Noms propres pour aider la transcription (prospect, entreprise, offre).
+    keyterms: list[str] = []
 
 
 class TranscriptMsg(BaseModel):
@@ -140,6 +145,17 @@ class StepState(BaseModel):
     active_objection: str | None = None
 
 
+class TranscriptEcho(BaseModel):
+    """Transcription produite par le backend, renvoyée au client pour affichage."""
+
+    type: Literal["transcript"] = "transcript"
+    speaker: Speaker
+    text: str
+    start: float
+    end: float
+    final: bool
+
+
 class StateMsg(BaseModel):
     type: Literal["state"] = "state"
     step: StepState
@@ -172,6 +188,7 @@ class CallSummary(BaseModel):
     announcement_at: float | None = None
     prospect_consent: bool | None = None
     emotion_analysis_used: bool = False
+    transcription_cost_usd: float | None = None
 
     def team_view(self) -> dict:
         return self.model_dump()

@@ -5,6 +5,7 @@ import { DEFAULT_BACKEND, type ClientMsg, type Hint, type ServerMsg } from "../s
 import { clock, fr, httpBase } from "../shared/format";
 import { CopilotView, EMOTIONS } from "../sidepanel/CopilotView";
 import { useCallSession } from "../sidepanel/useCallSession";
+import { FRAME, SAMPLE_RATE, decodeCall, frameFor } from "./audio";
 
 interface DemoCall {
   id: string;
@@ -46,6 +47,16 @@ interface Observed {
   arrival: number; // temps audio à la réception
 }
 
+interface Heard {
+  speaker: "user" | "prospect";
+  text: string;
+  start: number;
+  end: number;
+  arrival: number;
+}
+
+type Mode = "reference" | "stt";
+
 const OBJECTION_LABELS: Record<string, string> = {
   no_time: "Pas le temps", has_provider: "Déjà un prestataire", no_budget: "Pas de budget",
   send_email: "Envoyez un mail", other: "Autre objection",
@@ -82,15 +93,30 @@ export function DemoApp() {
   const [observed, setObserved] = useState<Observed[]>([]);
   const [stepsAfter, setStepsAfter] = useState<Record<number, string>>({});
   const [emotionAfter, setEmotionAfter] = useState<Record<number, string | null>>({});
+  const [mode, setMode] = useState<Mode>("stt");
+  const [heard, setHeard] = useState<Heard[]>([]);
+  const [partial, setPartial] = useState<Record<string, string>>({});
+  const [preparing, setPreparing] = useState(false);
 
   const audio = useRef<HTMLAudioElement>(null);
   const nextEvent = useRef(0);
   const ticker = useRef<number | null>(null);
   const lastState = useRef<{ step: string | null; prospect: string | null }>({ step: null, prospect: null });
+  const pcm = useRef<[Int16Array, Int16Array] | null>(null);
+  const sentSamples = useRef(0);
+  const snapped = useRef(new Set<number>());
 
   const onServer = useCallback((msg: ServerMsg) => {
     const now = audio.current?.currentTime ?? 0;
     if (msg.type === "hint") setObserved((o) => [...o, { hint: msg.hint, arrival: now }]);
+    if (msg.type === "transcript") {
+      if (msg.final) {
+        setHeard((h) => [...h, { speaker: msg.speaker, text: msg.text, start: msg.start, end: msg.end, arrival: now }]);
+        setPartial((p) => ({ ...p, [msg.speaker]: "" }));
+      } else {
+        setPartial((p) => ({ ...p, [msg.speaker]: msg.text }));
+      }
+    }
     if (msg.type === "state") {
       lastState.current = {
         step: msg.step.id,
@@ -98,7 +124,7 @@ export function DemoApp() {
       };
     }
   }, []);
-  const { state, connect, send, giveFeedback, answerAnnouncement } = useCallSession(backendUrl, onServer);
+  const { state, connect, send, sendAudio, giveFeedback, answerAnnouncement } = useCallSession(backendUrl, onServer);
 
   useEffect(() => {
     fetch(`${api}/demo/calls`)
@@ -130,39 +156,76 @@ export function DemoApp() {
     setReplay(r);
   };
 
-  const start = async () => {
-    if (!selected || !replay || !audio.current) return;
+  const resetRun = () => {
     setObserved([]);
     setStepsAfter({});
     setEmotionAfter({});
+    setHeard([]);
+    setPartial({});
     nextEvent.current = 0;
+    sentSamples.current = 0;
+    snapped.current = new Set();
+  };
+
+  const start = async () => {
+    if (!selected || !replay || !audio.current) return;
+    resetRun();
+    const live = mode === "stt";
+    if (live) {
+      // Décodage de l'appel en deux canaux 16 kHz, envoyés au rythme de la lecture.
+      setPreparing(true);
+      try {
+        pcm.current = await decodeCall(`${api}/demo/calls/${selected.id}/audio`);
+      } catch (err) {
+        setLoadError(`Décodage audio impossible : ${String(err)}`);
+        setPreparing(false);
+        return;
+      }
+      setPreparing(false);
+    }
     await connect({
       type: "start", scenario_id: replay.scenario_id ?? "cold_call_fr", language: replay.language ?? selected.language,
-      self_analysis: false, context: replay.context,
+      self_analysis: false, context: replay.context, transcription: live ? "server" : "client",
+      keyterms: [selected.seller_name, selected.prospect_name, selected.prospect_company, "Herakles"]
+        .filter((x): x is string => !!x),
     });
     const el = audio.current;
     el.currentTime = 0;
+    el.playbackRate = 1;
     await el.play();
     setPlaying(true);
     stopTicker();
-    // Pilotage par l'horloge de l'audio : chaque événement part quand le son l'atteint.
+    // Pilotage par l'horloge de l'audio : chaque événement (ou bloc audio) part quand le son l'atteint.
     ticker.current = window.setInterval(() => {
       const now = el.currentTime;
       setT(now);
+      if (live && pcm.current) {
+        const [left, right] = pcm.current;
+        const target = Math.min(Math.floor(now * SAMPLE_RATE), left.length);
+        while (sentSamples.current + FRAME <= target) {
+          const a = sentSamples.current;
+          sendAudio(frameFor(0, left, a, a + FRAME));
+          sendAudio(frameFor(1, right, a, a + FRAME));
+          sentSamples.current += FRAME;
+        }
+      }
       const events = replay.events;
       while (nextEvent.current < events.length && eventTime(events[nextEvent.current]) <= now) {
         const ev = events[nextEvent.current];
-        send(ev);
-        if (ev.type === "transcript") {
-          const i = labels.findIndex((l) => l.start === ev.start && l.end === ev.end);
-          // Instantané de l'état peu après le tour (laisse le temps au moteur de répondre).
-          window.setTimeout(() => {
-            setStepsAfter((s) => ({ ...s, [i]: lastState.current.step ?? "" }));
-            setEmotionAfter((s) => ({ ...s, [i]: lastState.current.prospect }));
-          }, 400);
-        }
+        // En transcription réelle, seul le texte vient de l'audio : les autres événements
+        // (accord du prospect au message d'information) restent rejoués.
+        if (!(live && ev.type === "transcript")) send(ev);
         nextEvent.current += 1;
       }
+      // Instantané de l'état peu après chaque tour (temps de transcription et de réponse).
+      const delay = live ? 1.6 : 0.4;
+      labels.forEach((l, i) => {
+        if (!snapped.current.has(i) && now >= l.end + delay) {
+          snapped.current.add(i);
+          setStepsAfter((s) => ({ ...s, [i]: lastState.current.step ?? "" }));
+          setEmotionAfter((s) => ({ ...s, [i]: lastState.current.prospect }));
+        }
+      });
     }, 50);
   };
 
@@ -261,14 +324,33 @@ export function DemoApp() {
                 <div className="progress"><span style={{ width: `${Math.min(100, (t / selected.duration) * 100)}%` }} /></div>
                 <div className="actions">
                   {state.phase !== "live" ? (
-                    <button className="btn primary" onClick={() => void start()} disabled={!replay}>Lancer la démo</button>
+                    <>
+                      <button className="btn primary" onClick={() => void start()} disabled={!replay || preparing}>
+                        {preparing ? "Préparation de l'audio…" : "Lancer la démo"}
+                      </button>
+                      <div className="segmented" role="radiogroup" aria-label="Transcription">
+                        <button role="radio" aria-checked={mode === "stt"} className={mode === "stt" ? "on" : ""}
+                          onClick={() => setMode("stt")}>Transcription en direct</button>
+                        <button role="radio" aria-checked={mode === "reference"} className={mode === "reference" ? "on" : ""}
+                          onClick={() => setMode("reference")}>Texte de référence</button>
+                      </div>
+                    </>
                   ) : (
                     <>
-                      <button className="btn secondary" onClick={pause}>{playing ? "Pause" : "Reprendre"}</button>
+                      {mode === "reference" && (
+                        <button className="btn secondary" onClick={pause}>{playing ? "Pause" : "Reprendre"}</button>
+                      )}
                       <button className="btn danger" onClick={finish}>Terminer</button>
                     </>
                   )}
-                  <span className="sub">Vendeur à gauche, prospect à droite (casque conseillé).</span>
+                </div>
+                <p className="sub mode-note">
+                  {mode === "stt"
+                    ? "L'audio est transcrit en direct par ElevenLabs (≈ 1 s de délai), comme pendant un vrai appel."
+                    : "Le texte exact des répliques est envoyé à la fin de chaque tour : isole les erreurs de l'assistant de celles de la transcription."}
+                  {" "}Vendeur à gauche, prospect à droite (casque conseillé).
+                </p>
+                <div>
                 </div>
               </div>
 
@@ -277,8 +359,12 @@ export function DemoApp() {
               <div className="card transcript">
                 <div className="eyebrow">Transcription · attendu vs assistant</div>
                 {visible.map((l, i) => (
-                  <TurnRow key={l.index} turn={l} row={review.rows[i]} done={t > l.end + TOLERANCE} />
+                  <TurnRow key={l.index} turn={l} row={review.rows[i]} done={t > l.end + TOLERANCE}
+                    heard={mode === "stt" ? heardFor(heard, l) : null} />
                 ))}
+                {mode === "stt" && (["user", "prospect"] as const).map((sp) => partial[sp] ? (
+                  <p key={sp} className="partial">{sp === "user" ? "Vendeur" : "Prospect"} · {partial[sp]}…</p>
+                ) : null)}
                 <div ref={transcriptEnd} />
               </div>
             </>
@@ -333,7 +419,7 @@ function buildReview(labels: TurnLabel[], observed: Observed[], stepsAfter: Reco
         && o.hint.ref === l.objection && o.hint.ts >= l.start && o.hint.ts <= l.end + TOLERANCE) ?? null;
       if (hit) used.add(hit.hint.id);
     }
-    const hints = observed.filter((o) => Math.abs(o.hint.ts - l.end) < 0.05 && o.hint.kind !== "announcement");
+    const hints = observed.filter((o) => o.hint.kind !== "announcement" && turnOf(labels, o.hint.ts) === i);
     return {
       expectedStep: STEP_MAP[l.step] ?? l.step, trackedStep: stepsAfter[i], objection: l.objection,
       objectionHit: hit, emotion: l.emotion, engineEmotion: emotionAfter[i], hints, replaced,
@@ -346,8 +432,8 @@ function buildReview(labels: TurnLabel[], observed: Observed[], stepsAfter: Reco
   const steps = rows.filter((r, i) => passed[i] && r.trackedStep);
   const lat = { rule: [] as number[], llm: [] as number[] };
   for (const o of observed) {
-    const l = labels.find((x) => Math.abs(x.end - o.hint.ts) < 0.05);
-    if (l && o.hint.kind !== "announcement") lat[o.hint.source].push(Math.max(0, o.arrival - l.end));
+    const i = turnOf(labels, o.hint.ts);
+    if (i >= 0 && o.hint.kind !== "announcement") lat[o.hint.source].push(Math.max(0, o.arrival - labels[i].end));
   }
   return {
     rows,
@@ -359,6 +445,21 @@ function buildReview(labels: TurnLabel[], observed: Observed[], stepsAfter: Reco
     latencies: lat,
     hintsPerMinute: t > 10 ? (observed.filter((o) => o.hint.kind !== "announcement").length / t) * 60 : 0,
   };
+}
+
+// Tour auquel répond une fiche : celui qui se termine au plus près de son horodatage
+// (exact en mode référence ; à quelques centaines de ms près avec la transcription réelle).
+function turnOf(labels: TurnLabel[], ts: number): number {
+  let best = -1;
+  let gap = 1.0;
+  labels.forEach((l, i) => {
+    const d = Math.abs(l.end - ts);
+    if (d < gap) {
+      gap = d;
+      best = i;
+    }
+  });
+  return best;
 }
 
 function mean(xs: number[]): string {
@@ -389,7 +490,12 @@ function Scorecard({ review }: { review: Review }) {
   );
 }
 
-function TurnRow({ turn, row, done }: { turn: TurnLabel; row?: Row; done: boolean }) {
+// Énoncés transcrits qui recouvrent ce tour (même locuteur).
+function heardFor(heard: Heard[], l: TurnLabel): Heard[] {
+  return heard.filter((h) => h.speaker === l.speaker && h.end > l.start - 0.3 && h.start < l.end + 0.3);
+}
+
+function TurnRow({ turn, row, done, heard }: { turn: TurnLabel; row?: Row; done: boolean; heard: Heard[] | null }) {
   const seller = turn.speaker === "user";
   const objectionExpected = turn.speaker === "prospect" && turn.objection && turn.objection !== "other";
   return (
@@ -403,6 +509,12 @@ function TurnRow({ turn, row, done }: { turn: TurnLabel; row?: Row; done: boolea
         )}
       </div>
       <p className="turn-text">{fr(turn.text)}</p>
+      {heard && heard.length > 0 && (
+        <p className="heard">
+          <span className="label">entendu (+{(heard[heard.length - 1].arrival - heard[heard.length - 1].end).toFixed(1)} s)</span>
+          {fr(heard.map((h) => h.text).join(" "))}
+        </p>
+      )}
       <div className="turn-review">
         {objectionExpected && (
           <span className={`chip ${done ? (row?.objectionHit ? "good" : "bad") : ""}`}>
