@@ -33,7 +33,8 @@ async def replay(path: Path) -> list[dict]:
             print("\nBilan :", json.dumps(msg["summary"], ensure_ascii=False, indent=2))
 
     session = CallSession(send, provider=default_provider(), context_vars=script.get("context", {}))
-    await session.handle({"type": "start", "scenario_id": script.get("scenario_id", "cold_call_fr")})
+    await session.handle({"type": "start", "scenario_id": script.get("scenario_id", "cold_call_fr"),
+                          "language": script.get("language", "fr")})
     for event in script["events"]:
         await session.handle(event)
         await asyncio.sleep(0)  # laisse tourner les tâches LLM en parallèle

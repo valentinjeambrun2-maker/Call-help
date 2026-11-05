@@ -166,19 +166,38 @@ def _write_mono_wav(path: Path, pcm: bytes) -> None:
         w.writeframes(pcm)
 
 
+def tts_seed(spec: CallSpec, index: int) -> int:
+    """Graine ElevenLabs dans sa plage documentée [0, 2**32 - 1], quelle que soit la graine du plan."""
+    return (spec.seed * 1000 + index) % 2**32
+
+
+def _turn_sidecar(turns_dir: Path, i: int) -> Path:
+    return turns_dir / f"{i:03d}.json"
+
+
+def _done_turn(turns_dir: Path, i: int, turn: Turn) -> dict | None:
+    """Métadonnées d'un tour déjà synthétisé pour CE texte, sinon None (à refaire)."""
+    wav, side = turns_dir / f"{i:03d}.wav", _turn_sidecar(turns_dir, i)
+    if not (wav.exists() and side.exists()):
+        return None
+    meta = json.loads(side.read_text("utf-8"))
+    return meta if meta.get("text_sent") == render_text(turn) else None
+
+
 async def synthesize_call(client, call_dir: Path, dialogue: Dialogue, spec: CallSpec,
                           voices: dict[str, Voice], model: str, sem: asyncio.Semaphore) -> None:
+    """Synthétise les tours manquants. Chaque tour écrit son WAV et ses métadonnées :
+    une interruption ne perd rien, et turns.json n'est écrit que si tout est là."""
     turns_dir = call_dir / "turns"
     turns_dir.mkdir(parents=True, exist_ok=True)
-    meta: list[dict | None] = [None] * len(dialogue.turns)
+    meta: list[dict | None] = [_done_turn(turns_dir, i, t) for i, t in enumerate(dialogue.turns)]
 
     async def one(i: int, turn: Turn) -> None:
-        wav = turns_dir / f"{i:03d}.wav"
-        if wav.exists():
+        if meta[i] is not None:
             return
         voice = voices[turn.speaker]
         previous = dialogue.turns[i - 1].text if i else None
-        kwargs = _tts_kwargs(turn, voice, spec.language, spec.seed * 1000 + i, model, previous)
+        kwargs = _tts_kwargs(turn, voice, spec.language, tts_seed(spec, i), model, previous)
         async with sem:
             raw = await client.text_to_speech.with_raw_response.convert_with_timestamps(voice.voice_id, **kwargs)
         res = raw.data
@@ -188,18 +207,21 @@ async def synthesize_call(client, call_dir: Path, dialogue: Dialogue, spec: Call
             a = res.alignment
             words = words_from_alignment(a.characters, a.character_start_times_seconds,
                                          a.character_end_times_seconds)
-        _write_mono_wav(wav, pcm)
-        meta[i] = {
+        m = {
             "index": i, "speaker": turn.speaker, "voice_id": voice.voice_id, "model": model,
             "text_sent": kwargs["text"], "stability": stability(turn), "seed": kwargs["seed"],
             "request_id": raw.headers.get("request-id"), "character_cost": raw.headers.get("character-cost"),
             "words": words,
         }
+        _write_mono_wav(turns_dir / f"{i:03d}.wav", pcm)
+        _turn_sidecar(turns_dir, i).write_text(json.dumps(m, ensure_ascii=False), encoding="utf-8")
+        meta[i] = m
 
-    await asyncio.gather(*(one(i, t) for i, t in enumerate(dialogue.turns)))
-    previous = json.loads((call_dir / "turns.json").read_text("utf-8")) if (call_dir / "turns.json").exists() else []
-    merged = [m or (previous[i] if i < len(previous) else None) for i, m in enumerate(meta)]
-    (call_dir / "turns.json").write_text(json.dumps(merged, ensure_ascii=False, indent=1), encoding="utf-8")
+    results = await asyncio.gather(*(one(i, t) for i, t in enumerate(dialogue.turns)), return_exceptions=True)
+    errors = [r for r in results if isinstance(r, BaseException)]
+    if errors:
+        raise errors[0]  # les tours réussis sont conservés ; la relance reprendra les autres
+    (call_dir / "turns.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     (call_dir / "provenance.json").write_text(json.dumps({
         "source": "synthetic", "dialogue_model": "anthropic", "voice_provider": "elevenlabs",
         "voice_model": model, "voices": {k: v.voice_id for k, v in voices.items()}, "split": spec.split,
@@ -234,16 +256,34 @@ async def synthesize_many(todo: list[tuple[Path, Dialogue]], specs: dict[str, Ca
             log.error("%s : %s", dialogue.call_id, exc)
 
 
-def load_turn_audios(call_dir: Path) -> list[TurnAudio] | None:
-    """Audio des tours s'ils existent tous, sinon None (ligne de temps estimée)."""
+def audio_complete(call_dir: Path, dialogue: Dialogue) -> bool:
+    """Vrai si chaque tour a son audio pour le texte actuel (métadonnées seules, rapide)."""
+    meta_path = call_dir / "turns.json"
+    if not meta_path.exists():
+        return False
+    meta = json.loads(meta_path.read_text("utf-8"))
+    return len(meta) == len(dialogue.turns) and all(
+        m and m.get("text_sent") == render_text(t) and (call_dir / "turns" / f"{i:03d}.wav").exists()
+        for i, (m, t) in enumerate(zip(meta, dialogue.turns, strict=True)))
+
+
+def load_turn_audios(call_dir: Path, dialogue: Dialogue | None = None) -> list[TurnAudio] | None:
+    """Audio des tours s'ils existent tous ET correspondent au dialogue actuel,
+    sinon None (ligne de temps estimée). Un dialogue réécrit invalide l'ancien audio."""
     meta_path = call_dir / "turns.json"
     if not meta_path.exists():
         return None
     meta = json.loads(meta_path.read_text("utf-8"))
+    if dialogue is not None and len(meta) != len(dialogue.turns):
+        log.warning("%s : audio périmé (nombre de tours différent), ignoré", call_dir.name)
+        return None
     audios = []
     for i, m in enumerate(meta):
         wav = call_dir / "turns" / f"{i:03d}.wav"
         if m is None or not wav.exists():
+            return None
+        if dialogue is not None and m.get("text_sent") != render_text(dialogue.turns[i]):
+            log.warning("%s : audio périmé (tour %d modifié), ignoré", call_dir.name, i)
             return None
         with wave.open(str(wav)) as w:
             pcm, sr = w.readframes(w.getnframes()), w.getframerate()
@@ -257,12 +297,17 @@ def load_turn_audios(call_dir: Path) -> list[TurnAudio] | None:
 SPLIT_ORDER = ("train", "val", "test")
 
 
-def split_for(rank: int, per_bucket: int) -> str:
-    """Répartit les voix d'un groupe : au moins 2 en val et 2 en test, le reste en train."""
-    n_eval = 2 if per_bucket >= 6 else 1
-    if rank < per_bucket - 2 * n_eval:
+MIN_PER_SPLIT = 2  # vendeur et prospect du même genre : deux voix différentes par lot
+MIN_PER_BUCKET = 3 * MIN_PER_SPLIT
+
+
+def split_for(rank: int, n: int) -> str:
+    """Répartit n voix d'un groupe (n >= 6) : 2 en val, 2 en test, le reste en train."""
+    if n < MIN_PER_BUCKET:
+        raise ValueError(f"{n} voix : il en faut au moins {MIN_PER_BUCKET} par langue et par genre")
+    if rank < n - 2 * MIN_PER_SPLIT:
         return "train"
-    return "val" if rank < per_bucket - n_eval else "test"
+    return "val" if rank < n - MIN_PER_SPLIT else "test"
 
 
 def choose_library_voices(candidates: list, language: str, per_bucket: int) -> list:
@@ -297,25 +342,30 @@ async def pick_voices(per_bucket: int = 6, dry_run: bool = False, path: Path | N
     if not key:
         raise SystemExit("ELEVENLABS_API_KEY absent.")
     client = AsyncElevenLabs(api_key=key)
-    book: dict = {"fr": {}, "en": {}}
+    # 1) Sélection de tous les groupes ; 2) vérification ; 3) seulement ensuite, ajout au compte.
+    selection: dict[tuple[str, str], list] = {}
     for language in ("fr", "en"):
         for gender in ("female", "male"):
             res = await client.voices.get_shared(language=language, gender=gender, page_size=100,
                                                  include_custom_rates=False)
-            chosen = choose_library_voices(res.voices, language, per_bucket)
-            if len(chosen) < per_bucket:
-                log.warning("%s/%s : seulement %d voix adaptées", language, gender, len(chosen))
-            entries = []
-            for rank, v in enumerate(chosen):
-                voice_id = v.voice_id
-                if not dry_run and not v.is_added_by_user:
-                    added = await client.voices.share(v.public_owner_id, v.voice_id,
-                                                      new_name=f"callhelp-{language}-{gender[0]}-{rank + 1}")
-                    voice_id = added.voice_id
-                entries.append({"voice_id": voice_id, "name": v.name, "split": split_for(rank, per_bucket),
-                                "accent": v.accent, "preview_url": v.preview_url})
-                log.info("%s/%s %-5s %s (%s)", language, gender, entries[-1]["split"], v.name, v.accent)
-            book[language][gender] = entries
+            selection[(language, gender)] = choose_library_voices(res.voices, language, per_bucket)
+    short = {k: len(v) for k, v in selection.items() if len(v) < MIN_PER_BUCKET}
+    if short:
+        raise SystemExit(f"Pas assez de voix adaptées {short} (minimum {MIN_PER_BUCKET} par langue et genre). "
+                         "Rien n'a été ajouté au compte. Complétez voices.json à la main (voices.example.json).")
+    book: dict = {"fr": {}, "en": {}}
+    for (language, gender), chosen in selection.items():
+        entries = []
+        for rank, v in enumerate(chosen):
+            voice_id = v.voice_id
+            if not dry_run and not v.is_added_by_user:
+                added = await client.voices.share(v.public_owner_id, v.voice_id,
+                                                  new_name=f"callhelp-{language}-{gender[0]}-{rank + 1}")
+                voice_id = added.voice_id
+            entries.append({"voice_id": voice_id, "name": v.name, "split": split_for(rank, len(chosen)),
+                            "accent": v.accent, "preview_url": v.preview_url})
+            log.info("%s/%s %-5s %s (%s)", language, gender, entries[-1]["split"], v.name, v.accent)
+        book[language][gender] = entries
     if not dry_run:
         path = path or VOICES_FILE
         path.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")

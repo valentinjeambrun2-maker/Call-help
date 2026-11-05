@@ -142,3 +142,12 @@ def test_choose_library_voices_filters_custom_rates_and_language():
     chosen = voices_mod.choose_library_voices(cands, "fr", 3)
     assert [c.voice_id for c in chosen] == ["v5", "v1", "v7"]
     assert [voices_mod.split_for(r, 6) for r in range(6)] == ["train", "train", "val", "val", "test", "test"]
+
+
+def test_voices_limit_progresses_across_runs(mocked_apis, monkeypatch, tmp_path):
+    root = tmp_path / "s"
+    run_cli(monkeypatch, "--root", str(root), "pilot", "--n", "3", "--skip-voices")
+    for _ in range(3):
+        run_cli(monkeypatch, "--root", str(root), "voices", "--limit", "1")
+    done = [c.name for c in (root / "calls").iterdir() if (c / "turns.json").exists()]
+    assert len(done) == 3

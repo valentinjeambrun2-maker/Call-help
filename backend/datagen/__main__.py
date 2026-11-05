@@ -41,11 +41,21 @@ def select(specs: list[CallSpec], limit: int | None, only_missing: Path | None =
     return specs[:limit] if limit else specs
 
 
+DERIVED = ("turns.json", "provenance.json", "call.wav", "call_telephone.wav", "labels.json", "replay.json")
+
+
 def save_dialogues(root: Path, ok: dict[str, Dialogue], errors: dict[str, str]) -> None:
     calls = root / "calls"
     for call_id, d in ok.items():
-        (calls / call_id).mkdir(parents=True, exist_ok=True)
-        (calls / call_id / "dialogue.json").write_text(d.model_dump_json(indent=1), encoding="utf-8")
+        call = calls / call_id
+        call.mkdir(parents=True, exist_ok=True)
+        path = call / "dialogue.json"
+        new = d.model_dump_json(indent=1)
+        if path.exists() and path.read_text("utf-8") != new:
+            # Dialogue réécrit : l'audio et les étiquettes de l'ancien ne valent plus.
+            for name in DERIVED:
+                (call / name).unlink(missing_ok=True)
+        path.write_text(new, encoding="utf-8")
     if errors:
         err_path = root / "dialogue_errors.json"
         previous = json.loads(err_path.read_text("utf-8")) if err_path.exists() else {}
@@ -111,7 +121,10 @@ def cmd_voices(args: argparse.Namespace) -> None:
     from . import voices
 
     specs = {s.call_id: s for s in load_plan(args.root)}
-    todo = [(p, d) for p, d in iter_dialogues(args.root, args.limit) if not (p / "turns.json").exists()]
+    # Filtrer d'abord, limiter ensuite : chaque relance avance sur les appels restants.
+    todo = [(p, d) for p, d in iter_dialogues(args.root) if not voices.audio_complete(p, d)]
+    if args.limit:
+        todo = todo[: args.limit]
     asyncio.run(voices.synthesize_many(todo, specs, args.concurrency, args.model))
 
 
@@ -141,8 +154,9 @@ def cmd_pilot(args: argparse.Namespace) -> None:
         save_dialogues(args.root, ok, errors)
 
     ids = {s.call_id for s in pilot}
+    specs_by_id = {s.call_id: s for s in pilot}
     written = [(p, d) for p, d in iter_dialogues(args.root) if d.call_id in ids]
-    to_voice = [(p, d) for p, d in written if not (p / "turns.json").exists()]
+    to_voice = [(p, d) for p, d in written if not voices.audio_complete(p, d)]
     chars = sum(voices.estimate_characters(d) for _, d in to_voice)
     print(f"Voix : {len(to_voice)} appels, {chars:,} caractères à synthétiser")
     if chars > args.max_chars:
@@ -155,8 +169,9 @@ def cmd_pilot(args: argparse.Namespace) -> None:
         asyncio.run(voices.synthesize_many(to_voice, specs, args.voice_concurrency, args.model))
 
     for path, d in written:
-        write_call(path, d, voices.load_turn_audios(path),
-                   context={"user_name": d.seller_name, "company": args.company})
+        write_call(path, d, voices.load_turn_audios(path, d),
+                   context={"user_name": d.seller_name, "company": args.company},
+                   language=specs_by_id[d.call_id].language)
     report = evaluate_dir(calls)
     (args.root / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
     text = format_report(report)
@@ -167,11 +182,12 @@ def cmd_pilot(args: argparse.Namespace) -> None:
 def cmd_assemble(args: argparse.Namespace) -> None:
     from .voices import load_turn_audios
 
+    languages = {s.call_id: s.language for s in load_plan(args.root)}
     n = 0
     for path, d in iter_dialogues(args.root, args.limit):
-        audios = load_turn_audios(path)
+        audios = load_turn_audios(path, d)
         write_call(path, d, audios, context={"user_name": d.seller_name, "company": args.company},
-                   telephone=not args.no_telephone)
+                   telephone=not args.no_telephone, language=languages.get(d.call_id, d.call_id[:2]))
         n += 1
     print(f"{n} appels assemblés")
 
@@ -226,7 +242,7 @@ def main() -> None:
     p.set_defaults(func=cmd_evaluate)
 
     p = sub.add_parser("voices-pick", help="choisir des voix natives dans la bibliothèque ElevenLabs")
-    p.add_argument("--per-bucket", type=int, default=6, help="voix par langue et par genre")
+    p.add_argument("--per-bucket", type=int, default=6, help="voix par langue et par genre (6 minimum)")
     p.add_argument("--dry-run", action="store_true", help="lister sans ajouter au compte")
     p.set_defaults(func=cmd_voices_pick)
 

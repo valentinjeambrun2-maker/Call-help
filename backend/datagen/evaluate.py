@@ -27,25 +27,29 @@ STEP_MAP = {"announcement": "hook", "hook": "hook", "qualify": "qualify", "value
 TOLERANCE = 3.0  # secondes après la fin du tour pour émettre le conseil
 
 
-async def run_call(replay: dict) -> tuple[list[dict], list[tuple[float, str]]]:
-    """Rejoue un appel ; retourne (conseils, [(temps, étape suivie)])."""
+async def run_call(replay: dict) -> tuple[list[dict], list[str | None]]:
+    """Rejoue un appel ; retourne (conseils, étape suivie juste après chaque tour)."""
     hints: list[dict] = []
-    steps: list[tuple[float, str]] = []
+    last_step: list[str | None] = [None]
+    steps_after_turn: list[str | None] = []
 
     async def send(msg: dict) -> None:
         if msg["type"] == "hint":
             hints.append(msg["hint"])
         elif msg["type"] == "state":
-            steps.append((msg["metrics"]["elapsed"], msg["step"]["id"]))
+            last_step[0] = msg["step"]["id"]
 
     session = CallSession(send, provider=NullProvider(), context_vars=replay.get("context", {}))
-    await session.handle({"type": "start", "scenario_id": "cold_call_fr"})
+    await session.handle({"type": "start", "scenario_id": replay.get("scenario_id", "cold_call_fr"),
+                          "language": replay.get("language", "fr")})
     for event in replay["events"]:
         await session.handle(event)
-    return hints, steps
+        if event["type"] == "transcript":
+            steps_after_turn.append(last_step[0])
+    return hints, steps_after_turn
 
 
-def score_call(turns: list[TurnLabel], hints: list[dict], steps: list[tuple[float, str]]) -> dict:
+def score_call(turns: list[TurnLabel], hints: list[dict], steps_after_turn: list[str | None]) -> dict:
     tp: dict[str, int] = defaultdict(int)
     fn: dict[str, int] = defaultdict(int)
     fp: dict[str, int] = defaultdict(int)
@@ -66,13 +70,9 @@ def score_call(turns: list[TurnLabel], hints: list[dict], steps: list[tuple[floa
         if h["id"] not in used:
             fp[h["ref"]] += 1
 
-    # Étape suivie à la fin de chaque tour vs étape de référence.
+    # Étape suivie par le moteur juste après chaque tour, comparée à la référence.
     correct = total = 0
-    for t in turns:
-        tracked = None
-        for ts, step in steps:
-            if ts <= t.end + 1e-6:
-                tracked = step
+    for t, tracked in zip(turns, steps_after_turn, strict=False):
         if tracked is not None:
             total += 1
             correct += tracked == STEP_MAP[t.step]
@@ -103,7 +103,12 @@ def aggregate(per_call: dict[str, dict]) -> dict:
     def prf(t: int, p: int, n: int) -> dict:
         precision = t / (t + p) if t + p else None
         recall = t / (t + n) if t + n else None
-        f1 = 2 * precision * recall / (precision + recall) if precision and recall else None
+        if t == 0 and (p or n):
+            f1 = 0.0  # un échec complet n'est pas une absence de mesure
+        elif precision is not None and recall is not None:
+            f1 = 2 * precision * recall / (precision + recall)
+        else:
+            f1 = None
         return {"precision": precision, "recall": recall, "f1": f1, "support": t + n}
 
     objections = {o: prf(tp[o], fp[o], fn[o]) for o in OBJECTIONS}

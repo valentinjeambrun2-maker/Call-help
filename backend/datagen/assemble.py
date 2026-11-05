@@ -68,6 +68,7 @@ def timeline(dialogue: Dialogue, durations: list[float]) -> list[tuple[float, fl
     """Place chaque tour : fin du précédent + pause, ou avant s'il interrompt."""
     spans: list[tuple[float, float]] = []
     prev_start, prev_end = 0.0, 0.0
+    speaker_end: dict[str, float] = {}
     for i, (turn, dur) in enumerate(zip(dialogue.turns, durations, strict=True)):
         if i == 0:
             start = turn.pause_ms / 1000
@@ -76,9 +77,12 @@ def timeline(dialogue: Dialogue, durations: list[float]) -> list[tuple[float, fl
             start = max(prev_start + 0.3, prev_end - turn.overlap_ms / 1000)
         else:
             start = prev_end + turn.pause_ms / 1000
+        # Personne ne se chevauche lui-même : deux répliques ne se mélangent pas sur un canal.
+        start = max(start, speaker_end.get(turn.speaker, 0.0))
         end = start + dur
         spans.append((round(start, 3), round(end, 3)))
         prev_start, prev_end = start, max(prev_end, end)
+        speaker_end[turn.speaker] = end
     return spans
 
 
@@ -98,7 +102,8 @@ def labels(dialogue: Dialogue, spans: list[tuple[float, float]],
     return out
 
 
-def replay_events(turn_labels: list[TurnLabel], context: dict[str, str] | None = None) -> dict:
+def replay_events(turn_labels: list[TurnLabel], context: dict[str, str] | None = None,
+                  language: str = "fr", scenario_id: str = "cold_call_fr") -> dict:
     """Événements au format de la démo (backend/demo), rejouables dans une session.
 
     Le message d'information est confirmé à la fin du tour « announcement » du
@@ -114,7 +119,7 @@ def replay_events(turn_labels: list[TurnLabel], context: dict[str, str] | None =
             events.append({"type": "announcement_done", "ts": t.end})
             announced = True
     events.append({"type": "stop"})
-    return {"context": context or {}, "events": events}
+    return {"scenario_id": scenario_id, "language": language, "context": context or {}, "events": events}
 
 
 def mix_stereo(dialogue: Dialogue, audios: list[TurnAudio],
@@ -175,7 +180,8 @@ def telephone_version(src: Path, dst: Path) -> bool:
 
 
 def write_call(out_dir: Path, dialogue: Dialogue, audios: list[TurnAudio] | None,
-               context: dict[str, str] | None = None, telephone: bool = True) -> list[TurnLabel]:
+               context: dict[str, str] | None = None, telephone: bool = True,
+               language: str | None = None) -> list[TurnLabel]:
     """Écrit un appel complet. Sans audio, la ligne de temps est estimée (150 mots/min)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     durations = [a.duration for a in audios] if audios else [estimated_duration(t.text) for t in dialogue.turns]
@@ -185,7 +191,8 @@ def write_call(out_dir: Path, dialogue: Dialogue, audios: list[TurnAudio] | None
     (out_dir / "labels.json").write_text(
         json.dumps([t.model_dump() for t in turn_labels], ensure_ascii=False, indent=1), encoding="utf-8")
     (out_dir / "replay.json").write_text(
-        json.dumps(replay_events(turn_labels, context), ensure_ascii=False, indent=1), encoding="utf-8")
+        json.dumps(replay_events(turn_labels, context, language or dialogue.call_id.split("-")[0]),
+                   ensure_ascii=False, indent=1), encoding="utf-8")
     if audios:
         pcm, sr = mix_stereo(dialogue, audios, spans)
         write_wav(out_dir / "call.wav", pcm, sr, channels=2)

@@ -107,9 +107,9 @@ Write the call so it is useful as labelled data:
 - Spoken style: short sentences, false starts and self-repairs, fillers ("euh", "bon", "ben", "hum" in French; "uh", "well", "um" in English), a few interruptions. Aim for rates measured in real speech: in French about 3 filled pauses ("euh") and 3 repetitions per 100 words; in English fewer filled pauses. Make 5 to 10 % of turns short backchannels on their own ("mm-hmm", "d'accord", "oui oui", "ouais", "right", "okay"). Junior sellers talk too fast, pitch too early and sometimes deliver long monologues; senior sellers ask open questions and listen.
 - Objections: phrase every objection in your own words, the way that persona would say it. Vary the wording a lot; never reuse stock sentences. An objection may be indirect ("on verra plus tard", "c'est pas vraiment le moment").
 - Emotions: the label of a turn is the emotion of the speaker of that turn, as a listener would perceive it from tone and words. Express it through word choice, rhythm and the delivery hints; do not have speakers name their own emotions. Follow the prospect's emotional arc given in the brief across the call (start, middle, end), with natural fluctuations. Use "neutral" when nothing stands out. Intensity is 0.2 (subtle) to 1.0 (very strong).
-- Steps: label each turn with the call step it belongs to: announcement (the seller's short notice that an assistant analyses the call, said right after the greeting; the prospect may react), hook, qualify, value, close, wrap_up. Steps move forward; an objection can happen at any step and keeps that step's label.
+- Steps: label each turn with the call step it belongs to: announcement (the seller's short notice that an assistant analyses the call, said by the seller in its own turn right after the greeting; the prospect's reaction is also labelled announcement), hook, qualify, value, close, wrap_up. Steps move forward; an objection can happen at any step and keeps that step's label.
 - objection: the objection id on the prospect turn that raises it (no_time, has_provider, no_budget, send_email, or "other" for any other objection), otherwise null.
-- pause_ms: silence before the turn (100-600 typical, up to 2500 when someone hesitates or thinks). overlap_ms: how early the turn starts before the previous one ends (0 unless interrupting; 150-900 for interruptions).
+- pause_ms: silence before the turn, 0-4000 (100-600 typical, up to 2500 when someone hesitates or thinks). overlap_ms: how early the turn starts before the previous one ends, 0-1500 (0 unless interrupting; 150-900 for interruptions). intensity: 0-1. Never output an empty turn.
 - delivery: zero to three hints per turn from the allowed list that a voice actor would need.
 - Everything is fictional: invent person and company names; never use real people, real companies (except the seller's company given in the brief), real phone numbers or emails.
 - The call must end with the requested outcome and last roughly the requested number of words."""
@@ -161,14 +161,29 @@ def validate_dialogue(spec: CallSpec, d: Dialogue) -> list[str]:
         last_third = prospect[-max(1, len(prospect) // 3):]
         if not any(t.emotion == spec.arc[-1] for t in last_third):
             issues.append(f"fin d'arc {spec.arc[-1]} absente")
-    if not any(t.step == "announcement" for t in d.turns[:4]):
-        issues.append("message d'information absent en début d'appel")
+    if not any(t.step == "announcement" and t.speaker == "seller" for t in d.turns[:4]):
+        issues.append("message d'information du vendeur absent en début d'appel")
     return issues
 
 
+def _clamp(x, lo, hi):
+    return lo if x < lo else hi if x > hi else x
+
+
 def parse_response_text(spec: CallSpec, text: str) -> Dialogue:
+    """Le schéma JSON ne peut pas exprimer de bornes numériques : on les applique
+    ici plutôt que de jeter un dialogue entier pour une pause de 4,5 s."""
     data = json.loads(text)
     data["call_id"] = spec.call_id
+    turns = []
+    for t in data.get("turns", []):
+        if not str(t.get("text", "")).strip():
+            continue  # tour vide : rien à dire, rien à synthétiser
+        t["pause_ms"] = int(_clamp(t.get("pause_ms", 0), 0, 4000))
+        t["overlap_ms"] = int(_clamp(t.get("overlap_ms", 0), 0, 1500))
+        t["intensity"] = float(_clamp(t.get("intensity", 0.0), 0.0, 1.0))
+        turns.append(t)
+    data["turns"] = turns
     return Dialogue.model_validate(data)
 
 
