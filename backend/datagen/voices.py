@@ -361,27 +361,44 @@ MIN_PER_BUCKET = 3 * MIN_PER_SPLIT
 
 
 def split_for(rank: int, n: int) -> str:
-    """Répartit n voix d'un groupe (n >= 6) : 2 en val, 2 en test, le reste en train."""
+    """Répartit n voix d'un groupe (n >= 6) en alternant train / val / test sur les six
+    premières, pour que chaque lot mélange accents et profils ; les suivantes vont en train."""
     if n < MIN_PER_BUCKET:
         raise ValueError(f"{n} voix : il en faut au moins {MIN_PER_BUCKET} par langue et par genre")
-    if rank < n - 2 * MIN_PER_SPLIT:
-        return "train"
-    return "val" if rank < n - MIN_PER_SPLIT else "test"
+    return ("train", "val", "test")[rank % 3] if rank < MIN_PER_BUCKET else "train"
 
 
-def choose_library_voices(candidates: list, language: str, per_bucket: int) -> list:
-    """Filtre et classe les voix de la bibliothèque : langue native, sans tarif
-    majoré ni préavis, usage conversationnel de préférence, puis les plus utilisées."""
+def choose_library_voices(candidates: list, language: str, per_bucket: int, model: str = VOICE_MODEL) -> list:
+    """Filtre et classe les voix de la bibliothèque :
+    - langue native, sans tarif majoré (rate > 1 = multiplicateur de crédits) ;
+    - pas de voix de personnage ou de télévision ;
+    - préférence : vérifiée pour le modèle utilisé, usage conversationnel, puis les plus utilisées ;
+    - accents variés.
+    Le préavis (notice_period) n'exclut pas : il ne dit que combien de temps la voix reste
+    disponible si son auteur la retire ; l'audio déjà généré reste utilisable."""
+    def verified(v) -> list:
+        return [vl for vl in (getattr(v, "verified_languages", None) or [])
+                if getattr(vl, "language", None) == language]
+
     def native(v) -> bool:
-        if (v.language or "") == language:
-            return True
-        return any(getattr(vl, "language", None) == language for vl in (v.verified_languages or []))
+        return (getattr(v, "language", None) or "") == language or bool(verified(v))
+
+    def surcharged(v) -> bool:
+        rate = getattr(v, "rate", None)
+        return (rate is not None and rate > 1) or bool(getattr(v, "fiat_rate", None))
+
+    def unsuited(v) -> bool:  # voix de relaxation : peu crédibles pour un prospect agacé
+        text = f"{getattr(v, 'name', '')} {getattr(v, 'description', '') or ''}".lower()
+        return any(w in text for w in ("meditat", "relax", "asmr", "sleep", "whisper", "hypno"))
 
     ok = [v for v in candidates
-          if native(v) and not v.rate and not v.fiat_rate and not v.notice_period
-          and v.use_case not in ("characters_animation", "entertainment_tv")]
-    ok.sort(key=lambda v: (v.use_case not in ("conversational", "social_media", "advertisement"),
-                           -(v.cloned_by_count or 0)))
+          if native(v) and not surcharged(v) and not unsuited(v)
+          and getattr(v, "use_case", None) not in ("characters_animation", "entertainment_tv")]
+    ok.sort(key=lambda v: (
+        not any(getattr(vl, "model_id", None) == model for vl in verified(v)),
+        getattr(v, "use_case", None) not in ("conversational", "social_media", "advertisement"),
+        -(getattr(v, "cloned_by_count", None) or 0),
+    ))
     # Diversité d'accents : un accent par voix tant que possible, puis les suivantes.
     chosen, seen = [], set()
     for v in ok:

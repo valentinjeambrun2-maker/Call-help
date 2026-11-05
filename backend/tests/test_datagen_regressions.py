@@ -91,7 +91,7 @@ def test_tts_seed_stays_in_documented_range():
 
 
 def test_split_needs_two_voices_per_split():
-    assert [split_for(r, 7) for r in range(7)] == ["train"] * 3 + ["val"] * 2 + ["test"] * 2
+    assert [split_for(r, 7) for r in range(7)] == ["train", "val", "test"] * 2 + ["train"]
     with pytest.raises(ValueError):
         split_for(0, 5)
 

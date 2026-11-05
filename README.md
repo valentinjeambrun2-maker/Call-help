@@ -47,7 +47,7 @@ cd backend && python3 -m venv .venv && .venv/bin/pip install -e '.[dev,llm]'
 
 Sans clé API, seuls les conseils par règles sont actifs. Pour les conseils affinés par l'IA, définissez `ANTHROPIC_API_KEY` avant de lancer le backend.
 
-Panneau en mode navigateur (démo, sans extension), dans un second terminal, depuis le dossier `Call-help` :
+Panneau en mode navigateur (démo, sans extension), dans un second terminal, depuis le dossier `Call-help`. Il faut **Node.js 22 ou plus récent** (`node -v` pour vérifier). Avec une version plus ancienne, `npm install` est refusé : Vite 8 ne s'installe pas correctement en dessous de Node 20.19.
 
 ```bash
 cd extension

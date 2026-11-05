@@ -132,16 +132,19 @@ def test_choose_library_voices_filters_custom_rates_and_language():
     from types import SimpleNamespace as V
 
     def v(i, **kw):
-        base = dict(voice_id=f"v{i}", language="fr", verified_languages=[], rate=None, fiat_rate=None,
-                    notice_period=None, use_case="conversational", cloned_by_count=i)
+        base = dict(voice_id=f"v{i}", language="fr", verified_languages=[], rate=1.0, fiat_rate=None,
+                    notice_period=730, use_case="conversational", cloned_by_count=i, accent=f"a{i}")
         base.update(kw)
         return V(**base)
 
-    cands = [v(1), v(2, rate=2.0), v(3, language="en"), v(4, notice_period=30), v(5),
-             v(6, use_case="characters_animation"), v(7, use_case="narrative_story")]
-    chosen = voices_mod.choose_library_voices(cands, "fr", 3)
-    assert [c.voice_id for c in chosen] == ["v5", "v1", "v7"]
-    assert [voices_mod.split_for(r, 6) for r in range(6)] == ["train", "train", "val", "val", "test", "test"]
+    v4 = [V(language="fr", model_id="eleven_v4")]
+    cands = [v(1), v(2, rate=2.0), v(3, language="en"), v(4, notice_period=4015), v(5),
+             v(6, use_case="characters_animation"), v(7, use_case="narrative_story"), v(8, verified_languages=v4),
+             v(9, fiat_rate=0.3)]
+    chosen = voices_mod.choose_library_voices(cands, "fr", 4, model="eleven_v4")
+    # Vérifiée v4 d'abord, puis conversationnelles par usage ; tarif majoré, autre langue et personnage exclus.
+    assert [c.voice_id for c in chosen] == ["v8", "v5", "v4", "v1"]
+    assert [voices_mod.split_for(r, 6) for r in range(6)] == ["train", "val", "test"] * 2
 
 
 def test_voices_limit_progresses_across_runs(mocked_apis, monkeypatch, tmp_path):
