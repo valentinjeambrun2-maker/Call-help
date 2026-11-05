@@ -10,3 +10,7 @@ dist/
 
 # Secrets
 .env
+
+# Données synthétiques générées (audio, dialogues)
+backend/data/
+backend/datagen/voices.json

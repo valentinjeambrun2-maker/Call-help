@@ -125,6 +125,7 @@ class Hint(BaseModel):
     source: Literal["rule", "llm"] = "rule"
     priority: int = 1  # 1 = info, 3 = urgent
     replaces: str | None = None  # id d'un conseil par règle remplacé par le LLM
+    ref: str | None = None  # objection ou étape concernée (évaluation, affichage)
     ts: float = 0.0
 
 

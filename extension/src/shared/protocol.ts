@@ -11,6 +11,7 @@ export interface Hint {
   source: "rule" | "llm";
   priority: number;
   replaces: string | null;
+  ref: string | null;
   ts: number;
 }
 

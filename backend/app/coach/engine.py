@@ -97,7 +97,7 @@ class CoachEngine:
 
     async def on_objection(self, objection: Objection, ts: float) -> Hint | None:
         hint = self._new(kind="objection", text=objection.hint, say=self._say(objection.say),
-                         priority=3, ts=ts)
+                         priority=3, ts=ts, ref=objection.id)
         return await self._send(f"objection:{objection.id}", hint)
 
     async def on_announcement(self, says: dict[str, str], ts: float) -> Hint | None:
@@ -108,7 +108,7 @@ class CoachEngine:
 
     async def on_step(self, step: Step, ts: float) -> Hint | None:
         hint = self._new(kind="step", text=f"Étape « {step.title} » : {step.goal}",
-                         say=self._say(step.say), priority=2, ts=ts)
+                         say=self._say(step.say), priority=2, ts=ts, ref=step.id)
         return await self._send(f"step:{step.id}", hint)
 
     async def on_overtime(self, step: Step, ts: float) -> Hint | None:
