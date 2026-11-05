@@ -1,0 +1,23 @@
+{
+ "call_id": "fr-9999",
+ "seller_name": "Léa",
+ "prospect_name": "Marc Dufresne",
+ "prospect_company": "Cabinet Dufresne & Associés",
+ "offer": "référencement SEO et visibilité locale",
+ "outcome": "meeting_booked",
+ "turns": [
+  {"speaker": "seller", "text": "Bonjour monsieur Dufresne, Léa de The Herakles.", "emotion": "neutral", "intensity": 0.3, "delivery": ["warm"], "step": "hook", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "seller", "text": "Avant de commencer, je vous préviens que j'utilise un assistant qui analyse notre échange en direct.", "emotion": "neutral", "intensity": 0.3, "delivery": ["calm"], "step": "announcement", "objection": null, "pause_ms": 200, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Euh, d'accord. Mais faites vite, j'ai pas le temps là.", "emotion": "annoyance", "intensity": 0.6, "delivery": ["rushed"], "step": "announcement", "objection": "no_time", "pause_ms": 600, "overlap_ms": 0},
+  {"speaker": "seller", "text": "Bien sûr. Trente secondes : on aide les cabinets à être trouvés sur Google. Vous avez deux minutes ?", "emotion": "neutral", "intensity": 0.4, "delivery": [], "step": "hook", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Allez-y.", "emotion": "hesitation", "intensity": 0.4, "delivery": ["hesitant"], "step": "hook", "objection": null, "pause_ms": 900, "overlap_ms": 0},
+  {"speaker": "seller", "text": "Aujourd'hui, comment vos nouveaux clients vous trouvent-ils ?", "emotion": "neutral", "intensity": 0.3, "delivery": ["curious"], "step": "qualify", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Surtout le bouche-à-oreille. On a un vrai problème de visibilité en ligne, honnêtement.", "emotion": "interest", "intensity": 0.5, "delivery": ["thoughtful"], "step": "qualify", "objection": null, "pause_ms": 700, "overlap_ms": 0},
+  {"speaker": "seller", "text": "C'est exactement ce qu'on a réglé pour un cabinet à Villeurbanne : deux fois plus de demandes en trois mois.", "emotion": "enthusiasm", "intensity": 0.5, "delivery": ["warm"], "step": "value", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Oui enfin, on bosse déjà avec une agence pour le site.", "emotion": "hesitation", "intensity": 0.6, "delivery": ["skeptical"], "step": "value", "objection": "has_provider", "pause_ms": 500, "overlap_ms": 300},
+  {"speaker": "seller", "text": "Très bien. Si vous pouviez améliorer une seule chose avec eux, ce serait quoi ?", "emotion": "neutral", "intensity": 0.3, "delivery": ["calm"], "step": "value", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Ah, c'est intéressant comme question. Le référencement local, clairement.", "emotion": "interest", "intensity": 0.7, "delivery": ["curious"], "step": "value", "objection": null, "pause_ms": 1200, "overlap_ms": 0},
+  {"speaker": "seller", "text": "Je vous propose vingt minutes pour vous montrer ça : mardi dix heures ou jeudi quatorze heures ?", "emotion": "neutral", "intensity": 0.4, "delivery": [], "step": "close", "objection": null, "pause_ms": 300, "overlap_ms": 0},
+  {"speaker": "prospect", "text": "Jeudi, ça marche.", "emotion": "enthusiasm", "intensity": 0.6, "delivery": ["warm"], "step": "close", "objection": null, "pause_ms": 400, "overlap_ms": 0}
+ ]
+}

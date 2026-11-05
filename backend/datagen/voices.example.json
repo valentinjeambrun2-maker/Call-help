@@ -1,0 +1,155 @@
+{
+  "_doc": "Copier en voices.json et remplacer par de vrais voice_id ElevenLabs (bibliothèque de voix, langue native). Au moins deux voix par langue, genre et lot (vendeur et prospect du même genre ont besoin de deux voix différentes) ; viser 10+ voix par langue pour limiter le surapprentissage sur une voix.",
+  "fr": {
+    "female": [
+      {
+        "voice_id": "REMPLACER_fr_f_1",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_2",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_3",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_4",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_5",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_6",
+        "name": "",
+        "split": "test"
+      },
+      {
+        "voice_id": "REMPLACER_fr_f_7",
+        "name": "",
+        "split": "test"
+      }
+    ],
+    "male": [
+      {
+        "voice_id": "REMPLACER_fr_m_1",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_2",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_3",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_4",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_5",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_6",
+        "name": "",
+        "split": "test"
+      },
+      {
+        "voice_id": "REMPLACER_fr_m_7",
+        "name": "",
+        "split": "test"
+      }
+    ]
+  },
+  "en": {
+    "female": [
+      {
+        "voice_id": "REMPLACER_en_f_1",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_2",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_3",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_4",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_5",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_6",
+        "name": "",
+        "split": "test"
+      },
+      {
+        "voice_id": "REMPLACER_en_f_7",
+        "name": "",
+        "split": "test"
+      }
+    ],
+    "male": [
+      {
+        "voice_id": "REMPLACER_en_m_1",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_2",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_3",
+        "name": "",
+        "split": "train"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_4",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_5",
+        "name": "",
+        "split": "val"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_6",
+        "name": "",
+        "split": "test"
+      },
+      {
+        "voice_id": "REMPLACER_en_m_7",
+        "name": "",
+        "split": "test"
+      }
+    ]
+  }
+}
