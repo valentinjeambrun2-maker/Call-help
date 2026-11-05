@@ -143,13 +143,17 @@ class ScenarioTracker:
         self.steps_reached.append(self.step.id)
         return True
 
-    def mark_objection(self, objection_id: str) -> bool:
-        """Objection détectée par le LLM. Retourne True si l'état a changé."""
+    def mark_objection(self, objection_id: str, activate: bool = True) -> bool:
+        """Objection détectée par le LLM. Retourne True si l'état a changé.
+        `activate=False` : levée (comptée) sans devenir l'objection en cours, pour un résultat
+        arrivé après celui d'un tour plus récent."""
         obj = next((o for o in self.scenario.objections if o.id == objection_id), None)
         if obj is None:
             return False
-        changed = self.active_objection is not obj
-        self.active_objection = obj
+        changed = False
+        if activate:
+            changed = self.active_objection is not obj
+            self.active_objection = obj
         if obj.id not in self.objections_seen:
             self.objections_seen.append(obj.id)
             changed = True

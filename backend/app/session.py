@@ -254,7 +254,8 @@ class CallSession:
             self.coach.request_llm(self._context(), msg.end, replaces=rule_hint)
         elif self.coach.has_llm:
             # Tour du vendeur : classement seul (l'étape suit ce qu'il est en train de faire).
-            self.coach.request_llm(self._context(), msg.end, replaces=None, classify_only=True)
+            ctx = self._context().model_copy(update={"task": "step"})
+            self.coach.request_llm(ctx, msg.end, replaces=None, classify_only=True)
 
         if self.tracker.step_overtime(self.now):
             await self.coach.on_overtime(self.tracker.step, self.now)
@@ -288,6 +289,9 @@ class CallSession:
         changed = False
         self.pending_turns.pop(ts, None)
         provisional = self.provisional.pop(ts, None)
+        # Résultats arrivés dans le désordre (analyses en parallèle) : un tour plus ancien ne
+        # remplace pas l'objection en cours ni le ressenti lus sur un tour plus récent.
+        fresh = ts >= self._last_classified_ts
         if provisional and result.objection is None and result.kind == "objection":
             # Le LLM répond bien à une objection sans la nommer : on garde celle des mots-clés
             # plutôt que de la retirer (cas mesuré sur les démos, surtout « envoyez un mail »).
@@ -298,13 +302,12 @@ class CallSession:
             # objection, par exemple sur une réplique recollée qui en contient deux, on garde
             # les deux.)
             self.coach.retract_objection(provisional)
-        elif provisional and provisional != result.objection:
-            changed |= self.tracker.mark_objection(provisional)
         if result.objection:
-            changed |= self.tracker.mark_objection(result.objection)
-        # Résultats arrivés dans le désordre (analyses en parallèle) : un tour plus ancien ne
-        # remplace pas l'objection en cours ni le ressenti lus sur un tour plus récent.
-        fresh = ts >= self._last_classified_ts
+            changed |= self.tracker.mark_objection(result.objection, activate=fresh)
+        if provisional and result.objection and provisional != result.objection:
+            # Marquée en dernier : les mots-clés viennent du fragment le plus récent, c'est
+            # l'objection en cours.
+            changed |= self.tracker.mark_objection(provisional, activate=fresh)
         if prospect_turn and fresh:
             self._last_classified_ts = ts
             if not result.objection and self.tracker.active_objection is not None:

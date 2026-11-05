@@ -261,9 +261,15 @@ class CoachEngine:
             return
         if self.emotion_suppressed and result.kind == "emotion":
             return  # analyse coupée : pas de conseil fondé sur le ressenti
-        # Le LLM infirme une fiche d'objection des mots-clés : on la remplace toujours à l'écran,
+        keyword_card = replaces is not None and replaces.kind == "objection"
+        # Le LLM infirme la fiche d'objection des mots-clés : on la remplace toujours à l'écran,
         # même avec une faible confiance, pour ne pas laisser une fausse alerte affichée.
-        overrides = replaces is not None and replaces.kind == "objection" and result.objection != replaces.ref
+        overrides = keyword_card and result.objection is None
+        if keyword_card and result.objection and result.objection != replaces.ref:
+            # Le LLM nomme une AUTRE objection (réponse fusionnée qui en contient deux, « trop cher…
+            # et on a déjà une agence ») : la session garde les deux, la fiche des mots-clés reste
+            # affichée et la sienne passe comme une nouvelle fiche (filtrée si déjà montrée).
+            replaces = None
         if result.confidence < self.llm_min_confidence and not overrides:
             return
         # Un tour plus récent a déjà été envoyé au LLM : le classement ci-dessus reste

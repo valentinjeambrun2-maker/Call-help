@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
@@ -35,6 +35,8 @@ class CoachContext(BaseModel):
     objections: list[dict] = []  # [{"id", "label"}]
     current_step_id: str | None = None
     objections_raised: list[str] = []  # déjà levées dans cet appel : ne pas les reclasser
+    # "hint" : tour du prospect, conseil + classement. "step" : tour du vendeur, étape seule.
+    task: Literal["hint", "step"] = "hint"
 
 
 class LLMHint(BaseModel):
@@ -53,24 +55,37 @@ class HintProvider(Protocol):
     async def suggest(self, ctx: CoachContext) -> LLMHint | None: ...
 
 
+def step_schema(ctx: CoachContext) -> dict:
+    """Tour du vendeur : l'étape seule. Sans conseil à écrire d'abord, l'étape décrit ce que le
+    vendeur fait, et non ce que le conseil lui recommanderait (mesuré en démo : avec le conseil
+    en tête, « Valeur » n'était presque jamais choisie, le conseil disant « creuse le besoin »)."""
+    return {"type": "object", "properties": {
+        "step": {"type": "string", "enum": [st["id"] for st in ctx.steps],
+                 "description": "Étape d'après ce que le vendeur vient de faire"}},
+        "required": ["step"], "additionalProperties": False}
+
+
 def hint_schema(ctx: CoachContext) -> dict:
     """Schéma de sortie, avec les objections et étapes propres au scénario.
 
-    Ordre voulu : le conseil d'abord, le classement ensuite. Les champs sont produits dans
-    cet ordre, et le classement suit alors ce que le modèle vient d'écrire. Mesuré en démo :
-    quand `objection` venait en premier, le conseil disait « objection budget » alors que le
-    champ restait vide."""
+    Ordre voulu : l'étape (constat de ce que fait le vendeur), puis le conseil, puis le reste
+    du classement. Les champs sont produits dans cet ordre, et le classement suit ce que le
+    modèle vient d'écrire. Mesuré en démo : quand `objection` venait avant le conseil, celui-ci
+    disait « objection budget » alors que le champ restait vide ; quand l'étape venait après,
+    elle suivait le conseil (« creuse le besoin » -> qualification) et non l'appel."""
     objection_ids = [o["id"] for o in ctx.objections] + ["other"]
     step_ids = [st["id"] for st in ctx.steps]
-    props: dict = {
+    props: dict = {}
+    if step_ids:
+        props["step"] = {"type": "string", "enum": step_ids,
+                         "description": "Étape d'après ce que fait le vendeur dans l'échange"}
+    props |= {
         "text": {"type": "string", "description": "Indication de 12 mots maximum"},
         "say": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Phrase prête à dire, 25 mots maximum"},
         "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]},
         "objection": {"anyOf": [{"type": "string", "enum": objection_ids}, {"type": "null"}],
                       "description": "Objection NOUVELLE exprimée dans le dernier tour du prospect, sinon null"},
     }
-    if step_ids:
-        props["step"] = {"type": "string", "enum": step_ids, "description": "Étape où en est l'appel"}
     props["prospect_state"] = {
         "anyOf": [{"type": "string", "enum": ["neutral", "interest", "hesitation", "annoyance", "boredom",
                                               "enthusiasm"]}, {"type": "null"}],
@@ -99,16 +114,29 @@ Règles :
 Classement (en plus du conseil) :
 - `objection` : une objection NOUVELLE que le prospect exprime dans son DERNIER tour, même
   indirectement (« je suis entre deux réunions » = manque de temps ; « ce n'est pas donné » =
-  budget ; « on a déjà quelqu'un » = prestataire en place). Choisis parmi `objections` du
-  contexte, "other" pour une autre objection, null sinon. Mets null dans ces cas :
+  budget ; « on a déjà quelqu'un » = prestataire en place). Deux formes souvent manquées :
+  - demander un mail ou une documentation au lieu de poursuivre ou de fixer un rendez-vous est
+    une demande de mail, même dite poliment, en passant ou avec une autre demande ;
+  - dire qu'il n'a pas le temps demandé (durée de l'appel ou du rendez-vous) sans proposer
+    d'autre créneau est un manque de temps ; déplacer un créneau ne l'est pas.
+  Choisis parmi `objections` du contexte, "other" pour une autre objection, null sinon.
+  Mets null dans ces cas :
   - le prospect revient sur une objection déjà levée (`objections_raised`) ;
   - il accepte un rappel ou propose un créneau (« rappelez-moi mardi » quand on fixe un rendez-vous) ;
   - simple politesse, acquiescement ou fin d'appel (« d'accord », « au revoir », « mm-hmm »).
 - `step` : l'étape où en est l'appel, parmi `steps` du contexte, d'après ce que le vendeur est en
-  train de faire : se présenter et capter l'attention (accroche), questionner sur la situation
-  (qualification), présenter son offre ou un bénéfice (valeur), proposer un rendez-vous ou un
-  créneau (prise de rendez-vous). L'appel avance normalement dans cet ordre ; ne reviens pas en arrière.
-- Si le DERNIER tour est celui du vendeur, `objection` vaut null (seul `step` compte).
+  train de faire :
+  - accroche : il se présente et demande un peu d'attention ;
+  - qualification : il pose des questions sur la situation, les outils, les problèmes du prospect ;
+  - valeur : il décrit ce qu'il propose, comment ça marche, ce que le prospect y gagnerait, un
+    exemple ou un prix, y compris quand il répond à une objection. Un vendeur qui commence à
+    expliquer son offre ou relie le problème entendu à sa solution est passé à la valeur, même
+    s'il glisse encore une question ;
+  - prise de rendez-vous : il propose explicitement un rendez-vous, un appel, une démo ou un
+    créneau. Répondre à une objection n'est pas prendre rendez-vous.
+  L'appel avance normalement dans cet ordre ; ne reviens pas en arrière.
+- Si `task` vaut "step", le dernier tour est celui du vendeur : donne seulement `step`, d'après
+  ce qu'il vient de dire.
 - `prospect_state` : l'état du prospect tel qu'on le perçoit dans ses mots (dernier tour du prospect
   et contexte) : neutral, interest, hesitation, annoyance, boredom, enthusiasm ; `state_confidence`
   entre 0 et 1. C'est une hypothèse. Si `emotion_allowed` est faux : null et 0.
@@ -139,13 +167,14 @@ class ClaudeProvider:
         try:
             response = await self.client.messages.create(
                 model=self.model,
-                max_tokens=400,
+                max_tokens=40 if ctx.task == "step" else 400,
                 system=SYSTEM_PROMPT,
                 # Latence d'abord : pas de réflexion pour un conseil de deux lignes.
                 thinking={"type": "disabled"},
                 output_config={
                     "effort": "low",
-                    "format": {"type": "json_schema", "schema": hint_schema(ctx)},
+                    "format": {"type": "json_schema",
+                               "schema": step_schema(ctx) if ctx.task == "step" else hint_schema(ctx)},
                 },
                 messages=[{"role": "user", "content": ctx.model_dump_json(indent=1)}],
             )
@@ -165,7 +194,10 @@ class ClaudeProvider:
         text = next((b.text for b in response.content if b.type == "text"), None)
         if not text:
             return None
-        return LLMHint.model_validate(json.loads(text))
+        data = json.loads(text)
+        if ctx.task == "step":
+            return LLMHint(kind="step", text="", say=None, confidence=0.0, step=data.get("step"))
+        return LLMHint.model_validate(data)
 
 
 def default_provider() -> HintProvider:

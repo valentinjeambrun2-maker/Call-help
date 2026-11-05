@@ -115,6 +115,13 @@ async def test_merged_reply_with_two_objections_keeps_both():
     await say(s, "Et puis on a déjà une agence.", 3.7, 5)
     await s.coach.wait_llm()
     assert set(s.tracker.objections_seen) == {"no_budget", "has_provider"}
+    # La fiche « prestataire » des mots-clés reste à l'écran (avant : remplacée par une seconde
+    # fiche budget), et c'est l'objection en cours (la plus récente).
+    hints = [m["hint"] for m in out if m["type"] == "hint" and m["hint"]["kind"] == "objection"]
+    provider_card = next(h for h in hints if h["ref"] == "has_provider")
+    assert not any(h.get("replaces") == provider_card["id"] for h in hints)
+    assert sum(h["ref"] == "no_budget" and not h.get("replaces") for h in hints) <= 1
+    assert s.tracker.active_objection.id == "has_provider"
 
 
 async def test_prospect_turn_is_not_dropped_behind_seller_classifications():
@@ -205,3 +212,21 @@ async def test_out_of_order_results_do_not_overwrite_newer_reading():
     await s.coach.wait_llm()
     from app.models import Speaker
     assert s.emotions.reading(Speaker.PROSPECT, 10).state.value == "enthusiasm"
+
+
+async def test_late_result_for_an_older_turn_does_not_become_the_active_objection():
+    class Late:
+        async def suggest(self, ctx):
+            last = ctx.recent_transcript[-1]
+            if "budget" in last:
+                await asyncio.sleep(0.3)  # tour ancien, réponse lente
+                return LLMHint(kind="objection", text="b", say=None, confidence=0.9, objection="no_budget")
+            await asyncio.sleep(0.01)
+            return LLMHint(kind="objection", text="p", say=None, confidence=0.9, objection="has_provider")
+
+    s, out = await started(Late())
+    await say(s, "Le budget est serré cette année.", 1, 3)
+    await say(s, "Bon, et de toute façon on travaille avec une agence.", 8, 10)
+    await s.coach.wait_llm()
+    assert set(s.tracker.objections_seen) == {"no_budget", "has_provider"}
+    assert s.tracker.active_objection.id == "has_provider"  # avant : remplacée par l'ancienne (budget)
