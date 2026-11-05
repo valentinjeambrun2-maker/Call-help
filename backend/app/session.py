@@ -258,7 +258,8 @@ class CallSession:
             self.coach.request_llm(ctx, msg.end, replaces=None, classify_only=True)
 
         if self.tracker.step_overtime(self.now):
-            await self.coach.on_overtime(self.tracker.step, self.now)
+            last = self.tracker.index == len(self.scenario.steps) - 1
+            await self.coach.on_overtime(self.tracker.step, self.now, last=last)
         await self.coach.on_metrics(self.metrics.snapshot(self.now), self.now)
         await self._send_state()
 

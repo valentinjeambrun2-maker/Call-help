@@ -230,3 +230,18 @@ async def test_late_result_for_an_older_turn_does_not_become_the_active_objectio
     await s.coach.wait_llm()
     assert set(s.tracker.objections_seen) == {"no_budget", "has_provider"}
     assert s.tracker.active_objection.id == "has_provider"  # avant : remplacée par l'ancienne (budget)
+
+
+async def test_overtime_on_the_last_step_says_conclude_not_move_on():
+    out = []
+
+    async def emit(h):
+        out.append(h)
+
+    from app.scenario import load_scenario
+    steps = load_scenario("cold_call_fr").steps
+    engine = CoachEngine(emit)
+    await engine.on_overtime(steps[-1], 100.0, last=True)
+    await engine.on_overtime(steps[1], 120.0)
+    assert "passe à la suite" not in out[0].text and "conclus" in out[0].text
+    assert "passe à la suite" in out[1].text

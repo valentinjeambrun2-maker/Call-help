@@ -135,12 +135,14 @@ class CoachEngine:
                          say=self._say(step.say), priority=2, ts=ts, ref=step.id)
         return await self._send(f"step:{step.id}", hint)
 
-    async def on_overtime(self, step: Step, ts: float) -> Hint | None:
+    async def on_overtime(self, step: Step, ts: float, last: bool = False) -> Hint | None:
         if step.id in self._overtime_warned:
             return None
         self._overtime_warned.add(step.id)
-        hint = self._new(kind="step", text=f"« {step.title} » dure trop : passe à la suite.",
-                         priority=2, ts=ts)
+        # Dernière étape : il n'y a pas de « suite », il faut conclure (vu en démo, en fin d'appel).
+        text = (f"« {step.title} » s'étire : fixe la suite précise et conclus." if last
+                else f"« {step.title} » dure trop : passe à la suite.")
+        hint = self._new(kind="step", text=text, priority=2, ts=ts)
         return await self._send(f"overtime:{step.id}", hint)
 
     async def on_metrics(self, m: Metrics, ts: float) -> list[Hint]:

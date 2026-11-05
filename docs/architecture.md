@@ -116,10 +116,20 @@ LLM retenus par défaut : `claude-haiku-5-5` pour les conseils en direct, `claud
 
 Mesure sur le pilote de 100 appels : avec les mots-clés seuls, le moteur ne détecte que 31 % des objections, car elles sont formulées librement. Il ne suit la bonne étape que dans 30 % des tours.
 
-À chaque tour du prospect, le fournisseur LLM (`claude-haiku-5-5`, environ 2 s, environ 0,0003 $ par tour) renvoie aussi :
-- l'objection **nouvelle** du tour, parmi celles du scénario ;
-- l'étape où en est réellement l'appel.
+**À chaque tour du prospect**, le fournisseur LLM (`claude-haiku-5-5`, environ 2 s, environ 0,0003 $ par tour) renvoie, dans cet ordre :
+1. l'étape où en est l'appel ;
+2. le conseil ;
+3. l'objection **nouvelle** du tour, parmi celles du scénario ;
+4. le ressenti lu dans les mots, seulement avec l'accord du prospect.
 
-Le moteur émet alors une fiche d'objection quand les mots-clés l'ont manquée, et fait avancer le fil directeur, jamais en arrière. Les mots-clés restent le réflexe instantané ; Claude complète environ 2 s plus tard.
+L'ordre compte : chaque champ suit ce que le modèle vient d'écrire. Avec l'objection avant le conseil, le conseil disait « objection budget » alors que le champ restait vide.
 
-Résultat : F1 des objections de 40 % à 71 %, étape correcte de 30 % à 56 %. Détails dans `docs/donnees-synthetiques.md`.
+**À chaque tour du vendeur**, une requête plus courte ne demande que l'étape. Quand elle venait après un conseil, l'étape suivait le conseil (« creuse le besoin », donc qualification) au lieu de ce que faisait le vendeur, et « Valeur » n'était presque jamais choisie.
+
+**Mots-clés et Claude.** Les mots-clés restent le réflexe instantané : une fiche d'objection s'affiche en environ 1 s. Elle est provisoire. Environ 2 s plus tard, Claude la confirme, la corrige ou la retire (fausse alerte). Si Claude ne répond pas (panne, délai de 8 s), les mots-clés décident. Le fil directeur n'avance que vers l'avant.
+
+**Résultat** sur les 90 appels du pilote hors sélection de démo (non utilisés pour régler les consignes) :
+- objections : F1 **90 %** (précision 87 %, rappel 94 %), contre 40 % avec les mots-clés seuls ;
+- bonne étape : **87 %** des tours, contre 30 %.
+
+Mesures en direct, avec la transcription : `docs/demos.md`. Détails du pilote : `docs/donnees-synthetiques.md`.
