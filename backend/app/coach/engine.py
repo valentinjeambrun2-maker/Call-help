@@ -139,14 +139,19 @@ class CoachEngine:
         return [h for h in sent if h]
 
     async def on_emotion(self, reading: EmotionReading, ts: float) -> Hint | None:
-        if reading.state is None or reading.state == self._last_emotion:
+        if reading.state is None:
+            self._last_emotion = None  # retour au neutre : un nouvel épisode sera signalé
             return None
-        self._last_emotion = reading.state
+        if reading.state == self._last_emotion:
+            return None
         text, say = EMOTION_HINTS[reading.state]
         if reading.label == "probable":
             text = f"(probable) {text}"
         hint = self._new(kind="emotion", text=text, say=say, priority=1, ts=ts)
-        return await self._send(f"emotion:{reading.state.value}", hint)
+        sent = await self._send(f"emotion:{reading.state.value}", hint)
+        if sent:  # refusé par la limite de fréquence : on réessaiera à la mesure suivante
+            self._last_emotion = reading.state
+        return sent
 
     # --- LLM en parallèle ---------------------------------------------------
 
@@ -177,6 +182,10 @@ class CoachEngine:
             await self.emit(hint)
         else:
             await self._send(f"llm:{result.text}", hint)
+
+    def cancel_llm(self) -> None:
+        if self._llm_task and not self._llm_task.done():
+            self._llm_task.cancel()
 
     async def close(self) -> None:
         if self._llm_task and not self._llm_task.done():

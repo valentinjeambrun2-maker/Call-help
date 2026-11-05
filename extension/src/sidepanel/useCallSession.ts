@@ -12,6 +12,7 @@ export interface CallState {
   emotions: EmotionReading[];
   analysisPaused: boolean;
   announcementPending: boolean;
+  announcement: Hint | null; // message d'information, affiché tant qu'il n'est pas confirmé
   current: Hint | null;
   history: Hint[];
   summary: CallSummary | null;
@@ -21,7 +22,7 @@ export interface CallState {
 
 const INITIAL: CallState = {
   phase: "idle", step: null, metrics: null, emotions: [], analysisPaused: false, announcementPending: false,
-  current: null, history: [], summary: null, error: null, feedback: {},
+  announcement: null, current: null, history: [], summary: null, error: null, feedback: {},
 };
 
 // Un conseil reste à l'écran au moins ce temps, sauf s'il est plus urgent.
@@ -36,13 +37,17 @@ export function useCallSession(backendUrl: string) {
   const current = useRef<Hint | null>(null);
 
   const onHint = useCallback((hint: Hint) => {
+    if (hint.kind === "announcement") {
+      // Carte dédiée, indépendante du conseil courant : le bouton de confirmation
+      // ne doit jamais être masqué par un autre conseil.
+      setState((s) => ({ ...s, announcement: hint }));
+      return;
+    }
     // La décision d'affichage est prise hors de setState : les fonctions de mise à
     // jour doivent rester pures (React les exécute deux fois en mode strict).
     const shown = current.current;
     const canShow =
       !shown ||
-      // Le conseil suivant n'arrive qu'après confirmation du message d'information.
-      shown.kind === "announcement" ||
       (hint.replaces !== null && shown.id === hint.replaces) ||
       hint.priority > shown.priority ||
       Date.now() - shownAt.current > MIN_DISPLAY_MS;

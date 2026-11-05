@@ -29,12 +29,33 @@ def test_nothing_analysed_before_start():
     assert f.people[Speaker.PROSPECT].voice.current == {}
 
 
-def test_calibration_window_starts_with_analysis():
+def test_calibration_window_starts_at_each_channel_first_sample():
     f = EmotionFusion()
     f.start(100)
     f.add_voice(Speaker.PROSPECT, NEUTRAL, 110)
-    assert not f.reading(Speaker.PROSPECT, 125).calibrated
-    assert f.reading(Speaker.PROSPECT, 131).calibrated
+    assert not f.reading(Speaker.PROSPECT, 131).calibrated
+    assert f.reading(Speaker.PROSPECT, 141).calibrated
+
+
+def test_late_channel_is_calibrated_not_shown_raw():
+    """Revue : une voix arrivée après 30 s s'affichait en score brut « sûr »."""
+    grave = {E.INTEREST: 0.1, E.HESITATION: 0.1, E.ANNOYANCE: 0.8, E.BOREDOM: 0.1, E.ENTHUSIASM: 0.1}
+    f = EmotionFusion()
+    f.start(0)
+    for ts in range(31, 41):
+        f.add_voice(Speaker.PROSPECT, grave, ts)
+    assert f.reading(Speaker.PROSPECT, 40).state is None  # encore en calibration
+    for ts in range(41, 70):
+        f.add_voice(Speaker.PROSPECT, grave, ts)
+    assert f.reading(Speaker.PROSPECT, 70).state is None  # profil constant neutralisé
+
+
+def test_samples_before_notice_are_rejected():
+    """Revue : un échantillon horodaté avant le message d'information était analysé."""
+    f = EmotionFusion()
+    f.start(20)
+    f.add_voice(Speaker.PROSPECT, HESITANT, 5)
+    assert f.people[Speaker.PROSPECT].voice.current == {} and f.samples_used == 0
 
 
 def test_strong_signal_shown_after_calibration():

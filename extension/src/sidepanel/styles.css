@@ -202,7 +202,7 @@ h2 { margin-top: 2px; font-size: 21px; line-height: 1.2; font-weight: 600; lette
   animation: rise 0.45s var(--spring);
 }
 .hint.p3 { box-shadow: inset 0 0 0 1.5px var(--danger); }
-.hint.p3:has(.eyebrow.accent) { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.hint.p3:has(.eyebrow.accent), .hint.notice { box-shadow: inset 0 0 0 1.5px var(--accent); }
 
 /* Conseil affiné par l'IA : liseré halo, comme les boutons « halo » du site. */
 .hint.halo { box-shadow: none; isolation: isolate; }

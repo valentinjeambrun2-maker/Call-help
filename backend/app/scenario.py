@@ -66,8 +66,9 @@ def normalize(text: str) -> str:
 
 
 def contains_keyword(text: str, keyword: str) -> bool:
-    """Correspondance sur des mots entiers, pour que « ok » ne matche pas « book »."""
-    pattern = r"(?<![\w'])" + re.escape(normalize(keyword)) + r"(?![\w'])"
+    """Correspondance sur des mots entiers, pour que « ok » ne matche pas « book ».
+    À gauche, l'apostrophe sépare les mots (élision : « qu'on cherche »)."""
+    pattern = r"(?<!\w)" + re.escape(normalize(keyword)) + r"(?![\w'])"
     return re.search(pattern, normalize(text)) is not None
 
 

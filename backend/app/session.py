@@ -63,6 +63,8 @@ class CallSession:
             self.feedback[msg.hint_id] = msg.useful
         elif isinstance(msg, PauseAnalysisMsg):
             self.emotions.paused = True
+            # Un conseil IA en cours a pu être construit avec l'émotion du prospect.
+            self.coach.cancel_llm()
             await self._send_state()
         elif isinstance(msg, AnnouncementDoneMsg):
             await self._on_announcement_done(msg.ts)
@@ -113,6 +115,13 @@ class CallSession:
             return  # les résultats partiels servent à l'affichage, pas aux règles
         self.metrics.add_segment(msg.speaker, msg.text, msg.start, msg.end)
         self.transcript.append(f"{msg.speaker.value}: {msg.text}")
+
+        if self.announcement_pending:
+            # Tant que le message d'information n'est pas confirmé, on ne fait
+            # qu'écouter : pas d'avancée de scénario ni de conseil qui masquerait
+            # le message (le « d'accord » du prospect y répond, il ne clôt pas l'accroche).
+            await self._send_state()
+            return
 
         rule_hint = None
         if msg.speaker is Speaker.PROSPECT:
@@ -172,7 +181,7 @@ class CallSession:
             hints_useful=sum(self.feedback.values()),
             hints_not_useful=sum(not v for v in self.feedback.values()),
             announcement_at=self.announcement_at,
-            emotion_analysis_used=self.emotions.active_since is not None,
+            emotion_analysis_used=self.emotions.samples_used > 0,
         )
 
     async def close(self) -> None:

@@ -156,6 +156,19 @@ export function App() {
           </section>
         )}
 
+        {state.announcementPending && state.announcement && (
+          <section className="card hint p3 notice" aria-live="polite">
+            <div className="hint-head">
+              <span className="eyebrow accent">{KINDS.announcement.label}</span>
+            </div>
+            <p className="hint-text">{fr(state.announcement.text)}</p>
+            {state.announcement.say && <blockquote>{fr(state.announcement.say)}</blockquote>}
+            <button className="btn primary wide" onClick={confirmAnnouncement}>
+              Message dit, démarrer l'analyse
+            </button>
+          </section>
+        )}
+
         {hint && (
           <section key={hint.id} className={`card hint ${hint.source === "llm" ? "halo" : ""} p${hint.priority}`} aria-live="polite">
             <div className="hint-head">
@@ -164,15 +177,7 @@ export function App() {
             </div>
             <p className="hint-text">{fr(hint.text)}</p>
             {hint.say && <blockquote>{fr(hint.say)}</blockquote>}
-            {hint.kind === "announcement" && state.announcementPending ? (
-              <button className="btn primary wide" onClick={confirmAnnouncement}>
-                Message dit, démarrer l'analyse
-              </button>
-            ) : (
-              hint.kind !== "announcement" && (
-                <Feedback id={hint.id} value={state.feedback[hint.id]} onFeedback={giveFeedback} />
-              )
-            )}
+            <Feedback id={hint.id} value={state.feedback[hint.id]} onFeedback={giveFeedback} />
           </section>
         )}
 

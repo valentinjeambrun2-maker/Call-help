@@ -2,22 +2,34 @@
 
 from __future__ import annotations
 
+import re
+
 from .models import Metrics, Speaker
 from .scenario import normalize
 
-QUESTION_STARTS = (
-    "comment", "pourquoi", "combien", "quel", "quelle", "quels", "quelles", "est-ce",
-    "qu'est-ce", "ou ", "quand", "qui ", "how", "what", "why", "when", "where", "who",
-    "do you", "are you", "is it", "can you",
-)
+# « où » est absent : sans accents il se confond avec « ou » (« Ou alors jeudi »).
+QUESTION_WORDS = {
+    "comment", "pourquoi", "combien", "quel", "quelle", "quels", "quelles", "quand", "qui",
+    "est-ce", "qu'est-ce",
+    "how", "what", "why", "when", "where", "who", "which",
+}
+QUESTION_PAIRS = {"do you", "did you", "are you", "is it", "can you", "could you", "would you"}
+
 
 # Deux segments de l'utilisateur séparés de moins de ce délai = même monologue.
 MONOLOGUE_GAP = 1.5
 
 
 def is_question(text: str) -> bool:
+    """Point d'interrogation, ou premier(s) mot(s) interrogatif(s) en mots entiers :
+    « Quelqu'un m'a recommandé » ou « However » ne sont pas des questions."""
     t = normalize(text).strip()
-    return t.endswith("?") or t.startswith(QUESTION_STARTS)
+    if t.endswith("?"):
+        return True
+    tokens = re.findall(r"[\w'-]+", t)
+    if not tokens:
+        return False
+    return tokens[0] in QUESTION_WORDS or " ".join(tokens[:2]) in QUESTION_PAIRS
 
 
 class ConversationMetrics:
