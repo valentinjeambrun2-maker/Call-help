@@ -68,6 +68,14 @@ Réglages :
   - la stabilité de la voix : 0,6 pour une réplique neutre, jusqu'à 0,3 pour une émotion forte.
 - **Voix :** listées dans `datagen/voices.json` (modèle : `voices.example.json`), au moins deux par langue, genre et lot. Choisir des voix **natives** : avec v4, une voix étrangère parle sans accent dans la langue cible.
 
+Robustesse :
+- **Reprises :** le SDK ElevenLabs 2.76 ne réessaie pas les erreurs réseau et ignore `retry-after-ms`. Le générateur gère lui-même les reprises :
+  - codes 408, 409, 429 et 5xx, ainsi que les délais dépassés ;
+  - attente indiquée par le serveur, sinon attente croissante.
+- **Repli sans horodatage :** si `eleven_v4` refuse l'endpoint « with timestamps », non confirmé par la documentation, la synthèse continue en mode simple. La ligne de temps des tours reste exacte ; seuls les temps par mot manquent.
+- **Reprise sur interruption :** chaque tour enregistre son audio et ses métadonnées. Une relance ne refait que ce qui manque, et un dialogue réécrit invalide l'ancien audio.
+- **Données dans l'UE :** `CALLHELP_ELEVENLABS_EU=1` utilise l'hébergement européen d'ElevenLabs.
+
 Points à vérifier pendant le pilote, faute de documentation :
 - les balises non documentées (`[hesitant]`, `[bored]`) et les balises anglaises dans un texte français ;
 - l'effet de `previous_text` sur la continuité entre les deux voix ;
@@ -142,6 +150,7 @@ Forfaits (API) :
   - Entraîner le modèle d'émotion de Call-help sur cet audio est donc **interdit sans accord écrit**.
   - Même l'usage comme **jeu d'évaluation** pour améliorer le moteur est une **zone grise**.
 - **§9 :** interdit d'utiliser leurs services « pour un système classé à haut risque » par l'AI Act. La reconnaissance des émotions figure à l'annexe III (haut risque). Il faut leur faire confirmer que générer des données de test pour un tel produit n'est pas visé.
+- **§10 :** interdit de retirer ou d'altérer les filigranes et marqueurs de provenance d'ElevenLabs. Il faut faire confirmer que nos traitements ne sont pas visés : version « téléphone », mixage stéréo, codec.
 
 Ce que je recommande :
 1. **Écrire à ElevenLabs** (juridique ou ventes ; une offre Enterprise peut accorder une exception). Demander une autorisation écrite pour :
