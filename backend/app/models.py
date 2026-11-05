@@ -28,9 +28,9 @@ class StartMsg(BaseModel):
     type: Literal["start"] = "start"
     scenario_id: str = "cold_call_fr"
     language: Literal["fr", "en"] = "fr"
-    # Analyse émotionnelle de l'utilisateur lui-même : active par défaut (Q36),
-    # désactivable par l'utilisateur ou, plus tard, par l'admin de la structure.
-    self_analysis: bool = True
+    # Analyse du ton de l'utilisateur lui-même : sur accord explicite (opt-in), choix
+    # mémorisé par le panneau. Jamais partagée avec un manager ou un admin.
+    self_analysis: bool = False
     # Variables du scénario : {user_name}, {company}, {topic}...
     context: dict[str, str] = {}
 
@@ -79,10 +79,12 @@ class PauseAnalysisMsg(BaseModel):
 
 
 class AnnouncementDoneMsg(BaseModel):
-    """L'utilisateur confirme avoir dit le message d'information au début de l'appel."""
+    """Le message d'information a été dit ; `consent` = réponse du prospect.
+    Sans accord, aucune analyse émotionnelle pendant tout l'appel."""
 
     type: Literal["announcement_done"] = "announcement_done"
     ts: float = Field(0, ge=0)
+    consent: bool
 
 
 class StopMsg(BaseModel):
@@ -147,6 +149,7 @@ class StateMsg(BaseModel):
     # Vrai tant que le message d'information n'a pas été dit : l'analyse
     # émotionnelle (voix + visage) ne démarre qu'après.
     announcement_pending: bool = False
+    prospect_consent: bool | None = None
 
 
 class HintMsg(BaseModel):
@@ -164,8 +167,10 @@ class CallSummary(BaseModel):
     hints_given: int
     hints_useful: int
     hints_not_useful: int
-    # Trace de conformité : moment où le message d'information a été dit.
+    # Trace de conformité : moment du message d'information, réponse du prospect,
+    # et analyse émotionnelle réellement effectuée ou non.
     announcement_at: float | None = None
+    prospect_consent: bool | None = None
     emotion_analysis_used: bool = False
 
     def team_view(self) -> dict:

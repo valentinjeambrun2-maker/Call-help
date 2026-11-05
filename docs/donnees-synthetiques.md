@@ -162,7 +162,11 @@ Ce que je recommande :
    - Gemini TTS sur l'offre payante : ses conditions n'interdisent que les modèles concurrents ;
    - Kyutai TTS `en_fr` : poids sous licence CC-BY 4.0, en n'utilisant que des voix CC-BY ou CC0.
 
-   Les scripts et étiquettes écrits par Claude restent utilisables : selon les conditions commerciales d'Anthropic, ils appartiennent au client et peuvent servir à entraîner un modèle non concurrent.
+   **Correction après vérification :** les scripts et étiquettes écrits par Claude appartiennent au client. Mais la politique d'usage d'Anthropic, intégrée aux conditions commerciales, interdit d'« utiliser les sorties pour entraîner un modèle d'IA » **sans autorisation préalable d'Anthropic**. Changer de fournisseur de voix ne suffit donc pas pour l'entraînement. Il faut :
+   - soit l'autorisation d'Anthropic en plus de celle du fournisseur de voix ;
+   - soit des étiquettes produites indépendamment, par des annotateurs humains.
+
+   L'usage pour **tester et évaluer** le moteur n'est pas concerné par cette clause.
 
 ## Ce que ces appels peuvent prouver, et ce qu'ils ne peuvent pas prouver
 
@@ -176,7 +180,11 @@ D'après la littérature récente (détails et sources dans l'historique de rech
 - **la précision réelle sur de vrais appels** : ni le taux d'erreur de transcription, ni la façon dont de vrais prospects formulent leurs objections.
 - **la qualité du modèle d'émotion sur de vrais prospects.** Un modèle entraîné uniquement sur de la voix de synthèse se transfère mal à la parole naturelle : même les meilleurs systèmes plafonnent vers 0,43 de F1 macro sur de la parole réelle. Sur de vrais appels de service client, environ 95 % des énoncés sont neutres. Les balises ElevenLabs ne produisent pas toujours l'émotion demandée : un banc d'essai mesure 2,67/5 de fidélité émotionnelle pour v3.
 
-**Contrôle des étiquettes avant tout usage :** 300 tours du prospect, échantillonnés par émotion, écoutés à l'aveugle par 2 évaluateurs natifs par langue. On ne garde une émotion que si l'accord entre évaluateurs atteint au moins 0,67 (kappa) **et** si l'émotion perçue correspond à l'émotion demandée dans au moins 70 % des cas. Compter environ 2 à 3 h par évaluateur.
+**Contrôle des étiquettes avant tout usage :** environ **90 tours du prospect par état** (6 états, soit environ 540 tours), écoutés à l'aveugle par 2 évaluateurs natifs par langue. On garde un état si deux conditions sont réunies :
+- l'accord entre évaluateurs atteint au moins 0,67 (kappa) ;
+- la **borne basse** de l'intervalle à 95 % du taux de reconnaissance dépasse 60 %.
+
+Avec seulement 50 tours par état, l'intervalle est de ± 12 à 13 points : on ne distinguerait pas 70 % de 58 %. Compter environ 4 à 5 h par évaluateur.
 
 ## Améliorations prévues
 

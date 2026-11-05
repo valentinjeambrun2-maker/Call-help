@@ -42,7 +42,7 @@ async def test_prospect_ok_during_pending_notice_does_not_advance_or_hide_it():
                     "start": 32, "end": 33})
     assert [h["kind"] for h in hints(out)] == ["announcement"]  # ni étape ni « dure trop »
     assert s.tracker.step.id == "hook" and out[-1]["announcement_pending"] is True
-    await s.handle({"type": "announcement_done", "ts": 34})
+    await s.handle({"type": "announcement_done", "ts": 34, "consent": True})
     assert hints(out)[-1]["ref"] == "hook"
 
 
@@ -53,7 +53,7 @@ async def test_pause_cancels_in_flight_llm_hint():
             return LLMHint(kind="emotion", text="Il semble hésiter", say=None, confidence=0.9)
 
     s, out = await started(provider=Slow(), scenario_id="cold_call_fr")
-    await s.handle({"type": "announcement_done", "ts": 0})
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
     await s.handle({"type": "transcript", "speaker": "prospect", "text": "Hum.", "start": 1, "end": 2})
     await s.handle({"type": "pause_analysis"})
     await asyncio.sleep(0.3)
@@ -86,7 +86,7 @@ async def test_emotion_hint_repeats_after_return_to_neutral_and_after_rate_limit
 async def test_compliance_trace_when_cut_before_any_sample():
     s, out = await started()
     await s.handle({"type": "pause_analysis"})
-    await s.handle({"type": "announcement_done", "ts": 10})
+    await s.handle({"type": "announcement_done", "ts": 10, "consent": True})
     for ts in range(10, 50, 5):
         await s.handle({"type": "voice", "speaker": "prospect", "ts": ts, "scores": HESITANT})
     assert s.summary().emotion_analysis_used is False
@@ -117,3 +117,36 @@ def test_invalid_frames_do_not_end_the_call(monkeypatch):
         assert ws.receive_json()["type"] == "error"
         ws.send_json({"type": "stop"})
         assert ws.receive_json()["type"] == "summary"
+
+
+async def test_llm_told_not_to_use_emotions_without_consent():
+    seen = []
+
+    class Spy:
+        async def suggest(self, ctx):
+            seen.append(ctx)
+            return None
+
+    s, out = await started(provider=Spy())
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": False})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "Hum.", "start": 1, "end": 2})
+    await asyncio.sleep(0)
+    await s.coach.close()
+    assert seen and seen[-1].emotion_allowed is False and seen[-1].prospect_emotion is None
+
+
+async def test_feedback_on_refined_hint_counts_once():
+    class Refine:
+        async def suggest(self, ctx):
+            return LLMHint(kind="objection", text="Plus fin", say=None, confidence=0.9)
+
+    s, out = await started(provider=Refine())
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "J'ai pas le temps.", "start": 1, "end": 2})
+    await s.coach._llm_task
+    rule = next(h for h in hints(out) if h["kind"] == "objection" and h["source"] == "rule")
+    llm = next(h for h in hints(out) if h["source"] == "llm")
+    await s.handle({"type": "feedback", "hint_id": rule["id"], "useful": True})
+    await s.handle({"type": "feedback", "hint_id": llm["id"], "useful": True})
+    summary = s.summary()
+    assert summary.hints_useful == 1 and summary.hints_useful <= summary.hints_given

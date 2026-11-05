@@ -25,6 +25,8 @@ class CoachContext(BaseModel):
     metrics: dict
     recent_transcript: list[str]  # « user: ... » / « prospect: ... »
     knowledge: str = ""  # connaissance produit (base de connaissances, plus tard)
+    # Faux si le prospect n'a pas donné son accord ou si l'analyse est coupée.
+    emotion_allowed: bool = False
 
 
 class LLMHint(BaseModel):
@@ -58,6 +60,9 @@ Règles :
 - `say` : une phrase naturelle que le vendeur peut dire telle quelle, dans la langue de l'appel, ou null.
 - Appuie-toi sur l'étape du scénario, l'objection en cours et l'état émotionnel probable du prospect.
 - L'état émotionnel est une hypothèse : formule-la comme telle (« il semble hésiter »).
+- Si `emotion_allowed` est faux, le prospect n'a pas accepté l'analyse : ne déduis, ne commente
+  et n'utilise jamais son état émotionnel, ni à partir de sa voix ni à partir de ses mots.
+  Appuie-toi uniquement sur le contenu de l'échange et sur le scénario.
 - N'invente aucun chiffre, client ou fait absent du contexte.
 - `confidence` entre 0 et 1 : mets une valeur basse si le contexte ne justifie pas de conseil."""
 

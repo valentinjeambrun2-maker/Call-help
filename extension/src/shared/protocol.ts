@@ -51,6 +51,7 @@ export interface CallSummary {
   hints_useful: number;
   hints_not_useful: number;
   announcement_at: number | null;
+  prospect_consent: boolean | null;
   emotion_analysis_used: boolean;
 }
 
@@ -62,6 +63,7 @@ export type ServerMsg =
       emotions: EmotionReading[];
       analysis_paused: boolean;
       announcement_pending: boolean;
+      prospect_consent: boolean | null;
     }
   | { type: "hint"; hint: Hint }
   | { type: "summary"; summary: CallSummary }
@@ -83,7 +85,7 @@ export type ClientMsg =
     }
   | { type: "feedback"; hint_id: string; useful: boolean }
   | { type: "pause_analysis" }
-  | { type: "announcement_done"; ts: number }
+  | { type: "announcement_done"; ts: number; consent: boolean }
   | { type: "stop" };
 
 // Messages internes à l'extension (panneau <-> service worker <-> offscreen).
@@ -95,3 +97,6 @@ export type ExtensionMsg =
   | { target: "sidepanel"; action: "capture-status"; status: "running" | "stopped" | "error"; detail?: string };
 
 export const DEFAULT_BACKEND = "ws://localhost:8000/ws/session";
+
+// Nom du port qui relie le panneau au service worker : sa fermeture arrête la capture.
+export const PANEL_PORT = "callhelp-sidepanel";

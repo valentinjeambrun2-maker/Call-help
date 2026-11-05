@@ -36,8 +36,12 @@ class CallSession:
         self.feedback: dict[str, bool] = {}
         self.transcript: deque[str] = deque(maxlen=12)
         self.announcement_at: float | None = None
+        self.prospect_consent: bool | None = None
+        self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
 
     async def _emit_hint(self, hint: Hint) -> None:
+        if hint.replaces:
+            self.replaced[hint.id] = self.replaced.get(hint.replaces, hint.replaces)
         await self.send(HintMsg(hint=hint).model_dump(mode="json"))
 
     async def handle(self, data: dict) -> bool:
@@ -60,14 +64,15 @@ class CallSession:
                 self.emotions.add_face(msg)
             await self._on_emotion_update(msg.ts)
         elif isinstance(msg, FeedbackMsg):
-            self.feedback[msg.hint_id] = msg.useful
+            # Un conseil affiné par l'IA et celui qu'il remplace ne comptent qu'une fois.
+            self.feedback[self.replaced.get(msg.hint_id, msg.hint_id)] = msg.useful
         elif isinstance(msg, PauseAnalysisMsg):
             self.emotions.paused = True
             # Un conseil IA en cours a pu être construit avec l'émotion du prospect.
             self.coach.cancel_llm()
             await self._send_state()
         elif isinstance(msg, AnnouncementDoneMsg):
-            await self._on_announcement_done(msg.ts)
+            await self._on_announcement_done(msg.ts, msg.consent)
         elif isinstance(msg, StopMsg):
             await self.close()
             await self.send(SummaryMsg(summary=self.summary()).model_dump(mode="json"))
@@ -90,6 +95,8 @@ class CallSession:
             # d'appel. L'analyse émotionnelle attend sa confirmation.
             await self.coach.on_announcement(self.scenario.announcement, 0.0)
         else:
+            # Scénario sans message (meeting) : l'accord a été recueilli à l'invitation.
+            self.prospect_consent = True
             self.emotions.start(0.0)
             await self.coach.on_step(self.tracker.step, 0.0)
         await self._send_state()
@@ -98,12 +105,17 @@ class CallSession:
     def announcement_pending(self) -> bool:
         return bool(self.scenario.announcement) and self.announcement_at is None
 
-    async def _on_announcement_done(self, ts: float) -> None:
+    async def _on_announcement_done(self, ts: float, consent: bool) -> None:
         if not self.announcement_pending:
             return
         ts = max(ts, self.now)
         self.now = ts
         self.announcement_at = ts
+        self.prospect_consent = consent
+        # Le refus du prospect porte sur lui seul : l'analyse du ton de l'utilisateur,
+        # qu'il a lui-même choisie, continue.
+        if not consent:
+            self.emotions.blocked.add(Speaker.PROSPECT)
         self.emotions.start(ts)
         self.tracker.step_started_at = ts
         await self.coach.on_step(self.tracker.step, ts)
@@ -158,6 +170,7 @@ class CallSession:
             prospect_emotion=emotion,
             metrics=self.metrics.snapshot(self.now).model_dump(),
             recent_transcript=list(self.transcript),
+            emotion_allowed=bool(self.prospect_consent) and self.emotions.running,
         )
 
     async def _send_state(self) -> None:
@@ -168,6 +181,7 @@ class CallSession:
             emotions=[self.emotions.reading(sp, self.now) for sp in speakers],
             analysis_paused=self.emotions.paused,
             announcement_pending=self.announcement_pending,
+            prospect_consent=self.prospect_consent,
         )
         await self.send(state.model_dump(mode="json"))
 
@@ -181,6 +195,7 @@ class CallSession:
             hints_useful=sum(self.feedback.values()),
             hints_not_useful=sum(not v for v in self.feedback.values()),
             announcement_at=self.announcement_at,
+            prospect_consent=self.prospect_consent,
             emotion_analysis_used=self.emotions.samples_used > 0,
         )
 

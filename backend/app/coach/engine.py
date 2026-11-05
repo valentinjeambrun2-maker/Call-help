@@ -81,7 +81,7 @@ class CoachEngine:
     # --- utilitaires ------------------------------------------------------
 
     def _say(self, says: dict[str, str]) -> str | None:
-        return fill(says.get(self.language) or says.get("fr"), self.context_vars)
+        return fill(says.get(self.language) or says.get("fr"), self.context_vars, self.language)
 
     async def _send(self, key: str, hint: Hint) -> Hint | None:
         if not self.limiter.allow(key, hint.ts, hint.priority):
@@ -102,7 +102,7 @@ class CoachEngine:
 
     async def on_announcement(self, says: dict[str, str], ts: float) -> Hint | None:
         hint = self._new(kind="announcement",
-                         text="Avant tout : dis ce message d'information, puis confirme.",
+                         text="Avant tout : lis ce message et note la réponse du prospect.",
                          say=self._say(says), priority=3, ts=ts)
         return await self._send("announcement", hint)
 

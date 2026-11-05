@@ -3,8 +3,8 @@
   "title": "Cold call — prise de rendez-vous",
   "target_duration": 300,
   "announcement": {
-    "fr": "Avant de commencer, je vous préviens que j'utilise un assistant qui analyse notre échange en direct, y compris le ton de la voix, pour m'aider à mieux vous répondre. Aucun enregistrement audio n'est conservé. Si vous préférez que je le coupe, dites-le-moi simplement.",
-    "en": "Before we start, just so you know, I use an assistant that analyses our conversation live, including tone of voice, to help me answer you better. No audio recording is kept. If you'd rather I switch it off, just let me know."
+    "fr": "Avant de commencer : j'utilise un assistant qui analyse notre échange en direct, y compris le ton de la voix, pour m'aider à mieux vous répondre. Aucun enregistrement audio n'est conservé. Êtes-vous d'accord ? Sinon, je le coupe tout de suite.",
+    "en": "Before we start: I use an assistant that analyses our conversation live, including tone of voice, to help me answer you better. No audio recording is kept. Is that okay with you? If not, I'll switch it off right away."
   },
   "steps": [
     {

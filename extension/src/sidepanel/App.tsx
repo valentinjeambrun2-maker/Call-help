@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  DEFAULT_BACKEND, type ClientMsg, type EmotionReading, type ExtensionMsg, type Hint, type Metrics,
+  DEFAULT_BACKEND, PANEL_PORT, type ClientMsg, type EmotionReading, type ExtensionMsg, type Hint, type Metrics,
 } from "../shared/protocol";
 import { useCallSession } from "./useCallSession";
 
@@ -50,14 +50,39 @@ function fr(text: string): string {
 
 const hasChrome = typeof chrome !== "undefined" && !!chrome.runtime?.id;
 
+// Analyse du ton de l'utilisateur : accord explicite (opt-in), mémorisé d'un appel à l'autre.
+const SELF_ANALYSIS_KEY = "callhelp.selfAnalysis";
+
+function loadSelfAnalysis(): boolean {
+  try {
+    return localStorage.getItem(SELF_ANALYSIS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function saveSelfAnalysis(on: boolean) {
+  try {
+    localStorage.setItem(SELF_ANALYSIS_KEY, on ? "1" : "0");
+  } catch {
+    /* stockage indisponible : le choix vaut pour cette session seulement */
+  }
+}
+
 export function App() {
   const [backendUrl, setBackendUrl] = useState(DEFAULT_BACKEND);
-  const [selfAnalysis, setSelfAnalysis] = useState(true); // Q36 : actif par défaut
+  const [selfAnalysis, setSelfAnalysisState] = useState(loadSelfAnalysis);
   const [capture, setCapture] = useState<string | null>(null);
   const [now, setNow] = useState(0);
-  const { state, connect, send, giveFeedback, confirmAnnouncement, elapsed } = useCallSession(backendUrl);
+  const { state, connect, send, giveFeedback, answerAnnouncement, elapsed, fail } = useCallSession(backendUrl);
   const timers = useRef<number[]>([]);
   const live = state.phase === "live";
+  const busy = state.phase === "connecting";
+
+  const setSelfAnalysis = (on: boolean) => {
+    setSelfAnalysisState(on);
+    saveSelfAnalysis(on);
+  };
 
   useEffect(() => {
     if (!hasChrome) return;
@@ -72,8 +97,20 @@ export function App() {
       }
     };
     chrome.runtime.onMessage.addListener(listener);
-    return () => chrome.runtime.onMessage.removeListener(listener);
+    // Lien permanent avec le service worker : panneau fermé = capture arrêtée.
+    const port = chrome.runtime.connect({ name: PANEL_PORT });
+    return () => {
+      chrome.runtime.onMessage.removeListener(listener);
+      port.disconnect();
+    };
   }, []);
+
+  // Fin d'appel ou connexion perdue : plus de rejeu de démo ni de capture en cours.
+  useEffect(() => {
+    if (state.phase !== "error" && state.phase !== "ended") return;
+    clearTimers();
+    if (hasChrome) void chrome.runtime.sendMessage({ target: "background", action: "stop-capture" }).catch(() => {});
+  }, [state.phase]);
 
   useEffect(() => {
     if (!live) return;
@@ -89,10 +126,18 @@ export function App() {
 
   const startDemo = async () => {
     clearTimers();
-    const demo = await fetch(`${httpBase(backendUrl)}/demo`).then((r) => r.json());
-    await connect({ type: "start", scenario_id: "cold_call_fr", language: "fr", self_analysis: selfAnalysis, context: demo.context });
+    let demo: { context: Record<string, string>; events: ClientMsg[] };
+    try {
+      const r = await fetch(`${httpBase(backendUrl)}/demo`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      demo = await r.json();
+      await connect({ type: "start", scenario_id: "cold_call_fr", language: "fr", self_analysis: selfAnalysis, context: demo.context });
+    } catch (err) {
+      fail(`Démo indisponible : backend injoignable (${httpBase(backendUrl)})`);
+      return;
+    }
     // Rejoue l'appel en temps réel, comme s'il arrivait du micro et de l'onglet.
-    const events = demo.events as ClientMsg[];
+    const events = demo.events;
     const last = Math.max(...events.map(eventTime).filter(Number.isFinite));
     for (const event of events) {
       const at = event.type === "stop" ? last + 3 : eventTime(event);
@@ -102,7 +147,12 @@ export function App() {
 
   const startCall = async () => {
     clearTimers();
-    await connect({ type: "start", scenario_id: "cold_call_fr", language: "fr", self_analysis: selfAnalysis });
+    setCapture(null);
+    try {
+      await connect({ type: "start", scenario_id: "cold_call_fr", language: "fr", self_analysis: selfAnalysis });
+    } catch {
+      return; // l'erreur est déjà affichée par la session
+    }
     if (hasChrome) {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tab?.id) await chrome.runtime.sendMessage({ target: "background", action: "start-capture", tabId: tab.id });
@@ -112,12 +162,13 @@ export function App() {
   const stopCall = () => {
     clearTimers();
     send({ type: "stop" });
-    if (hasChrome) void chrome.runtime.sendMessage({ target: "background", action: "stop-capture" });
+    if (hasChrome) void chrome.runtime.sendMessage({ target: "background", action: "stop-capture" }).catch(() => {});
   };
 
   const prospect = state.emotions.find((e) => e.speaker === "prospect");
   const user = state.emotions.find((e) => e.speaker === "user");
   const hint = state.current;
+  const past = state.history.filter((h) => h.id !== hint?.id);
 
   return (
     <div className="app">
@@ -163,9 +214,11 @@ export function App() {
             </div>
             <p className="hint-text">{fr(state.announcement.text)}</p>
             {state.announcement.say && <blockquote>{fr(state.announcement.say)}</blockquote>}
-            <button className="btn primary wide" onClick={confirmAnnouncement}>
-              Message dit, démarrer l'analyse
-            </button>
+            <div className="consent">
+              <button className="btn primary" onClick={() => answerAnnouncement(true)}>Il est d'accord</button>
+              <button className="btn secondary" onClick={() => answerAnnouncement(false)}>Il refuse</button>
+            </div>
+            <p className="sub">Sans son accord, aucune analyse émotionnelle pendant tout l'appel.</p>
           </section>
         )}
 
@@ -183,7 +236,8 @@ export function App() {
 
         {(live || state.phase === "ended") && (
           <section className="tiles two">
-            <EmotionTile who="Prospect" reading={prospect} paused={state.analysisPaused} pending={state.announcementPending} />
+            <EmotionTile who="Prospect" reading={prospect} paused={state.analysisPaused} pending={state.announcementPending}
+              refused={state.prospectConsent === false} />
             {selfAnalysis && (
               <EmotionTile who="Vous" reading={user} paused={state.analysisPaused} pending={state.announcementPending} />
             )}
@@ -210,12 +264,15 @@ export function App() {
         <section className="actions">
           {!live ? (
             <>
-              <button className="btn primary" onClick={startCall}>Démarrer l'appel</button>
-              <button className="btn secondary" onClick={startDemo}>Voir la démo</button>
+              <button className="btn primary" onClick={startCall} disabled={busy}>Démarrer l'appel</button>
+              <button className="btn secondary" onClick={startDemo} disabled={busy}>Voir la démo</button>
               <label className="toggle">
                 <input type="checkbox" role="switch" checked={selfAnalysis} onChange={(e) => setSelfAnalysis(e.target.checked)} />
                 <span className="track" aria-hidden />
-                Analyser aussi mon ton
+                <span>
+                  Analyser aussi mon ton
+                  <span className="sub block">Visible par vous seul, jamais par un manager.</span>
+                </span>
               </label>
             </>
           ) : (
@@ -228,11 +285,11 @@ export function App() {
           )}
         </section>
 
-        {state.history.length > 1 && (
+        {past.length > 0 && (
           <details className="card list">
-            <summary>Conseils précédents <span className="count">{state.history.length - 1}</span></summary>
+            <summary>Conseils précédents <span className="count">{past.length}</span></summary>
             <ul>
-              {state.history.slice(1).map((h) => (
+              {past.map((h) => (
                 <li key={h.id}>
                   <span className="time">{clock(h.ts)}</span>
                   <span>{fr(h.text)}</span>
@@ -251,11 +308,14 @@ export function App() {
   );
 }
 
-function EmotionTile({ who, reading, paused, pending }: { who: string; reading?: EmotionReading; paused: boolean; pending: boolean }) {
+function EmotionTile({ who, reading, paused, pending, refused = false }: {
+  who: string; reading?: EmotionReading; paused: boolean; pending: boolean; refused?: boolean;
+}) {
   let text = "Calibration…";
   let tone: Tone = "neutral";
   let confidence = 0;
-  if (pending) text = "En attente du message";
+  if (pending) text = "En attente de son accord";
+  else if (refused) text = "Analyse refusée";
   else if (paused) text = "Analyse coupée";
   else if (reading?.calibrated && !reading.state) text = reading.face_visible === false ? "Visage non analysable" : "Neutre";
   else if (reading?.state) {

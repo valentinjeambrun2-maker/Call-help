@@ -72,16 +72,32 @@ def contains_keyword(text: str, keyword: str) -> bool:
     return re.search(pattern, normalize(text)) is not None
 
 
+# Variables non renseignées : affichées comme un champ à compléter, jamais en brut.
+PLACEHOLDERS = {
+    "fr": {"user_name": "votre prénom", "company": "votre entreprise", "segment": "type de clients",
+           "benefit": "bénéfice principal", "topic": "sujet", "client_ref": "client de référence",
+           "result": "résultat obtenu"},
+    "en": {"user_name": "your name", "company": "your company", "segment": "type of clients",
+           "benefit": "main benefit", "topic": "topic", "client_ref": "reference client",
+           "result": "result achieved"},
+}
+
+
 class _SafeDict(dict):
+    def __init__(self, values: dict[str, str], language: str) -> None:
+        super().__init__(values)
+        self.labels = PLACEHOLDERS.get(language, PLACEHOLDERS["fr"])
+
     def __missing__(self, key: str) -> str:
-        return "{" + key + "}"
+        return "[" + self.labels.get(key, key) + "]"
 
 
-def fill(template: str | None, context: dict[str, str]) -> str | None:
-    """Remplit les variables connues ({company}...) et laisse les autres visibles."""
+def fill(template: str | None, context: dict[str, str], language: str = "fr") -> str | None:
+    """Remplit les variables connues ({company}...) ; les autres deviennent [votre entreprise]."""
     if template is None:
         return None
-    return string.Formatter().vformat(template, (), _SafeDict(context))
+    values = {k: v for k, v in context.items() if v}
+    return string.Formatter().vformat(template, (), _SafeDict(values, language))
 
 
 class ScenarioTracker:

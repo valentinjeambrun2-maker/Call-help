@@ -49,7 +49,8 @@ Client → serveur (JSON) :
 
 | type | contenu |
 |---|---|
-| `start` | `scenario_id`, `language`, `self_analysis` (bool) |
+| `start` | `scenario_id`, `language`, `self_analysis` (bool, faux par défaut : accord explicite), `context` |
+| `announcement_done` | `ts`, `consent` (réponse du prospect au message d'information) |
 | `transcript` | `speaker` (`user`/`prospect`), `text`, `start`, `end`, `final` |
 | `voice` | `speaker`, `ts`, `scores` {état: probabilité} |
 | `face` | `speaker`, `ts`, `expressions` {smile, frown, nod, gaze_away}, `visible` |
@@ -83,7 +84,9 @@ Plus tard, le client enverra l'audio brut (binaire, PCM 16 kHz) et la transcript
 - Les images du visage ne quittent jamais le navigateur : seuls des scores sont envoyés.
 - Aucun audio stocké par défaut.
 - Les émotions sont exclues des données visibles par un admin/manager (Q38).
-- L'auto-analyse de l'utilisateur est un réglage explicite (`self_analysis`), désactivable par l'admin.
+- L'analyse du ton de l'utilisateur se fait sur son accord explicite (`self_analysis`, mémorisé par le panneau). Elle n'est jamais visible par un manager ou un admin.
+- L'analyse émotionnelle du prospect exige son accord (`announcement_done.consent`). En cas de refus, elle est bloquée pour lui seul pendant tout l'appel, et Claude reçoit `emotion_allowed = false`.
+- La capture de l'onglet s'arrête dès que le panneau se ferme, que l'onglet d'appel se ferme ou que la connexion au backend tombe.
 - Un bouton « couper l'analyse » arrête voix et visage pour le reste de l'appel.
 
 ## 6. Open source : viable ou pas ? (Q40)

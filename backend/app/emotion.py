@@ -88,6 +88,7 @@ class EmotionFusion:
         self.paused = False
         self.active_since: float | None = None  # None = analyse pas encore démarrée
         self.samples_used = 0  # trace de conformité : échantillons réellement analysés
+        self.blocked: set[Speaker] = set()  # personnes ayant refusé l'analyse
 
     def start(self, ts: float) -> None:
         """Démarre l'analyse (après le message d'information). Idempotent."""
@@ -98,17 +99,18 @@ class EmotionFusion:
     def running(self) -> bool:
         return self.active_since is not None and not self.paused
 
-    def _accepts(self, ts: float) -> bool:
-        """Rien d'antérieur au message d'information, rien pendant une coupure."""
-        return self.running and ts >= self.active_since  # type: ignore[operator]
+    def _accepts(self, ts: float, speaker: Speaker) -> bool:
+        """Rien d'antérieur au message d'information, rien pendant une coupure,
+        rien pour une personne qui a refusé."""
+        return self.running and speaker not in self.blocked and ts >= self.active_since  # type: ignore[operator]
 
     def add_voice(self, speaker: Speaker, scores: dict[EmotionState, float], ts: float) -> None:
-        if self._accepts(ts):
+        if self._accepts(ts, speaker):
             self.people[speaker].voice.update(scores, ts)
             self.samples_used += 1
 
     def add_face(self, face: FaceMsg) -> None:
-        if not self._accepts(face.ts):
+        if not self._accepts(face.ts, face.speaker):
             return
         person = self.people[face.speaker]
         person.face_visible = face.visible
@@ -122,7 +124,7 @@ class EmotionFusion:
         empty = EmotionReading(
             speaker=speaker, state=None, face_visible=person.face_visible, calibrated=calibrated
         )
-        if not self.running or not calibrated:
+        if not self.running or speaker in self.blocked or not calibrated:
             return empty
 
         voice = person.voice.relative(now)

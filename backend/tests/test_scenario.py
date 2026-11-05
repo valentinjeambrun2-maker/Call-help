@@ -13,8 +13,10 @@ def test_keyword_matches_whole_words_only():
     assert contains_keyword("On a DEJA un prestataire", "déjà un prestataire")
 
 
-def test_fill_keeps_unknown_placeholders():
-    assert fill("{company} aide {segment}", {"company": "ACME"}) == "ACME aide {segment}"
+def test_fill_shows_readable_label_for_missing_values():
+    assert fill("{company} aide {segment}", {"company": "ACME"}) == "ACME aide [type de clients]"
+    assert fill("{user_name} from {company}", {}, "en") == "[your name] from [your company]"
+    assert fill("{inconnu}", {}) == "[inconnu]"
 
 
 def test_invalid_scenario_id_rejected():

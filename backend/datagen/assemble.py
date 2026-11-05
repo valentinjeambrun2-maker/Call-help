@@ -116,7 +116,8 @@ def replay_events(turn_labels: list[TurnLabel], context: dict[str, str] | None =
         events.append({"type": "transcript", "speaker": t.speaker, "text": t.text,
                        "start": t.start, "end": t.end, "final": True})
         if not announced and t.step == "announcement" and t.speaker == "user":
-            events.append({"type": "announcement_done", "ts": t.end})
+            # Appels fictifs : le prospect accepte l'analyse (cas couvert par le scénario).
+            events.append({"type": "announcement_done", "ts": t.end, "consent": True})
             announced = True
     events.append({"type": "stop"})
     return {"scenario_id": scenario_id, "language": language, "context": context or {}, "events": events}
