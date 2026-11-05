@@ -124,9 +124,18 @@ Réglages ElevenLabs à faire avant de lancer :
 - désactiver « Data use » dans les paramètres du compte, pour que les scripts et la grille d'étiquettes ne servent pas à entraîner leurs modèles ;
 - rester sur un forfait payant pendant toute la génération : le contenu produit hors abonnement payant n'est pas utilisable commercialement.
 
-## Résultats du pilote (5 novembre 2026, dialogues seulement)
+## Résultats du pilote (5 novembre 2026)
 
-100 dialogues écrits par `claude-opus-5-5` : **100 valides sur 100**, pour **10,32 $** (218 000 jetons en entrée, 472 000 en sortie). Les voix n'ont pas encore été générées : la clé ElevenLabs manque. La ligne de temps est donc estimée à 150 mots par minute. Volume à synthétiser : 309 000 caractères, soit environ 25 $ en `eleven_v4`.
+**Dialogues :** 100 écrits par `claude-opus-5-5`, **100 valides sur 100**, pour **10,32 $** (218 000 jetons en entrée, 472 000 en sortie).
+
+**Voix :**
+- 100 appels synthétisés en `eleven_v4`, aucune reprise nécessaire ;
+- 303 minutes d'audio, 60 appels en français et 40 en anglais ;
+- 24 voix natives de la bibliothèque, avec accents variés et répartition par lot ;
+- **136 049 caractères facturés**, soit environ 10,90 $ au tarif API. Les balises de jeu semblent ne pas être comptées : c'est 2,3 fois moins que l'estimation.
+- Chaque appel existe en stéréo (vendeur à gauche, prospect à droite) et en version « téléphone ».
+
+**Coût total du pilote : environ 22 $**, plus environ 0,40 $ par évaluation avec Claude.
 
 **Qualité constatée :**
 - le style est parlé (hésitations, interruptions, « mm-hmm ») ;
@@ -140,6 +149,9 @@ Réglages ElevenLabs à faire avant de lancer :
 | Mots-clés seuls | 56 % | 31 % | 40 % | 30 % | 1,9 |
 | + classement par Claude Haiku 5.5, 1ʳᵉ version | 25 % | 95 % | 40 % | 51 % | 5,3 |
 | **+ classement par Claude, corrigé** | **58 %** | **91 %** | **71 %** | **56 %** | 5,7 |
+| idem, ligne de temps de l'audio réel | 54 % | 88 % | 67 % | 57 % | 7,6 |
+
+La dernière ligne utilise les durées réelles des voix. Les tours y sont plus courts et plus rapprochés qu'avec l'estimation à 150 mots par minute, d'où un peu plus de conseils par minute.
 
 Coût de l'évaluation avec Claude : 0,37 $ pour 1 186 requêtes.
 
