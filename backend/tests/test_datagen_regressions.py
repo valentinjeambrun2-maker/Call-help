@@ -159,3 +159,42 @@ def test_english_calls_replay_in_english(tmp_path):
     hints, _ = asyncio.run(run_call(replay))
     objection = next(h for h in hints if h["kind"] == "objection")
     assert objection["say"].startswith("I understand")
+
+
+def _pcm_json(n=800):
+    pcm = array("h", (int(2000 * math.sin(i / 5)) for i in range(n))).tobytes()
+    return {"audio_base64": base64.b64encode(pcm).decode(), "alignment": None, "normalized_alignment": None}
+
+
+def test_retries_429_and_network_errors_then_falls_back_without_timestamps(tmp_path, monkeypatch):
+    import datagen.voices as vm
+    from elevenlabs import AsyncElevenLabs
+
+    sleeps = []
+
+    async def fake_sleep(s):
+        sleeps.append(s)
+    monkeypatch.setattr(vm.asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(vm, "_timestamps_supported", True)
+    state = {"n": 0}
+    paths = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        state["n"] += 1
+        paths.append(request.url.path)
+        if state["n"] == 1:
+            return httpx.Response(429, headers={"retry-after-ms": "1500"}, json={"detail": {"code": "rate_limit_exceeded"}})
+        if state["n"] == 2:
+            raise httpx.ConnectError("reset")
+        if state["n"] == 3:
+            return httpx.Response(422, json={"detail": {"message": "with-timestamps not supported for eleven_v4"}})
+        if request.url.path.endswith("with-timestamps"):
+            return httpx.Response(200, json=_pcm_json())
+        return httpx.Response(200, content=b"\x01\x00" * 800, headers={"request-id": "plain"})
+
+    client = AsyncElevenLabs(api_key="t", httpx_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    pcm, words, headers = asyncio.run(vm._synthesize_turn(client, "v1", {"text": "Bonjour", "model_id": "eleven_v4"}))
+    assert sleeps[0] == 1.5  # retry-after-ms respecté
+    assert len(sleeps) == 2  # 429 puis erreur réseau ; le 422 bascule sans attendre
+    assert paths[-1].endswith("/v1/text-to-speech/v1") and words is None and len(pcm) == 1600
+    assert vm._timestamps_supported is False

@@ -56,6 +56,16 @@ EMOTION_TAGS = {
 TAG_RE = re.compile(r"\[[^\]]*\]")
 
 
+def make_client(cls, key: str):
+    """Clé passée explicitement (le SDK lit sinon la variable dès l'import).
+    CALLHELP_ELEVENLABS_EU=1 : hébergement des données dans l'UE."""
+    if os.getenv("CALLHELP_ELEVENLABS_EU") == "1":
+        from elevenlabs.environment import ElevenLabsEnvironment
+
+        return cls(api_key=key, environment=ElevenLabsEnvironment.PRODUCTION_EU)
+    return cls(api_key=key)
+
+
 class Voice(BaseModel):
     model_config = {"extra": "ignore"}
 
@@ -150,7 +160,6 @@ def _tts_kwargs(turn: Turn, voice: Voice, language: str, seed: int, model: str,
         output_format=OUTPUT_FORMAT,
         voice_settings=VoiceSettings(stability=stability(turn), similarity_boost=0.75),
         seed=seed,
-        request_options={"max_retries": 6},  # le SDK réessaie 429 / 5xx sur cet appel
     )
     # Le SDK envoie `null` pour un None explicite : on n'ajoute le champ que s'il existe.
     if previous_text:
@@ -164,6 +173,64 @@ def _write_mono_wav(path: Path, pcm: bytes) -> None:
         w.setsampwidth(2)
         w.setframerate(SAMPLE_RATE)
         w.writeframes(pcm)
+
+
+# Le SDK 2.76 ne réessaie ni les erreurs réseau (délai, connexion coupée) ni ne
+# respecte l'en-tête retry-after-ms : on gère nous-mêmes les reprises.
+RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504}
+MAX_ATTEMPTS = 6
+_timestamps_supported = True  # passe à False si le modèle refuse l'endpoint with-timestamps
+
+
+def _retry_delay(attempt: int, headers: dict | None) -> float:
+    headers = headers or {}
+    for key, scale in (("retry-after-ms", 0.001), ("retry-after", 1.0)):
+        try:
+            if headers.get(key):
+                return min(60.0, float(headers[key]) * scale)
+        except ValueError:
+            pass
+    return min(60.0, 2 ** attempt + random.random())
+
+
+async def _synthesize_turn(client, voice_id: str, kwargs: dict) -> tuple[bytes, list | None, dict]:
+    """Un tour : avec horodatage si le modèle le permet, sinon synthèse simple
+    (la ligne de temps des tours reste exacte, seuls les temps par mot manquent)."""
+    global _timestamps_supported
+    import httpx
+    from elevenlabs.core import ApiError
+
+    kwargs = {**kwargs, "request_options": {"max_retries": 0}}  # reprises gérées ici
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            if _timestamps_supported:
+                raw = await client.text_to_speech.with_raw_response.convert_with_timestamps(voice_id, **kwargs)
+                res = raw.data
+                words = None
+                if res.alignment:
+                    a = res.alignment
+                    words = words_from_alignment(a.characters, a.character_start_times_seconds,
+                                                 a.character_end_times_seconds)
+                return base64.b64decode(res.audio_base_64), words, dict(raw.headers)
+            plain = {k: v for k, v in kwargs.items()}
+            async with client.text_to_speech.with_raw_response.convert(voice_id, **plain) as raw:
+                pcm = b"".join([chunk async for chunk in raw.data])
+                return pcm, None, dict(raw.headers)
+        except ApiError as exc:
+            if _timestamps_supported and exc.status_code in (400, 422) and "timestamp" in str(exc.body).lower():
+                log.warning("Horodatage refusé pour ce modèle : synthèse simple pour la suite (%s)", exc.body)
+                _timestamps_supported = False
+                continue
+            if exc.status_code not in RETRY_STATUS or attempt == MAX_ATTEMPTS - 1:
+                raise
+            delay = _retry_delay(attempt, exc.headers)
+        except (httpx.TimeoutException, httpx.TransportError):
+            if attempt == MAX_ATTEMPTS - 1:
+                raise
+            delay = _retry_delay(attempt, None)
+        log.info("Reprise ElevenLabs dans %.1f s (tentative %d)", delay, attempt + 2)
+        await asyncio.sleep(delay)
+    raise RuntimeError("inaccessible")
 
 
 def tts_seed(spec: CallSpec, index: int) -> int:
@@ -199,18 +266,11 @@ async def synthesize_call(client, call_dir: Path, dialogue: Dialogue, spec: Call
         previous = dialogue.turns[i - 1].text if i else None
         kwargs = _tts_kwargs(turn, voice, spec.language, tts_seed(spec, i), model, previous)
         async with sem:
-            raw = await client.text_to_speech.with_raw_response.convert_with_timestamps(voice.voice_id, **kwargs)
-        res = raw.data
-        pcm = base64.b64decode(res.audio_base_64)
-        words = None
-        if res.alignment:
-            a = res.alignment
-            words = words_from_alignment(a.characters, a.character_start_times_seconds,
-                                         a.character_end_times_seconds)
+            pcm, words, headers = await _synthesize_turn(client, voice.voice_id, kwargs)
         m = {
             "index": i, "speaker": turn.speaker, "voice_id": voice.voice_id, "model": model,
             "text_sent": kwargs["text"], "stability": stability(turn), "seed": kwargs["seed"],
-            "request_id": raw.headers.get("request-id"), "character_cost": raw.headers.get("character-cost"),
+            "request_id": headers.get("request-id"), "character_cost": headers.get("character-cost"),
             "words": words,
         }
         _write_mono_wav(turns_dir / f"{i:03d}.wav", pcm)
@@ -238,8 +298,7 @@ async def synthesize_many(todo: list[tuple[Path, Dialogue]], specs: dict[str, Ca
     key = os.environ.get("ELEVENLABS_API_KEY")
     if not key:
         raise SystemExit("ELEVENLABS_API_KEY absent.")
-    # Clé passée explicitement : le SDK lit sinon la variable au moment de l'import.
-    client = AsyncElevenLabs(api_key=key)
+    client = make_client(AsyncElevenLabs, key)
     book = VoiceBook.load()
     sem = asyncio.Semaphore(concurrency)  # limite de requêtes simultanées du forfait
     for call_dir, dialogue in todo:
@@ -341,7 +400,7 @@ async def pick_voices(per_bucket: int = 6, dry_run: bool = False, path: Path | N
     key = os.environ.get("ELEVENLABS_API_KEY")
     if not key:
         raise SystemExit("ELEVENLABS_API_KEY absent.")
-    client = AsyncElevenLabs(api_key=key)
+    client = make_client(AsyncElevenLabs, key)
     # 1) Sélection de tous les groupes ; 2) vérification ; 3) seulement ensuite, ajout au compte.
     selection: dict[tuple[str, str], list] = {}
     for language in ("fr", "en"):
