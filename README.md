@@ -14,6 +14,7 @@ Il suit le fil directeur de l'appel et souffle des conseils au bon moment : rép
 - [`docs/architecture.md`](docs/architecture.md) — architecture, protocole, options open source, planning
 - [`docs/questions-projet.md`](docs/questions-projet.md) — les 50 questions de cadrage
 - [`docs/donnees-synthetiques.md`](docs/donnees-synthetiques.md) — générateur des 1 000 appels synthétiques (Claude + ElevenLabs)
+- [`docs/demos.md`](docs/demos.md) — **démos en direct** des appels générés, et ce qui marche / ne marche pas encore
 
 ## Structure
 
@@ -55,7 +56,11 @@ npm install
 npm run dev
 ```
 
-Ouvrez ensuite http://localhost:5173/sidepanel.html et cliquez sur **Voir la démo** : un appel de 53 s est rejoué en temps réel.
+Ouvrez ensuite :
+- **http://localhost:5173/demo.html** : démos en direct des appels générés (son réel, transcription ElevenLabs, conseils et bilan Claude, avec ce que l'assistant aurait dû faire). Voir [`docs/demos.md`](docs/demos.md).
+- http://localhost:5173/sidepanel.html : le panneau seul, comme dans l'extension.
+
+Clés à mettre dans `backend/.env` (modèle : `backend/.env.example`) : `ANTHROPIC_API_KEY` pour les conseils et le bilan, `ELEVENLABS_API_KEY` pour la transcription en direct.
 
 Extension Chrome :
 

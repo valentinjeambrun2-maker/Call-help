@@ -222,7 +222,7 @@ class CoachEngine:
         if classify_only or result.objection not in self.objection_ids:
             result = result.model_copy(update={"objection": None})  # "other", inconnu ou tour du vendeur
         if self.on_classified:
-            await self.on_classified(result, ts)
+            await self.on_classified(result, ts)  # peut confirmer l'objection des mots-clés
         if classify_only:
             return
         if result.confidence < self.llm_min_confidence:

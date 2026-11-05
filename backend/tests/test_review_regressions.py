@@ -182,3 +182,19 @@ async def test_llm_other_objection_does_not_create_fake_ref():
     await s.coach.wait_llm()
     llm = [h for h in hints(out) if h["source"] == "llm"]
     assert llm and llm[-1]["ref"] is None and s.tracker.objections_seen == []
+
+
+async def test_unnamed_llm_objection_keeps_the_keyword_objection():
+    class Unnamed:
+        async def suggest(self, ctx):
+            return LLMHint(kind="objection", text="Il veut un mail : qualifie d'abord.", say=None,
+                           confidence=0.9, objection=None, step="value")
+
+    s, out = await started(provider=Unnamed())
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "Envoyez-moi un mail, je regarderai.",
+                    "start": 1, "end": 3})
+    await s.coach.wait_llm()
+    assert "send_email" in s.tracker.objections_seen
+    llm = [h for h in hints(out) if h["source"] == "llm"]
+    assert llm and llm[-1]["kind"] == "objection" and llm[-1]["ref"] == "send_email"

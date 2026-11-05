@@ -257,6 +257,10 @@ class CallSession:
         """Classement du LLM : confirme ou corrige les mots-clés (objection), fait avancer l'étape."""
         changed = False
         provisional = self.provisional.pop(ts, None)
+        if provisional and result.objection is None and result.kind == "objection":
+            # Le LLM répond bien à une objection sans la nommer : on garde celle des mots-clés
+            # plutôt que de la retirer (cas mesuré sur les démos, surtout « envoyez un mail »).
+            result.objection = provisional
         if provisional and provisional != result.objection:
             # Fausse alerte des mots-clés : elle ne compte pas comme objection levée et ne
             # bloque pas la vraie objection de ce type plus tard.
