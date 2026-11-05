@@ -155,8 +155,9 @@ class ScribeChannel:
         backoff = 0.25
         failures = 0
         while True:
-            # Connexion paresseuse : on attend le premier audio (ou la fin d'appel).
-            if self.queue.empty():
+            # Connexion paresseuse : on attend le premier audio (ou la fin d'appel), sauf s'il reste
+            # de l'audio envoyé mais pas encore transcrit (coupure juste avant de raccrocher).
+            if self.queue.empty() and not self._replayable():
                 getter = asyncio.create_task(self.queue.get())
                 closer = asyncio.create_task(self._closing.wait())
                 done, _ = await asyncio.wait({getter, closer}, return_when=asyncio.FIRST_COMPLETED)
@@ -206,6 +207,9 @@ class ScribeChannel:
                 await self._status("error", "transcription en direct interrompue : reconnexions en échec")
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 4.0)
+
+    def _replayable(self) -> bool:
+        return bool(self.history) and self.history[-1][0] >= self.committed_until - 0.05
 
     def _requeue_front(self, item: tuple[float, bytes]) -> None:
         rest = []
@@ -273,8 +277,10 @@ class ScribeChannel:
                         continue
                     try:
                         await send(t, frame, first_chunk)
-                    except RetrySTT:
-                        self._requeue_front((t, frame))  # ce bloc ouvrira la session suivante
+                    except BaseException:
+                        # Trou, coupure pendant l'envoi ou annulation : ce bloc n'a pas été confirmé
+                        # (absent de l'historique), il ouvrira la session suivante.
+                        self._requeue_front((t, frame))
                         raise
                     first_chunk = False
 

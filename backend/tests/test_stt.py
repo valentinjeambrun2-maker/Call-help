@@ -282,3 +282,73 @@ async def test_callback_error_and_malformed_words_do_not_kill_the_channel():
         await asyncio.sleep(0.2)
         await ch.close(timeout=1)
     assert got[:2] == ["boom", "mot10"]
+
+
+async def test_frame_in_flight_during_a_network_cut_is_not_lost(monkeypatch):
+    from websockets.asyncio.connection import Connection
+    from websockets.asyncio.server import serve
+    from websockets.exceptions import ConnectionClosedError
+
+    seen, sessions, calls = set(), [0], [0]
+    real_send = Connection.send
+
+    async def flaky_send(self, message, *a, **k):
+        calls[0] += 1
+        if calls[0] == 10:  # coupure détectée pendant l'envoi de ce bloc
+            self.transport.abort()
+            raise ConnectionClosedError(None, None)
+        return await real_send(self, message, *a, **k)
+
+    async def handler(ws):
+        sessions[0] += 1
+        await ws.send(json.dumps({"message_type": "session_started"}))
+        async for raw in ws:
+            seen.add(int.from_bytes(base64.b64decode(json.loads(raw)["audio_base_64"])[:4], "little"))
+
+    async with serve(handler, "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        monkeypatch.setattr(Connection, "send", flaky_send)
+        ch = ScribeChannel("k", Speaker.USER, "fr", lambda m: asyncio.sleep(0), url=f"ws://127.0.0.1:{port}/rt")
+        ch.start()
+        for i in range(1, 31):
+            ch.push(i.to_bytes(4, "little") + bytes(FRAME_BYTES - 4))
+            await asyncio.sleep(0.03)
+        await asyncio.sleep(0.5)
+        await ch.close(timeout=2)
+    assert sessions[0] == 2 and set(range(1, 31)) <= seen  # aucun bloc perdu à la coupure
+
+
+async def test_cut_just_before_hang_up_still_transcribes_the_pending_audio():
+    from websockets.asyncio.server import serve
+
+    sessions = [0]
+
+    async def handler(ws):
+        sessions[0] += 1
+        await ws.send(json.dumps({"message_type": "session_started"}))
+        n = 0
+        async for raw in ws:
+            n += 1
+            m = json.loads(raw)
+            if sessions[0] == 1 and n == 20:
+                await ws.close(1000)  # coupure, puis plus aucun audio : l'appel se termine
+                return
+            if m.get("commit"):
+                await ws.send(json.dumps({"message_type": "committed_transcript_with_timestamps", "text": "fin",
+                                          "words": [{"type": "word", "text": "fin", "start": 0.2, "end": n * 0.1 - 0.1}]}))
+
+    out = []
+
+    async def on_t(msg):
+        out.append(msg)
+
+    async with serve(handler, "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        ch = ScribeChannel("k", Speaker.USER, "fr", on_t, url=f"ws://127.0.0.1:{port}/rt")
+        ch.start()
+        for _ in range(20):
+            ch.push(bytes(FRAME_BYTES))
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.6)  # coupure détectée, aucun nouvel audio
+        await ch.close(timeout=3)
+    assert sessions[0] == 2 and any(m.final and m.text == "fin" for m in out)
