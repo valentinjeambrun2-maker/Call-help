@@ -115,6 +115,8 @@ class ScribeChannel:
 
     async def close(self, timeout: float = 2.0) -> None:
         """Fin d'appel : envoie le reste, valide, attend le dernier texte, puis ferme."""
+        if self._task is not None and self._task.done():
+            return
         if self._pending and not self.fatal:
             pad = bytes(self._pending) + bytes(FRAME_BYTES - len(self._pending))
             self._pending.clear()

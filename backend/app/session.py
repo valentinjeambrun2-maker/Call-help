@@ -44,6 +44,10 @@ class CallSession:
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
         self.provisional: dict[float, str] = {}  # fin de tour -> objection des mots-clés à confirmer
         self.stt = None  # SttHub quand le backend transcrit lui-même
+        self._stt_cost: float | None = None
+        self.summary_task: asyncio.Task | None = None
+        self.pending_turns: dict[float, str] = {}  # fin de tour du prospect -> texte, en attente du LLM
+        self._last_classified_ts = -1.0
 
     async def _emit_hint(self, hint: Hint) -> None:
         if hint.replaces:
@@ -54,6 +58,8 @@ class CallSession:
         """Traite un message. Retourne False quand l'appel est terminé."""
         msg = parse_client_msg(data)
         if isinstance(msg, StartMsg):
+            if self.started:
+                raise RuntimeError("Appel déjà démarré sur cette connexion")
             await self._start(msg)
             return True
         if not self.started:
@@ -74,17 +80,24 @@ class CallSession:
             self.feedback[self.replaced.get(msg.hint_id, msg.hint_id)] = msg.useful
         elif isinstance(msg, PauseAnalysisMsg):
             self.emotions.paused = True
-            # Un conseil IA en cours a pu être construit avec l'émotion du prospect.
-            self.coach.cancel_llm()
+            # Les classements en cours (objection, étape) continuent ; seuls les conseils
+            # fondés sur le ressenti sont écartés.
+            self.coach.emotion_suppressed = True
             await self._send_state()
         elif isinstance(msg, AnnouncementDoneMsg):
             await self._on_announcement_done(msg.ts, msg.consent)
         elif isinstance(msg, StopMsg):
             if self.stt is not None:
                 await self.stt.close()  # derniers énoncés transcrits avant le bilan
+                self._stt_cost = self.stt.cost_usd
+                self.stt = None
+            # Les derniers tours sont souvent ceux du rendez-vous : on laisse leur classement aboutir.
+            await self.coach.drain_llm(timeout=5.0)
             await self.close()
             await self.send(SummaryMsg(summary=self.summary()).model_dump(mode="json"))
-            await self._ai_summary()
+            # Le bilan IA tourne en tâche : la connexion reste à l'écoute et l'annule si le
+            # client part (pas d'appel payant pour rien).
+            self.summary_task = asyncio.create_task(self._ai_summary())
             return False
         return True
 
@@ -98,7 +111,7 @@ class CallSession:
         self.context_vars = {**self.context_vars, **msg.context}
         self.coach = CoachEngine(self._emit_hint, language=msg.language,
                                  provider=self.provider, context_vars=self.context_vars,
-                                 on_classified=self._on_classified,
+                                 on_classified=self._on_classified, on_unclassified=self._on_unclassified,
                                  objection_ids={o.id for o in self.scenario.objections})
         self.started = True
         if msg.transcription == "server":
@@ -213,7 +226,9 @@ class CallSession:
                 objection = self.tracker.detect_objection(msg.text)
                 if objection:
                     rule_hint = await self.coach.on_objection(objection, msg.end)
-                    self.provisional[msg.end] = objection.id
+                    if rule_hint is not None:  # fiche réellement montrée (pas bloquée par l'anti-répétition)
+                        self.provisional[msg.end] = objection.id
+                self.pending_turns[msg.end] = msg.text
             else:
                 objection, advanced = self.tracker.on_prospect_text(msg.text, msg.end)
                 if objection:
@@ -253,22 +268,35 @@ class CallSession:
         await self.coach.on_emotion(self.emotions.reading(Speaker.PROSPECT, self.now), self.now)
         await self._send_state()
 
-    async def _on_classified(self, result, ts: float) -> None:
+    async def _on_classified(self, result, ts: float, prospect_turn: bool = True) -> None:
         """Classement du LLM : confirme ou corrige les mots-clés (objection), fait avancer l'étape."""
         changed = False
+        self.pending_turns.pop(ts, None)
         provisional = self.provisional.pop(ts, None)
         if provisional and result.objection is None and result.kind == "objection":
             # Le LLM répond bien à une objection sans la nommer : on garde celle des mots-clés
             # plutôt que de la retirer (cas mesuré sur les démos, surtout « envoyez un mail »).
             result.objection = provisional
-        if provisional and provisional != result.objection:
+        if provisional and result.objection is None and provisional not in self.tracker.objections_seen:
             # Fausse alerte des mots-clés : elle ne compte pas comme objection levée et ne
-            # bloque pas la vraie objection de ce type plus tard.
+            # bloque pas la vraie objection de ce type plus tard. (Si le LLM nomme une autre
+            # objection, par exemple sur une réplique recollée qui en contient deux, on garde
+            # les deux.)
             self.coach.retract_objection(provisional)
+        elif provisional and provisional != result.objection:
+            changed |= self.tracker.mark_objection(provisional)
         if result.objection:
             changed |= self.tracker.mark_objection(result.objection)
-        if (result.prospect_state and self.prospect_consent and Speaker.PROSPECT not in self.emotions.blocked
-                and self.emotions.running):
+        # Résultats arrivés dans le désordre (analyses en parallèle) : un tour plus ancien ne
+        # remplace pas l'objection en cours ni le ressenti lus sur un tour plus récent.
+        fresh = ts >= self._last_classified_ts
+        if prospect_turn and fresh:
+            self._last_classified_ts = ts
+            if not result.objection and self.tracker.active_objection is not None:
+                self.tracker.active_objection = None  # objection traitée : on passe à la suite
+                changed = True
+        if (fresh and prospect_turn and result.prospect_state and self.prospect_consent
+                and Speaker.PROSPECT not in self.emotions.blocked and self.emotions.running):
             state = None if result.prospect_state == "neutral" else EmotionState(result.prospect_state)
             self.emotions.add_text(Speaker.PROSPECT, state, result.state_confidence, ts)
             await self.coach.on_emotion(self.emotions.reading(Speaker.PROSPECT, self.now), self.now)
@@ -276,6 +304,23 @@ class CallSession:
         if result.step and self.tracker.advance_to(result.step, ts):
             changed = True
             await self.coach.on_step(self.tracker.step, ts)
+        if changed:
+            await self._send_state()
+
+    async def _on_unclassified(self, ts: float) -> None:
+        """Le LLM n'a pas répondu pour ce tour (panne, quota, délai) : repli sur les mots-clés,
+        pour que l'objection et l'étape restent suivies même sans IA."""
+        text = self.pending_turns.pop(ts, None)
+        provisional = self.provisional.pop(ts, None)
+        changed = False
+        if provisional:
+            changed |= self.tracker.mark_objection(provisional)
+        elif text is not None:
+            from .scenario import contains_keyword
+
+            if any(contains_keyword(text, kw) for kw in self.tracker.step.exit_keywords) and self.tracker.advance(ts):
+                await self.coach.on_step(self.tracker.step, ts)
+                changed = True
         if changed:
             await self._send_state()
 
@@ -324,12 +369,17 @@ class CallSession:
             hints_not_useful=sum(not v for v in self.feedback.values()),
             announcement_at=self.announcement_at,
             prospect_consent=self.prospect_consent,
-            transcription_cost_usd=round(self.stt.cost_usd, 4) if self.stt is not None else None,
+            transcription_cost_usd=round(self.stt.cost_usd if self.stt is not None else self._stt_cost, 4)
+            if (self.stt is not None or self._stt_cost is not None) else None,
             emotion_analysis_used=self.emotions.samples_used > 0,
         )
 
     async def close(self) -> None:
         if self.stt is not None:
-            await self.stt.close()
+            stt, self.stt = self.stt, None  # une seule fermeture, même si close() est rappelé
+            await stt.close()
+            self._stt_cost = stt.cost_usd
+        if self.summary_task is not None and not self.summary_task.done():
+            self.summary_task.cancel()
         if self.started:
             await self.coach.close()

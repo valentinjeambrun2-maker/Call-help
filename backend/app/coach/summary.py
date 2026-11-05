@@ -86,7 +86,7 @@ Règles :
 - `objections` : chaque objection réellement exprimée par le prospect, et la façon dont le vendeur l'a traitée.
 - `strengths` et `improvements` : 2 ou 3 éléments chacun, formulés comme des actions (« Reformule le besoin avant de pitcher »).
 - `follow_up_email` : un email de suivi prêt à relire, dans la LANGUE DE L'APPEL, cohérent avec l'issue (confirmation de rendez-vous, envoi d'informations demandé, rappel convenu, ou remerciement bref si refus). N'invente ni chiffre, ni référence client, ni engagement qui n'a pas été pris pendant l'appel.
-- Ne commente jamais l'état émotionnel du prospect : ce bilan peut être partagé.
+- Ne commente jamais l'état émotionnel ni le ton de quiconque, prospect ou vendeur (ni stress, ni nervosité, ni agacement) : ce bilan peut être partagé. Juge seulement ce qui a été dit et fait.
 - La transcription peut contenir des erreurs de reconnaissance vocale : interprète avec bon sens."""
 
 

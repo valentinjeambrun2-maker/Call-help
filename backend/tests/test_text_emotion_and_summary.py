@@ -71,6 +71,7 @@ async def test_ai_summary_follows_the_stats_summary_and_has_no_emotions():
     await s.handle({"type": "transcript", "speaker": "user", "text": "Bonjour, Léa de The Herakles.", "start": 0, "end": 2})
     await s.handle({"type": "transcript", "speaker": "prospect", "text": "Pas le temps, rappelez jeudi.", "start": 3, "end": 5})
     await s.handle({"type": "stop"})
+    await s.summary_task  # le bilan IA tourne en tâche après le bilan chiffré
     kinds = [m["type"] for m in out]
     assert kinds.index("summary") < kinds.index("ai_summary_pending") < kinds.index("ai_summary")
     data = fake.inputs[0]

@@ -20,8 +20,9 @@ from .providers import CoachContext, HintProvider, LLMHint, NullProvider
 log = logging.getLogger(__name__)
 
 Emit = Callable[[Hint], Awaitable[None]]
-# Appelé avec le classement du LLM (objection, étape) avant l'émission du conseil.
-Classified = Callable[[LLMHint, float], Awaitable[None]]
+# Appelé avec le classement du LLM (objection, étape) avant l'émission du conseil :
+# (résultat, fin du tour, tour du prospect ?). `on_unclassified(ts)` si le LLM n'a pas répondu.
+Classified = Callable[[LLMHint, float, bool], Awaitable[None]]
 
 # Indication (toujours en français : c'est l'interface du vendeur) et phrase à dire
 # (dans la langue de l'appel).
@@ -78,8 +79,9 @@ class CoachEngine:
         context_vars: dict[str, str] | None = None,
         limiter: RateLimiter | None = None,
         llm_min_confidence: float = 0.6,
-        on_classified: Classified | None = None,
+        on_classified=None,
         objection_ids: set[str] | None = None,
+        on_unclassified=None,
     ) -> None:
         self.emit = emit
         self.language = language
@@ -88,10 +90,13 @@ class CoachEngine:
         self.limiter = limiter or RateLimiter()
         self.llm_min_confidence = llm_min_confidence
         self.on_classified = on_classified
+        self.on_unclassified = on_unclassified
         self.objection_ids = objection_ids or set()
         self._ids = itertools.count(1)
         self._llm_task: asyncio.Task | None = None  # dernière analyse lancée
         self._llm_tasks: set[asyncio.Task] = set()  # analyses en cours (en parallèle)
+        self._classify_tasks: set[asyncio.Task] = set()  # dont classements d'un tour du vendeur
+        self.emotion_suppressed = False  # « Couper l'analyse » : plus de conseil fondé sur le ressenti
         self._llm_generation = 0
         self._last_emotion: EmotionState | None = None
         self._overtime_warned: set[str] = set()
@@ -185,23 +190,46 @@ class CoachEngine:
         """Objection des mots-clés infirmée par le LLM : elle ne bloque plus la vraie."""
         self.limiter.last_by_key.pop(f"objection:{objection_id}", None)
 
+    LLM_TIMEOUT = 8.0  # s : au-delà, le classement arrive trop tard pour être utile en direct
+
     def request_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None, classify_only: bool = False) -> None:
         """Lance l'analyse du dernier tour par le LLM, en parallèle des précédentes.
 
         On n'annule plus l'analyse en cours quand le prospect reparle : en direct, il
         reparle souvent avant le retour du LLM (~2-4 s), et l'annulation faisait perdre
-        le classement du tour qui contenait l'objection (0 objection repérée en démo)."""
+        le classement du tour qui contenait l'objection (0 objection repérée en démo).
+        Les tours du prospect sont prioritaires sur ceux du vendeur (classement d'étape seul)."""
         if isinstance(self.provider, NullProvider):
             return
+        if classify_only and any(t in self._classify_tasks for t in self._llm_tasks):
+            return  # un classement du vendeur est déjà en cours : inutile d'en empiler
         if len(self._llm_tasks) >= self.MAX_LLM_INFLIGHT:
-            log.warning("Trop d'analyses LLM en cours : tour ignoré")
-            return
+            seller = [t for t in self._llm_tasks if t in self._classify_tasks]
+            if classify_only or not seller:
+                log.warning("Trop d'analyses LLM en cours : tour ignoré")
+                if not classify_only and self.on_unclassified:
+                    asyncio.get_running_loop().create_task(self.on_unclassified(ts))
+                return
+            seller[0].cancel()  # on sacrifie un classement d'étape, pas un tour du prospect
         if not classify_only:
             self._llm_generation += 1
         task = asyncio.create_task(self._run_llm(ctx, ts, replaces, self._llm_generation, classify_only))
         self._llm_tasks.add(task)
+        if classify_only:
+            self._classify_tasks.add(task)
+            task.add_done_callback(self._classify_tasks.discard)
         task.add_done_callback(self._llm_tasks.discard)
         self._llm_task = task
+
+    async def drain_llm(self, timeout: float) -> None:
+        """Laisse les analyses en cours se terminer (fin d'appel), puis annule les retardataires."""
+        tasks = list(self._llm_tasks)
+        if tasks:
+            _, pending = await asyncio.wait(tasks, timeout=timeout)
+            for t in pending:
+                t.cancel()
+            if pending:
+                await asyncio.gather(*pending, return_exceptions=True)
 
     async def wait_llm(self) -> None:
         """Attend toutes les analyses en cours (évaluation, tests)."""
@@ -211,21 +239,32 @@ class CoachEngine:
     async def _run_llm(self, ctx: CoachContext, ts: float, replaces: Hint | None, generation: int = 0,
                        classify_only: bool = False) -> None:
         try:
-            result = await self.provider.suggest(ctx)
+            result = await asyncio.wait_for(self.provider.suggest(ctx), self.LLM_TIMEOUT)
         except asyncio.CancelledError:
             raise
+        except asyncio.TimeoutError:
+            log.warning("LLM trop lent (> %.0f s) : tour non classé", self.LLM_TIMEOUT)
+            result = None
         except Exception:  # un fournisseur défaillant ne doit jamais casser l'appel
             log.exception("Fournisseur LLM en erreur")
-            return
+            result = None
         if result is None:
+            # Panne, quota, délai : la session retombe sur les mots-clés pour ce tour.
+            if not classify_only and self.on_unclassified:
+                await self.on_unclassified(ts)
             return
         if classify_only or result.objection not in self.objection_ids:
             result = result.model_copy(update={"objection": None})  # "other", inconnu ou tour du vendeur
         if self.on_classified:
-            await self.on_classified(result, ts)  # peut confirmer l'objection des mots-clés
+            await self.on_classified(result, ts, not classify_only)  # peut confirmer l'objection des mots-clés
         if classify_only:
             return
-        if result.confidence < self.llm_min_confidence:
+        if self.emotion_suppressed and result.kind == "emotion":
+            return  # analyse coupée : pas de conseil fondé sur le ressenti
+        # Le LLM infirme une fiche d'objection des mots-clés : on la remplace toujours à l'écran,
+        # même avec une faible confiance, pour ne pas laisser une fausse alerte affichée.
+        overrides = replaces is not None and replaces.kind == "objection" and result.objection != replaces.ref
+        if result.confidence < self.llm_min_confidence and not overrides:
             return
         # Un tour plus récent a déjà été envoyé au LLM : le classement ci-dessus reste
         # utile, mais un conseil générique sur un tour dépassé n'est plus affiché

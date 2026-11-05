@@ -68,7 +68,7 @@ async def test_stale_llm_result_still_classifies_but_generic_hint_is_dropped():
     out, emit = collector()
     classified = []
 
-    async def on_classified(result, ts):
+    async def on_classified(result, ts, prospect_turn=True):
         classified.append(ts)
 
     class Generic(FakeProvider):

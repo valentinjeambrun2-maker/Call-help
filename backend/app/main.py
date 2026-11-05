@@ -74,6 +74,25 @@ def demo_call_data(call_id: str, kind: str):
     return data
 
 
+async def _await_ai_summary(ws: WebSocket, session: CallSession) -> None:
+    """Attend le bilan IA tout en écoutant le client : s'il se déconnecte, on l'annule."""
+    import asyncio
+
+    task = session.summary_task
+    while task is not None and not task.done():
+        receiver = asyncio.create_task(ws.receive())
+        done, _ = await asyncio.wait({task, receiver}, return_when=asyncio.FIRST_COMPLETED)
+        if receiver in done:
+            frame = receiver.result()
+            if frame.get("type") == "websocket.disconnect":
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+                return
+            continue  # message tardif du client : ignoré, on attend toujours le bilan
+        receiver.cancel()
+        await asyncio.gather(receiver, return_exceptions=True)
+
+
 @app.websocket("/ws/session")
 async def ws_session(ws: WebSocket) -> None:
     await ws.accept()
@@ -104,6 +123,7 @@ async def ws_session(ws: WebSocket) -> None:
                 if not isinstance(data, dict):
                     raise ValueError("Message JSON attendu (objet)")
                 if not await session.handle(data):
+                    await _await_ai_summary(ws, session)
                     break
             except (ValidationError, ValueError, RuntimeError, FileNotFoundError, KeyError) as exc:
                 await ws.send_json({"type": "error", "message": str(exc)})

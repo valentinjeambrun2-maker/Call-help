@@ -88,6 +88,8 @@ Règles :
 - `say` : une phrase naturelle que le vendeur peut dire telle quelle, dans la langue de l'appel, ou null.
 - Appuie-toi sur l'étape du scénario, l'objection en cours et l'état émotionnel probable du prospect.
 - L'état émotionnel est une hypothèse : formule-la comme telle (« il semble hésiter »).
+- Ne déduis ni ne commente jamais l'état émotionnel ou le ton du vendeur (stress, nervosité,
+  agacement…) : juge seulement ce qu'il dit et fait.
 - Si `emotion_allowed` est faux, le prospect n'a pas accepté l'analyse : ne déduis, ne commente
   et n'utilise jamais son état émotionnel, ni à partir de sa voix ni à partir de ses mots.
   Appuie-toi uniquement sur le contenu de l'échange et sur le scénario.
@@ -126,7 +128,8 @@ class ClaudeProvider:
     def __init__(self, model: str = LIVE_MODEL) -> None:
         from anthropic import AsyncAnthropic  # dépendance optionnelle [llm]
 
-        self.client = AsyncAnthropic()
+        # Délai court et une seule reprise : en direct, une réponse tardive ne sert plus.
+        self.client = AsyncAnthropic(timeout=10.0, max_retries=1)
         self.model = model
         self.usage = {"requests": 0, "input_tokens": 0, "output_tokens": 0}
 
