@@ -26,7 +26,7 @@ Après chaque `npm run build`, cliquez sur ↻ dans `chrome://extensions` pour r
 
 ## Pendant l'appel
 
-1. Ouvrez l'onglet de l'appel, puis **cliquez sur l'icône Call-help depuis cet onglet**. Chrome ne laisse capter que l'onglet où l'extension a été ouverte. Le panneau affiche l'onglet retenu (« Onglet de l'appel : meet.google.com · … »). Un clic sur l'icône depuis un autre onglet le remplace pour l'appel suivant, pas pour l'appel en cours.
+1. Ouvrez l'onglet de l'appel, puis **cliquez sur l'icône Call-help depuis cet onglet**. Chrome ne laisse capter que l'onglet où l'extension a été ouverte. Le panneau affiche l'onglet retenu (« Onglet de l'appel : meet.google.com · … »). Un clic sur l'icône depuis un autre onglet le remplace pour l'appel suivant, pas pour l'appel en cours. Vous pouvez ensuite déplacer l'onglet de l'appel dans sa propre fenêtre : il reste celui de l'appel.
 2. Dans le panneau, réglez une fois pour toutes :
    - la langue de l'appel ;
    - votre prénom et votre société ;
@@ -37,7 +37,7 @@ Après chaque `npm run build`, cliquez sur ↻ dans `chrome://extensions` pour r
 3. **Démarrer l'appel.** La première fois, un onglet demande l'accès au micro. Le panneau latéral ne peut pas afficher cette demande de Chrome. Autorisez, revenez au panneau et cliquez de nouveau.
 4. Le panneau affiche d'abord le **message d'information** à lire au prospect. Il dit ce qui se passe vraiment : la transcription en direct, et la lecture de son ressenti à travers ses mots, seulement s'il est d'accord. Notez sa réponse. S'il refuse, aucun ressenti n'est lu ni proposé pendant tout l'appel. La transcription et les conseils continuent.
 5. La carte **Écoute**, en bas, montre le niveau de chaque voix et la dernière phrase entendue. Si une barre reste vide, ce côté n'est pas capté. Le panneau prévient si :
-   - rien n'est entendu sur l'onglet pendant 20 s (mauvais onglet ?) ;
+   - rien n'est entendu sur l'onglet dans les 20 premières secondes (mauvais onglet ?). Une fois le prospect entendu, un silence n'est plus signalé ;
    - le micro est perdu en cours d'appel (casque débranché).
 
    **Couper mon micro** : pour parler à un collègue sans que ce soit transcrit. Couper le micro dans Meet ne suffit pas, car Call-help a son propre accès au micro.
@@ -60,7 +60,9 @@ Mesures dans Chromium, avec l'extension construite :
   - fermeture du panneau, y compris après 90 s d'inactivité ;
   - panneau qui ne répond plus ;
   - autre panneau ou autre onglet fermé ;
-  - micro perdu, micro choisi introuvable, sortie choisie ;
+  - micro perdu, micro choisi introuvable, sortie choisie : l'avertissement reste affiché jusqu'à la fin de l'appel ;
+  - onglet d'appel déplacé dans une autre fenêtre ;
+  - démarrage refusé par Chrome dans une autre fenêtre, sans couper l'appel en cours ;
   - micro coupé ;
   - double clic sur la démo.
 - **À vérifier à la main sur un vrai Meet** : la qualité de la transcription avec de vrais micros et un vrai casque.

@@ -486,6 +486,8 @@ blockquote::after { content: "\202f»"; color: var(--accent); }
 .heard-line { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--text); }
 .heard-line .who { display: inline-block; margin-right: 6px; font-weight: 600; color: var(--accent); }
 .heard-line.partial { color: var(--text-2); }
+.listen-note { margin: 10px 0 0; font-size: 12px; line-height: 1.45; }
+.listen-note.warn { color: var(--warn); }
 .listen .btn.small { margin-top: 12px; padding: 6px 14px; font-size: 13px; }
 .listen .btn.small.on { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
 

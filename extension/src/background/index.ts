@@ -55,20 +55,32 @@ async function closeOffscreen(): Promise<boolean> {
   return true;
 }
 
-async function startCapture(tabId: number, captureId: string, panelId: string, devices: CaptureDevices): Promise<void> {
-  // Une seule captation à la fois : celle d'un autre panneau (autre fenêtre) s'arrête, et on le lui dit.
-  const previous = await running();
+// Arrête la captation en cours pour en lancer une autre ; prévient son panneau s'il en a un autre.
+async function replace(previous: RunningCapture | null, panelId: string): Promise<void> {
   await chrome.storage.session.remove("capture");
   if ((await closeOffscreen()) && previous && previous.panelId !== panelId) {
     notifyPanel("stopped", previous.captureId, "Un appel a démarré dans une autre fenêtre.");
   }
+}
+
+async function startCapture(
+  tabId: number, captureId: string, panelId: string, windowId: number | undefined, devices: CaptureDevices,
+): Promise<void> {
+  // Tout est vérifié avant de toucher à la captation en cours : un démarrage refusé dans une
+  // autre fenêtre ne coupe pas l'appel qui y tourne.
   const tab = await chrome.tabs.get(tabId);
-  const key = invokedKey(tab.windowId);
+  // L'onglet retenu est celui de la fenêtre du panneau, même s'il a été déplacé depuis dans une
+  // autre fenêtre (l'autorisation de Chrome le suit).
+  const key = invokedKey(windowId ?? tab.windowId);
   const invoked = (await chrome.storage.session.get(key))[key] as InvokedTab | undefined;
   if (invoked?.tabId !== tabId) {
     throw new Error("cliquez sur l'icône Call-help depuis l'onglet de l'appel (Meet, Teams…), puis relancez");
   }
+  const previous = await running();
+  // Chrome refuse de capter un onglet déjà capté : même onglet, on libère d'abord.
+  if (previous?.tabId === tabId) await replace(previous, panelId);
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
+  await replace(previous?.tabId === tabId ? null : previous, panelId); // une seule captation à la fois
   await chrome.offscreen.createDocument({
     url: "offscreen.html",
     reasons: [chrome.offscreen.Reason.USER_MEDIA],
@@ -88,6 +100,17 @@ async function stopCapture(match: (c: RunningCapture) => boolean, detail?: strin
   if (await closeOffscreen()) notifyPanel("stopped", capture.captureId, detail);
 }
 
+function explain(err: unknown): string {
+  const text = err instanceof Error ? err.message : String(err);
+  // Message de Chrome quand l'autorisation sur l'onglet est perdue (il a changé de page) ou
+  // quand c'est une page de Chrome.
+  if (/has not been invoked|Chrome pages cannot be captured/i.test(text)) {
+    return "Chrome n'autorise plus la captation de cet onglet (il a changé de page ?). Cliquez de nouveau sur l'icône Call-help depuis l'onglet de l'appel, puis relancez.";
+  }
+  if (/active stream/i.test(text)) return "cet onglet est déjà capté par une autre extension ou un autre appel.";
+  return text;
+}
+
 // Les demandes sont traitées une à une : un démarrage et un arrêt rapprochés ne se
 // chevauchent jamais (un seul document offscreen peut exister).
 let queue: Promise<void> = Promise.resolve();
@@ -100,11 +123,16 @@ chrome.runtime.onMessage.addListener((msg: ExtensionMsg) => {
   if (msg.action === "start-capture") {
     enqueue(async () => {
       try {
-        await startCapture(msg.tabId, msg.captureId, msg.panelId, msg.devices ?? {});
+        await startCapture(msg.tabId, msg.captureId, msg.panelId, msg.windowId, msg.devices ?? {});
       } catch (err) {
-        await chrome.storage.session.remove("capture");
-        await closeOffscreen().catch(() => false);
-        notifyPanel("error", msg.captureId, err instanceof Error ? err.message : String(err));
+        // On ne ferme que ce que ce démarrage a pu ouvrir : la captation d'un autre panneau,
+        // si elle tourne encore, reste intacte.
+        const current = await running();
+        if (!current || current.captureId === msg.captureId) {
+          await chrome.storage.session.remove("capture");
+          if (current) await closeOffscreen().catch(() => false);
+        }
+        notifyPanel("error", msg.captureId, explain(err));
       }
     });
   } else if (msg.action === "stop-capture") {
@@ -122,10 +150,13 @@ chrome.runtime.onConnect.addListener((port) => {
 });
 
 // Onglet capté fermé : on libère la captation (et pas pour un autre onglet fermé).
-chrome.tabs.onRemoved.addListener((tabId, info) => {
+chrome.tabs.onRemoved.addListener((tabId) => {
   enqueue(() => stopCapture((c) => c.tabId === tabId, "L'onglet de l'appel a été fermé."));
-  const key = invokedKey(info.windowId);
-  void chrome.storage.session.get(key).then((v) => {
-    if ((v[key] as InvokedTab | undefined)?.tabId === tabId) void chrome.storage.session.remove(key);
+  // L'onglet retenu peut appartenir à l'entrée d'une autre fenêtre (onglet déplacé).
+  void chrome.storage.session.get(null).then((all) => {
+    const stale = Object.entries(all)
+      .filter(([k, v]) => k.startsWith("invoked:") && (v as InvokedTab | undefined)?.tabId === tabId)
+      .map(([k]) => k);
+    if (stale.length) void chrome.storage.session.remove(stale);
   });
 });

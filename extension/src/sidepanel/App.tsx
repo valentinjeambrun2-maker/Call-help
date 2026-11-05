@@ -20,7 +20,7 @@ const MAX_PAD_FRAMES = 300; // 30 s au plus de silence de calage
 const STALL_MS = 5000; // plus de son depuis ce délai : la captation est perdue
 const HEARTBEAT_MS = 1000; // « j'écoute » envoyé au document offscreen
 const PORT_PING_MS = 20000; // garde le service worker éveillé (Chrome l'endort après 30 s)
-const SILENT_TAB_MS = 20000; // rien entendu sur l'onglet capté : est-ce le bon ?
+const SILENT_TAB_MS = 20000; // onglet jamais entendu depuis le début : est-ce le bon ?
 const HEARD_LEVEL = 0.003; // ~ -50 dB
 
 // Ce panneau (un par fenêtre) : seul lui peut arrêter la captation qu'il a lancée.
@@ -51,8 +51,9 @@ interface ActiveCapture {
   lastFrameAt: number;
   levelsShownAt: number;
   heartbeatAt: number;
-  tabHeardAt: number; // dernier son entendu sur l'onglet (ou début de la captation)
-  silentWarned: boolean;
+  host?: string; // onglet capté (et non le dernier où l'icône a été cliquée)
+  startedAt: number;
+  tabEverHeard: boolean; // le prospect a déjà été entendu au moins une fois
   stop?: () => void;
   onFirstFrame?: (offset: number) => void;
   onEnded?: () => void;
@@ -138,6 +139,7 @@ export function App() {
   const [starting, setStarting] = useState(false); // démarrage en cours : pas de double clic
   const startingRef = useRef(false);
   const [micMuted, setMicMuted] = useState(false);
+  const [tabSilent, setTabSilent] = useState(false); // onglet capté jamais entendu depuis 20 s
   // Lecture du ton de l'utilisateur pour l'appel en cours : démos seulement pour l'instant.
   const [callSelfAnalysis, setCallSelfAnalysis] = useState(false);
   const micMutedRef = useRef(false);
@@ -178,6 +180,7 @@ export function App() {
     const cap = active.current;
     active.current = null;
     setLevels(null);
+    setTabSilent(false);
     cap?.stop?.();
     if (hasChrome && cap?.kind === "call") {
       const msg: ExtensionMsg = { target: "background", action: "stop-capture", captureId: cap.id };
@@ -190,12 +193,13 @@ export function App() {
     clearTimers();
     const cap: ActiveCapture = {
       id: crypto.randomUUID(), kind, started: false, lastFrameAt: 0, levelsShownAt: 0, heartbeatAt: 0,
-      tabHeardAt: 0, silentWarned: false, ...hooks,
+      startedAt: 0, tabEverHeard: false, ...hooks,
     };
     active.current = cap;
     setLevels(null);
     setHeard({});
     setMuted(false);
+    setTabSilent(false);
     setCapture({ tone: "ok", text: kind === "call" ? "Connexion à l'onglet et au micro…" : "Préparation de l'appel de démo…" });
     return cap;
   };
@@ -206,10 +210,12 @@ export function App() {
   };
 
   // Vrai appel : le service worker ouvre le document offscreen, qui capte l'onglet et le micro.
-  const captureCall = (tabId: number) => {
+  const captureCall = (tabId: number, host?: string) => {
     const cap = newCapture("call");
+    cap.host = host;
     const msg: ExtensionMsg = {
       target: "background", action: "start-capture", tabId, captureId: cap.id, panelId: PANEL_ID,
+      windowId: windowId.current ?? undefined,
       devices: { micId: settings.micId || undefined, speakerId: settings.speakerId || undefined },
     };
     void chrome.runtime.sendMessage(msg).catch(() => {});
@@ -258,20 +264,17 @@ export function App() {
     sendAudio(frameBytes(1, frame.tab));
     const t = performance.now();
     cap.lastFrameAt = t;
-    if (!cap.tabHeardAt || frame.level.tab > HEARD_LEVEL) {
-      cap.tabHeardAt = t;
-      if (cap.silentWarned) {
-        cap.silentWarned = false; // le prospect est bien entendu, finalement
-        onCaptureStatus.current("running");
+    // Onglet jamais entendu depuis le début (icône cliquée sur un autre onglet, son coupé dans
+    // l'outil d'appel…) : on le signale à part, sans masquer l'état du micro. Une fois le
+    // prospect entendu, un silence (attente, long exposé) n'est plus suspect.
+    if (cap.kind === "call" && !cap.tabEverHeard) {
+      if (!cap.startedAt) cap.startedAt = t;
+      if (frame.level.tab > HEARD_LEVEL) {
+        cap.tabEverHeard = true;
+        setTabSilent(false);
+      } else if (t - cap.startedAt > SILENT_TAB_MS) {
+        setTabSilent(true);
       }
-    }
-    if (cap.kind === "call" && !cap.silentWarned && t - cap.tabHeardAt > SILENT_TAB_MS) {
-      // Icône cliquée sur un autre onglet, appel pas encore commencé, son coupé dans l'outil d'appel…
-      cap.silentWarned = true;
-      setCapture({
-        tone: "warn",
-        text: `Rien n'est entendu sur l'onglet ${invokedRef.current?.host ?? "capté"} : est-ce bien celui de l'appel ?`,
-      });
     }
     if (cap.kind === "call" && t - cap.heartbeatAt > HEARTBEAT_MS) {
       // Sur réception d'un bloc (événement), pas sur minuteur : un panneau en arrière-plan
@@ -300,7 +303,7 @@ export function App() {
     if (status === "running") {
       setCapture({
         tone: "ok",
-        text: cap.kind === "call" ? `Onglet ${invokedRef.current?.host ?? "d'appel"} et micro captés` : "Lecture de l'appel de démo",
+        text: cap.kind === "call" ? `Onglet ${cap.host ?? "d'appel"} et micro captés` : "Lecture de l'appel de démo",
       });
     } else if (status === "warning") {
       setCapture({ tone: "warn", text: detail ?? "Captation partielle." });
@@ -315,8 +318,7 @@ export function App() {
     }
   };
 
-  const invokedRef = useRef<InvokedTab | null>(null);
-  invokedRef.current = invoked;
+  const windowId = useRef<number | null>(null);
 
   useEffect(() => {
     if (!hasChrome) return;
@@ -365,6 +367,7 @@ export function App() {
     chrome.storage.onChanged.addListener(onStorage);
     void chrome.windows.getCurrent().then(async (w) => {
       if (w.id === undefined) return;
+      windowId.current = w.id;
       key = invokedKey(w.id);
       setInvoked(((await chrome.storage.session.get(key))[key] as InvokedTab | undefined) ?? null);
     });
@@ -495,7 +498,7 @@ export function App() {
     } catch {
       return; // l'erreur est déjà affichée par la session
     }
-    captureCall(tab.id);
+    captureCall(tab.id, invoked?.host);
   });
 
   const startDemo = once(async () => {
@@ -587,6 +590,12 @@ export function App() {
                 </p>
               ) : null;
             })}
+            {tabSilent && (
+              <p className="listen-note warn">
+                Rien n'est entendu sur l'onglet {active.current?.host ?? "capté"} depuis le début : est-ce bien celui de
+                l'appel ?
+              </p>
+            )}
             {active.current?.kind === "call" && (
               <button className={`btn secondary small ${micMuted ? "on" : ""}`} aria-pressed={micMuted} onClick={() => setMuted(!micMuted)}>
                 {micMuted ? "Réactiver mon micro" : "Couper mon micro"}

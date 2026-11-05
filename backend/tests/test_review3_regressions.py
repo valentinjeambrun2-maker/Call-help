@@ -32,6 +32,49 @@ async def test_consent_reply_transcribed_after_the_click_does_not_skip_the_hook(
     assert s.tracker.step.id != "hook"
 
 
+async def test_objection_inside_the_consent_reply_still_counts_without_moving_the_step():
+    """« D'accord, mais là j'ai pas le temps » : la réponse au message, dite avant le clic,
+    ne clôt pas l'accroche, mais l'objection qu'elle contient compte (revue 4)."""
+    out, send = collector()
+    s = CallSession(send)  # mots-clés seuls
+    await s.handle({"type": "start"})
+    await s.handle({"type": "announcement_done", "ts": 7.1, "consent": True})
+    await say(s, "Oui d'accord, mais là j'ai pas le temps, je suis entre deux rendez-vous.", 4.2, 6.9)
+    assert "no_time" in s.tracker.objections_seen
+    assert s.tracker.step.id == "hook"
+    assert any(m["type"] == "hint" and m["hint"]["kind"] == "objection" for m in out)
+
+
+class StepAndObjection:
+    def __init__(self):
+        self.contexts = []
+
+    async def suggest(self, ctx):
+        self.contexts.append(ctx)
+        if ctx.task == "step":
+            return LLMHint(kind="step", text="", say=None, confidence=0.0, step="qualify")
+        return LLMHint(kind="objection", text="Propose deux minutes", say=None, confidence=0.9,
+                       objection="no_time", step="qualify")
+
+
+async def test_with_the_llm_the_consent_reply_counts_its_objection_but_not_its_step():
+    provider = StepAndObjection()
+    out, send = collector()
+    s = CallSession(send, provider=provider)
+    await s.handle({"type": "start"})
+    await s.handle({"type": "announcement_done", "ts": 7.1, "consent": True})
+    await say(s, "Avant de commencer : un assistant transcrit notre échange. Êtes-vous d'accord ?", 0.5, 3.8,
+              speaker="user")  # le message lu, transcrit après le clic : rien à classer
+    await say(s, "Oui d'accord, mais là j'ai pas le temps.", 4.2, 6.9)
+    await s.coach.wait_llm()
+    assert [c.task for c in provider.contexts] == ["hint"]
+    assert "no_time" in s.tracker.objections_seen and s.tracker.step.id == "hook"
+    assert s.no_step_turns == set()
+    await say(s, "Allez-y, je vous écoute.", 9.0, 10.0)  # après le clic : l'étape suit le LLM
+    await s.coach.wait_llm()
+    assert s.tracker.step.id == "qualify"
+
+
 class EmotionHint:
     def __init__(self):
         self.contexts = []

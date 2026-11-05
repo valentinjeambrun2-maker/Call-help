@@ -53,6 +53,7 @@ class CallSession:
         self.summary_task: asyncio.Task | None = None
         self.pending_turns: dict[float, str] = {}  # fin de tour du prospect -> texte, en attente du LLM
         self._last_classified_ts = -1.0
+        self.no_step_turns: set[float] = set()  # fin de tour : réponse au message, sans avancée d'étape
 
     async def _emit_hint(self, hint: Hint) -> None:
         if hint.replaces:
@@ -235,12 +236,18 @@ class CallSession:
         self.metrics.add_segment(msg.speaker, msg.text, msg.start, msg.end)
         self._append_transcript(msg)
 
-        if self.announcement_pending or self._said_before_consent(msg):
+        if self.announcement_pending:
             # Tant que le message d'information n'est pas confirmé, on ne fait
             # qu'écouter : pas d'avancée de scénario ni de conseil qui masquerait
             # le message (le « d'accord » du prospect y répond, il ne clôt pas l'accroche).
-            # La transcription en direct rend souvent ce « d'accord » après le clic du vendeur
-            # (~1 s) : c'est l'heure à laquelle il a été dit qui compte, pas celle de son arrivée.
+            await self._send_state()
+            return
+        # La transcription en direct rend souvent la réponse au message après le clic du vendeur
+        # (~1 s) : c'est l'heure à laquelle elle a été dite qui compte. Elle ne fait pas avancer
+        # l'étape, mais une objection qu'elle contient (« d'accord, mais j'ai deux minutes »)
+        # compte bien. Le message lu par le vendeur, lui, n'a rien à classer.
+        consent_reply = self._said_before_consent(msg)
+        if consent_reply and msg.speaker is Speaker.USER and msg.end <= self.announcement_at + self.CONSENT_MARGIN:
             await self._send_state()
             return
 
@@ -256,6 +263,13 @@ class CallSession:
                     if rule_hint is not None:  # fiche réellement montrée (pas bloquée par l'anti-répétition)
                         self.provisional[msg.end] = objection.id
                 self.pending_turns[msg.end] = msg.text
+                if consent_reply:
+                    self.no_step_turns.add(msg.end)
+            elif consent_reply:
+                objection = self.tracker.detect_objection(msg.text)
+                if objection:
+                    self.tracker.mark_objection(objection.id)
+                    rule_hint = await self.coach.on_objection(objection, msg.end)
             else:
                 objection, advanced = self.tracker.on_prospect_text(msg.text, msg.end)
                 if objection:
@@ -302,6 +316,8 @@ class CallSession:
         changed = False
         self.pending_turns.pop(ts, None)
         provisional = self.provisional.pop(ts, None)
+        step_allowed = ts not in self.no_step_turns
+        self.no_step_turns.discard(ts)
         # Résultats arrivés dans le désordre (analyses en parallèle) : un tour plus ancien ne
         # remplace pas l'objection en cours ni le ressenti lus sur un tour plus récent.
         fresh = ts >= self._last_classified_ts
@@ -332,7 +348,7 @@ class CallSession:
             self.emotions.add_text(Speaker.PROSPECT, state, result.state_confidence, ts)
             await self.coach.on_emotion(self.emotions.reading(Speaker.PROSPECT, self.now), self.now)
             changed = True
-        if result.step and self.tracker.advance_to(result.step, ts):
+        if result.step and step_allowed and self.tracker.advance_to(result.step, ts):
             changed = True
             await self.coach.on_step(self.tracker.step, ts)
         if changed:
@@ -348,10 +364,12 @@ class CallSession:
                                                          "seuls les conseils par mots-clés s'affichent."})
         text = self.pending_turns.pop(ts, None)
         provisional = self.provisional.pop(ts, None)
+        step_allowed = ts not in self.no_step_turns
+        self.no_step_turns.discard(ts)
         changed = False
         if provisional:
             changed |= self.tracker.mark_objection(provisional)
-        elif text is not None:
+        elif text is not None and step_allowed:
             from .scenario import contains_keyword
 
             if any(contains_keyword(text, kw) for kw in self.tracker.step.exit_keywords) and self.tracker.advance(ts):

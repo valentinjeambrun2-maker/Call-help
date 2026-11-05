@@ -127,7 +127,11 @@ export interface CaptureDevices {
 // captation précédente sont ignorés. `panelId` identifie le panneau qui l'a lancée : seul
 // lui peut l'arrêter (un panneau par fenêtre). (La démo, elle, est jouée et captée dans le panneau.)
 export type ExtensionMsg =
-  | { target: "background"; action: "start-capture"; tabId: number; captureId: string; panelId: string; devices: CaptureDevices }
+  | {
+      target: "background"; action: "start-capture"; tabId: number; captureId: string; panelId: string;
+      windowId?: number; // fenêtre du panneau : l'onglet d'appel retenu est celui de cette fenêtre
+      devices: CaptureDevices;
+    }
   | { target: "background"; action: "stop-capture"; captureId: string }
   | { target: "offscreen"; action: "start"; streamId: string; captureId: string; devices: CaptureDevices }
   | { target: "offscreen"; action: "stop" }
