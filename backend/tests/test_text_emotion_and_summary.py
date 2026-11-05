@@ -99,3 +99,32 @@ async def test_stt_fragments_of_one_reply_are_merged_for_the_llm():
     await s.coach.wait_llm()
     assert seen[1][-1] == "prospect: On a explosé le budget. Il reste plus rien."
     assert seen[2][-2:] == ["prospect: On a explosé le budget. Il reste plus rien.", "user: Je comprends."]
+
+
+async def test_ai_summary_provider_crash_still_answers_the_client():
+    class Crashing:
+        async def summarize(self, data):
+            raise KeyError("boom")
+
+    out, send = collector()
+    s = CallSession(send, summary_provider=Crashing())
+    await s.handle({"type": "start"})
+    await s.handle({"type": "announcement_done", "ts": 0, "consent": True})
+    await s.handle({"type": "transcript", "speaker": "user", "text": "Bonjour.", "start": 0, "end": 1})
+    await s.handle({"type": "transcript", "speaker": "prospect", "text": "Oui ?", "start": 1.5, "end": 2})
+    await s.handle({"type": "stop"})
+    await s.summary_task
+    ai = next(m for m in out if m["type"] == "ai_summary")
+    assert ai["summary"] is None and ai["error"]  # avant : aucun message, bilan « en attente » sans fin
+
+
+async def test_missing_stt_key_is_reported_once_and_audio_is_then_ignored(monkeypatch):
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    out, send = collector()
+    s = CallSession(send)
+    await s.handle({"type": "start", "transcription": "server"})
+    assert [m for m in out if m["type"] == "error"]
+    assert s.push_audio(b"\x01" + bytes(3200)) is True  # pas de seconde erreur « audio sans transcription »
+    plain = CallSession(collector()[1])
+    await plain.handle({"type": "start"})
+    assert plain.push_audio(b"\x01" + bytes(3200)) is False

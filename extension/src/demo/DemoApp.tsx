@@ -97,6 +97,7 @@ export function DemoApp() {
   const [heard, setHeard] = useState<Heard[]>([]);
   const [partial, setPartial] = useState<Record<string, string>>({});
   const [preparing, setPreparing] = useState(false);
+  const [over, setOver] = useState(false); // bilan reçu : tous les tours sont jugés
 
   const audio = useRef<HTMLAudioElement>(null);
   const nextEvent = useRef(0);
@@ -105,6 +106,26 @@ export function DemoApp() {
   const pcm = useRef<[Int16Array, Int16Array] | null>(null);
   const sentSamples = useRef(0);
   const snapped = useRef(new Set<number>());
+  const labelsRef = useRef<TurnLabel[]>([]);
+  labelsRef.current = labels;
+  // Jeton de démo : tout changement d'appel ou nouvelle démo périme les étapes asynchrones en cours.
+  const run = useRef(0);
+  const choice = useRef(0);
+  const endTimer = useRef<number | null>(null);
+
+  // Étape et émotion lues par le moteur pour les tours pas encore photographiés.
+  const snapRemaining = useCallback(() => {
+    const steps: Record<number, string> = {};
+    const emotions: Record<number, string | null> = {};
+    labelsRef.current.forEach((_, i) => {
+      if (snapped.current.has(i)) return;
+      snapped.current.add(i);
+      steps[i] = lastState.current.step ?? "";
+      emotions[i] = lastState.current.prospect;
+    });
+    setStepsAfter((s) => ({ ...s, ...steps }));
+    setEmotionAfter((s) => ({ ...s, ...emotions }));
+  }, []);
 
   const onServer = useCallback((msg: ServerMsg) => {
     const now = audio.current?.currentTime ?? 0;
@@ -123,8 +144,16 @@ export function DemoApp() {
         prospect: msg.emotions.find((e) => e.speaker === "prospect")?.state ?? null,
       };
     }
-  }, []);
-  const { state, connect, send, sendAudio, giveFeedback, answerAnnouncement } = useCallSession(backendUrl, onServer);
+    if (msg.type === "summary") {
+      // Le serveur a tout traité (derniers énoncés, analyses de l'IA) : les derniers tours,
+      // que l'horloge de l'audio arrêtée n'atteint jamais, sont jugés maintenant.
+      snapRemaining();
+      setOver(true);
+    }
+  }, [snapRemaining]);
+  const audioClock = useCallback(() => audio.current?.currentTime ?? 0, []);
+  const { state, connect, disconnect, send, sendAudio, giveFeedback, answerAnnouncement } =
+    useCallSession(backendUrl, onServer, audioClock);
 
   useEffect(() => {
     fetch(`${api}/demo/calls`)
@@ -136,27 +165,53 @@ export function DemoApp() {
   const stopTicker = () => {
     if (ticker.current !== null) window.clearInterval(ticker.current);
     ticker.current = null;
+    if (endTimer.current !== null) window.clearTimeout(endTimer.current);
+    endTimer.current = null;
   };
   useEffect(() => stopTicker, []);
 
-  const choose = async (call: DemoCall) => {
+  // Connexion perdue ou appel terminé : plus rien n'est envoyé, le son s'arrête.
+  useEffect(() => {
+    if (state.phase === "error" || state.phase === "ended") {
+      stopTicker();
+      audio.current?.pause();
+      setPlaying(false);
+    }
+  }, [state.phase]);
+
+  // Abandonne la démo en cours (décodage, connexion, lecture) sans demander de bilan.
+  const cancelRun = () => {
+    run.current += 1;
     stopTicker();
     audio.current?.pause();
     setPlaying(false);
+    setPreparing(false);
+    disconnect();
+  };
+
+  const choose = async (call: DemoCall) => {
+    cancelRun();
+    const mine = ++choice.current;
     setSelected(call);
-    setObserved([]);
-    setStepsAfter({});
-    setEmotionAfter({});
+    setLabels([]);
+    setReplay(null);
+    setLoadError(null);
+    resetRun();
     setT(0);
-    const [l, r] = await Promise.all([
-      fetch(`${api}/demo/calls/${call.id}/labels`).then((x) => x.json()),
-      fetch(`${api}/demo/calls/${call.id}/replay`).then((x) => x.json()),
-    ]);
-    setLabels(l);
-    setReplay(r);
+    try {
+      const get = (kind: string) =>
+        fetch(`${api}/demo/calls/${call.id}/${kind}`).then((x) => (x.ok ? x.json() : Promise.reject(new Error(`HTTP ${x.status}`))));
+      const [l, r] = await Promise.all([get("labels"), get("replay")]);
+      if (choice.current !== mine) return; // un autre appel a été choisi entre-temps
+      setLabels(l as TurnLabel[]);
+      setReplay(r as Replay);
+    } catch (err) {
+      if (choice.current === mine) setLoadError(`Appel ${call.id} illisible : ${String(err)}`);
+    }
   };
 
   const resetRun = () => {
+    setOver(false);
     setObserved([]);
     setStepsAfter({});
     setEmotionAfter({});
@@ -168,33 +223,54 @@ export function DemoApp() {
   };
 
   const start = async () => {
-    if (!selected || !replay || !audio.current) return;
+    if (!selected || !replay || !audio.current || preparing) return;
+    stopTicker();
+    const token = ++run.current;
+    const stale = () => run.current !== token;
     resetRun();
+    setLoadError(null);
     const live = mode === "stt";
     if (live) {
       // Décodage de l'appel en deux canaux 16 kHz, envoyés au rythme de la lecture.
       setPreparing(true);
       try {
-        pcm.current = await decodeCall(`${api}/demo/calls/${selected.id}/audio`);
+        const decoded = await decodeCall(`${api}/demo/calls/${selected.id}/audio`);
+        if (stale()) return;
+        pcm.current = decoded;
       } catch (err) {
-        setLoadError(`Décodage audio impossible : ${String(err)}`);
-        setPreparing(false);
+        if (!stale()) setLoadError(`Décodage audio impossible : ${String(err)}`);
         return;
+      } finally {
+        if (!stale()) setPreparing(false);
       }
-      setPreparing(false);
     }
-    await connect({
-      type: "start", scenario_id: replay.scenario_id ?? "cold_call_fr", language: replay.language ?? selected.language,
-      self_analysis: false, context: replay.context, transcription: live ? "server" : "client",
-      keyterms: [selected.seller_name, selected.prospect_name, selected.prospect_company, "Herakles"]
-        .filter((x): x is string => !!x),
-    });
+    try {
+      await connect({
+        type: "start", scenario_id: replay.scenario_id ?? "cold_call_fr", language: replay.language ?? selected.language,
+        self_analysis: false, context: replay.context, transcription: live ? "server" : "client",
+        keyterms: [selected.seller_name, selected.prospect_name, selected.prospect_company, "Herakles"]
+          .filter((x): x is string => !!x),
+      });
+    } catch {
+      return; // l'erreur de connexion est affichée par le panneau
+    }
     const el = audio.current;
+    if (stale() || !el) return; // la connexion d'une démo abandonnée est fermée par cancelRun/connect
     el.currentTime = 0;
     el.playbackRate = 1;
-    await el.play();
+    try {
+      await el.play();
+    } catch (err) {
+      if (stale()) return;
+      disconnect();
+      setLoadError(`Lecture audio refusée par le navigateur : ${String(err)}. Cliquez à nouveau sur « Lancer la démo ».`);
+      return;
+    }
+    if (stale()) {
+      el.pause();
+      return;
+    }
     setPlaying(true);
-    stopTicker();
     // Pilotage par l'horloge de l'audio : chaque événement (ou bloc audio) part quand le son l'atteint.
     ticker.current = window.setInterval(() => {
       const now = el.currentTime;
@@ -247,8 +323,19 @@ export function DemoApp() {
     send({ type: "stop" });
   };
 
+  const onEnded = () => {
+    if (endTimer.current !== null) window.clearTimeout(endTimer.current);
+    const token = run.current;
+    endTimer.current = window.setTimeout(() => {
+      endTimer.current = null;
+      if (run.current === token) finish(); // derniers mots transcrits avant le bilan
+    }, 1500);
+  };
+
   // Revue : pour chaque objection attendue, la fiche du moteur est-elle arrivée à temps ?
-  const review = useMemo(() => buildReview(labels, observed, stepsAfter, emotionAfter, t), [labels, observed, stepsAfter, emotionAfter, t]);
+  const judgedUntil = over ? Number.POSITIVE_INFINITY : t;
+  const review = useMemo(() => buildReview(labels, observed, stepsAfter, emotionAfter, judgedUntil),
+    [labels, observed, stepsAfter, emotionAfter, judgedUntil]);
 
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const visible = labels.filter((l) => l.start <= t);
@@ -317,10 +404,10 @@ export function DemoApp() {
                     <div className="call-title">{selected.prospect_company}</div>
                     <div className="sub">{selected.offer}</div>
                   </div>
-                  <button className="btn secondary small" onClick={() => { finish(); setSelected(null); }}>Changer d'appel</button>
+                  <button className="btn secondary small" onClick={() => { cancelRun(); setSelected(null); }}>Changer d'appel</button>
                 </div>
                 <audio ref={audio} src={`${api}/demo/calls/${selected.id}/audio`} preload="auto"
-                  onEnded={() => window.setTimeout(finish, 1500)} />
+                  onEnded={onEnded} />
                 <div className="progress"><span style={{ width: `${Math.min(100, (t / selected.duration) * 100)}%` }} /></div>
                 <div className="actions">
                   {state.phase !== "live" ? (
@@ -330,9 +417,9 @@ export function DemoApp() {
                       </button>
                       <div className="segmented" role="radiogroup" aria-label="Transcription">
                         <button role="radio" aria-checked={mode === "stt"} className={mode === "stt" ? "on" : ""}
-                          onClick={() => setMode("stt")}>Transcription en direct</button>
+                          disabled={preparing} onClick={() => setMode("stt")}>Transcription en direct</button>
                         <button role="radio" aria-checked={mode === "reference"} className={mode === "reference" ? "on" : ""}
-                          onClick={() => setMode("reference")}>Texte de référence</button>
+                          disabled={preparing} onClick={() => setMode("reference")}>Texte de référence</button>
                       </div>
                     </>
                   ) : (
@@ -350,8 +437,7 @@ export function DemoApp() {
                     : "Le texte exact des répliques est envoyé à la fin de chaque tour : isole les erreurs de l'assistant de celles de la transcription."}
                   {" "}Vendeur à gauche, prospect à droite (casque conseillé).
                 </p>
-                <div>
-                </div>
+                {loadError && <p className="alert">{loadError}</p>}
               </div>
 
               <Scorecard review={review} />
@@ -359,7 +445,7 @@ export function DemoApp() {
               <div className="card transcript">
                 <div className="eyebrow">Transcription · attendu vs assistant</div>
                 {visible.map((l, i) => (
-                  <TurnRow key={l.index} turn={l} row={review.rows[i]} done={t > l.end + TOLERANCE}
+                  <TurnRow key={l.index} turn={l} row={review.rows[i]} done={judgedUntil > l.end + TOLERANCE}
                     heard={mode === "stt" ? heardFor(heard, l) : null} />
                 ))}
                 {mode === "stt" && (["user", "prospect"] as const).map((sp) => partial[sp] ? (
@@ -409,6 +495,8 @@ interface Review {
 
 function buildReview(labels: TurnLabel[], observed: Observed[], stepsAfter: Record<number, string>,
   emotionAfter: Record<number, string | null>, t: number): Review {
+  // t : temps jusqu'auquel les tours sont jugés (infini une fois le bilan reçu).
+  const played = Number.isFinite(t) ? t : Math.max(0, ...labels.map((l) => l.end));
   const used = new Set<string>();
   // Fiches remplacées par leur version corrigée par l'IA : ni repérage, ni fausse alerte.
   const replaced = new Set(observed.map((o) => o.hint.replaces).filter((x): x is string => !!x));
@@ -443,7 +531,7 @@ function buildReview(labels: TurnLabel[], observed: Observed[], stepsAfter: Reco
     stepsChecked: steps.length,
     stepsCorrect: steps.filter((r) => r.trackedStep === r.expectedStep).length,
     latencies: lat,
-    hintsPerMinute: t > 10 ? (observed.filter((o) => o.hint.kind !== "announcement").length / t) * 60 : 0,
+    hintsPerMinute: played > 10 ? (observed.filter((o) => o.hint.kind !== "announcement").length / played) * 60 : 0,
   };
 }
 

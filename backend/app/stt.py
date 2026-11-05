@@ -125,12 +125,12 @@ class ScribeChannel:
                 self.received += FRAME_SECONDS
         self._closing.set()
         if self._task:
-            try:
-                await asyncio.wait_for(asyncio.shield(self._flushed.wait()), timeout)
-            except asyncio.TimeoutError:
-                pass
+            waiter = asyncio.create_task(self._flushed.wait())
+            await asyncio.wait({waiter, self._task}, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+            waiter.cancel()
             self._task.cancel()
-            await asyncio.gather(self._task, return_exceptions=True)
+            # Borne : sur un réseau bloqué, la poignée de main de fermeture peut durer 10 s.
+            await asyncio.wait({self._task}, timeout=1.0)
 
     # --- connexion -----------------------------------------------------------------
 
@@ -153,6 +153,7 @@ class ScribeChannel:
         from websockets.exceptions import ConnectionClosed, InvalidHandshake, InvalidStatus
 
         backoff = 0.25
+        failures = 0
         while True:
             # Connexion paresseuse : on attend le premier audio (ou la fin d'appel).
             if self.queue.empty():
@@ -169,6 +170,7 @@ class ScribeChannel:
             try:
                 await self._session()
                 backoff = 0.25
+                failures = 0
                 if self._closing.is_set():
                     self._flushed.set()
                     return
@@ -179,17 +181,29 @@ class ScribeChannel:
                 return
             except InvalidStatus as exc:
                 code = getattr(getattr(exc, "response", None), "status_code", None)
-                if code in (401, 403):
-                    self.fatal = f"refus d'accès ElevenLabs ({code})"
+                if code is not None and 400 <= code < 500 and code not in (408, 429):
+                    # Erreur définitive (accès, paramètre, adresse) : inutile de réessayer.
+                    self.fatal = f"refus d'ElevenLabs (HTTP {code})"
                     await self._status("error", f"transcription arrêtée : {self.fatal}")
                     self._flushed.set()
                     return
+                failures += 1
                 await self._status("info", f"reconnexion (HTTP {code})")
             except (RetrySTT, ConnectionClosed, InvalidHandshake, OSError, asyncio.TimeoutError) as exc:
                 if self._closing.is_set():
                     self._flushed.set()
                     return
+                failures += 1
                 await self._status("info", f"reconnexion ({type(exc).__name__})")
+            except Exception as exc:  # noqa: BLE001 — message inattendu : on journalise et on reconnecte
+                log.exception("STT %s : erreur inattendue", self.speaker.value)
+                if self._closing.is_set():
+                    self._flushed.set()
+                    return
+                failures += 1
+                await self._status("info", f"reconnexion après erreur ({type(exc).__name__})")
+            if failures == 5:
+                await self._status("error", "transcription en direct interrompue : reconnexions en échec")
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 4.0)
 
@@ -207,19 +221,23 @@ class ScribeChannel:
         # Rejeu : l'audio envoyé mais pas encore transcrit avant la coupure.
         replay = [(t, b) for t, b in self.history if t >= self.committed_until - 0.05]
         async with connect(self._url(), additional_headers={"xi-api-key": self.api_key},
-                           open_timeout=5, ping_interval=10, max_size=2**22) as ws:
+                           open_timeout=5, ping_interval=10, close_timeout=1, max_size=2**22) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
             if first.get("message_type") != "session_started":
                 self._raise(first)
             origin: list[float | None] = [None]  # temps d'appel du premier bloc de cette session
             expected: list[float | None] = [None]
             last_final = asyncio.Event()
+            commit_at: list[float | None] = [None]  # fin de l'audio couvert par la validation forcée
 
-            async def send(t: float, frame: bytes, first_chunk: bool, commit: bool = False) -> None:
+            async def send(t: float, frame: bytes, first_chunk: bool, commit: bool = False,
+                           record: bool = True) -> None:
                 if origin[0] is None:
                     origin[0] = t
                 if expected[0] is not None and abs(t - expected[0]) > FRAME_SECONDS / 2:
-                    # Trou dans l'audio (pertes) : nouvelle session pour garder des temps justes.
+                    # Trou dans l'audio (pertes) : nouvelle session pour garder des temps justes,
+                    # qui repart du premier bloc après le trou (l'avant n'est plus rejoué).
+                    self.history.clear()
                     raise RetrySTT("discontinuité audio")
                 expected[0] = t + FRAME_SECONDS
                 m = {"message_type": "input_audio_chunk", "audio_base_64": base64.b64encode(frame).decode(),
@@ -228,18 +246,20 @@ class ScribeChannel:
                     m["previous_text"] = self.context[-50:]
                 await ws.send(json.dumps(m))
                 self.audio_sent_seconds += FRAME_SECONDS
-                self.history.append((t, frame))
+                if record:  # un bloc rejoué est déjà dans l'historique
+                    self.history.append((t, frame))
 
             async def sender() -> None:
                 first_chunk = True
                 for t, frame in replay:  # rattrapage ~4x temps réel
-                    await send(t, frame, first_chunk)
+                    await send(t, frame, first_chunk, record=False)
                     first_chunk = False
                     await asyncio.sleep(0.025)
                 while True:
                     if self._closing.is_set() and self.queue.empty():
                         # Fin d'appel : validation du dernier énoncé, puis attente de son texte.
                         if expected[0] is not None:
+                            commit_at[0] = expected[0] - (origin[0] or 0.0)  # secondes de session couvertes
                             await send(expected[0], bytes(FRAME_BYTES), first_chunk, commit=True)
                             try:
                                 await asyncio.wait_for(last_final.wait(), 1.5)
@@ -267,14 +287,15 @@ class ScribeChannel:
                         text = (m.get("text") or "").lstrip(" .,")
                         if text and text != last_partial and origin[0] is not None:
                             last_partial = text
-                            await self.on_transcript(TranscriptMsg(
+                            await self._safe(self.on_transcript, TranscriptMsg(
                                 speaker=self.speaker, text=text, start=max(self.committed_until, origin[0]),
                                 end=max(self.committed_until, origin[0] + self._session_seconds(expected, origin)),
                                 final=False))
                     elif mt == "committed_transcript_with_timestamps":
                         last_partial = None
                         words = [w for w in (m.get("words") or [])
-                                 if w.get("type") == "word" and (w.get("text") or "").strip(" .,?!…")]
+                                 if w.get("type") == "word" and (w.get("text") or "").strip(" .,?!…")
+                                 and isinstance(w.get("start"), (int, float)) and isinstance(w.get("end"), (int, float))]
                         text = (m.get("text") or "").strip().lstrip(".,").strip()
                         if text and words and origin[0] is not None:
                             start = round(origin[0] + words[0]["start"], 3)
@@ -282,10 +303,19 @@ class ScribeChannel:
                             if end > self.committed_until:  # sinon doublon après rejeu
                                 self.committed_until = end
                                 self.context = (self.context + " " + text)[-200:]
-                                await self.on_transcript(TranscriptMsg(
-                                    speaker=self.speaker, text=text, start=start, end=end, final=True))
-                        if self._closing.is_set():
-                            last_final.set()
+                                try:
+                                    await self.on_transcript(TranscriptMsg(
+                                        speaker=self.speaker, text=text, start=max(0.0, start), end=end, final=True))
+                                except Exception:  # noqa: BLE001 — une erreur en aval ne coupe pas la transcription
+                                    log.exception("STT %s : traitement d'un énoncé", self.speaker.value)
+                        # Fin d'appel : on ne libère l'attente que sur le texte de la validation forcée
+                        # (ou une validation vide), pas sur un énoncé précédent encore en route.
+                        if commit_at[0] is not None:
+                            last_end = words[-1]["end"] if words else None
+                            # Le dernier énoncé finit au plus tard « vad » avant la validation (sinon la
+                            # détection de silence l'aurait déjà validé) ; marge pour l'imprécision des temps.
+                            if last_end is None or last_end >= commit_at[0] - (self.vad + 0.3):
+                                last_final.set()
                     elif mt in FATAL or mt in RETRYABLE:
                         self._raise(m)
 
@@ -303,6 +333,12 @@ class ScribeChannel:
                     raise exc
             if not self._closing.is_set():
                 raise RetrySTT("fermeture inattendue")  # toute fermeture non voulue : reconnexion
+
+    async def _safe(self, fn, *args) -> None:
+        try:
+            await fn(*args)
+        except Exception:  # noqa: BLE001
+            log.exception("STT %s : rappel", self.speaker.value)
 
     @staticmethod
     def _session_seconds(expected: list[float | None], origin: list[float | None]) -> float:

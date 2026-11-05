@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections import deque
 from collections.abc import Awaitable, Callable
 
@@ -16,6 +17,8 @@ from .models import (
     PauseAnalysisMsg, Speaker, StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptEcho, TranscriptMsg, VoiceMsg,
 )
 from .scenario import ScenarioTracker, load_scenario
+
+log = logging.getLogger(__name__)
 
 Send = Callable[[dict], Awaitable[None]]
 
@@ -44,6 +47,7 @@ class CallSession:
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
         self.provisional: dict[float, str] = {}  # fin de tour -> objection des mots-clés à confirmer
         self.stt = None  # SttHub quand le backend transcrit lui-même
+        self.stt_requested = False  # transcription demandée (même si indisponible : erreur déjà signalée)
         self._stt_cost: float | None = None
         self.summary_task: asyncio.Task | None = None
         self.pending_turns: dict[float, str] = {}  # fin de tour du prospect -> texte, en attente du LLM
@@ -135,6 +139,19 @@ class CallSession:
                 or len(self.full_transcript) < 2:
             return
         await self.send({"type": "ai_summary_pending"})
+        try:
+            result = await self._summarize(SummaryInput)
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001 — le client attend une réponse : jamais de bilan « en attente » sans fin
+            log.exception("Bilan IA")
+            result = None
+        if result is None:
+            await self.send({"type": "ai_summary", "summary": None, "error": "Bilan IA indisponible."})
+        else:
+            await self.send({"type": "ai_summary", "summary": result.model_dump(), "error": None})
+
+    async def _summarize(self, SummaryInput):  # noqa: N803
         data = SummaryInput(
             language=self.language, scenario_title=self.scenario.title,
             seller_company=self.context_vars.get("company"),
@@ -144,19 +161,16 @@ class CallSession:
             duration_seconds=round(self.now, 1), transcript=self.full_transcript[-200:],
         )
         try:
-            result = await asyncio.wait_for(self.summary_provider.summarize(data), 60)
+            return await asyncio.wait_for(self.summary_provider.summarize(data), 60)
         except asyncio.TimeoutError:
-            result = None
-        if result is None:
-            await self.send({"type": "ai_summary", "summary": None, "error": "Bilan IA indisponible."})
-        else:
-            await self.send({"type": "ai_summary", "summary": result.model_dump(), "error": None})
+            return None
 
     async def _start_stt(self, msg: StartMsg) -> None:
         import os
 
         from .stt import SttHub
 
+        self.stt_requested = True
         key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
         if not key:
             await self.send({"type": "error", "message": "Transcription en direct indisponible : "
@@ -168,9 +182,10 @@ class CallSession:
 
     def push_audio(self, data: bytes) -> bool:
         """Trame audio binaire du client (1 octet de canal + PCM 16 kHz).
-        Retourne False si la transcription en direct n'est pas active pour cet appel."""
+        Retourne False si la transcription en direct n'a pas été demandée pour cet appel
+        (si elle a été demandée mais est indisponible, l'erreur a déjà été signalée)."""
         if self.stt is None:
-            return False
+            return self.stt_requested
         self.stt.push(data)
         return True
 

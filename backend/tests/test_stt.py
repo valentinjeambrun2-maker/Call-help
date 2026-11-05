@@ -99,3 +99,186 @@ def test_keyterms_respect_api_limits():
     terms = sanitize_keyterms(["Cabinet Duverger & Associés", "Claire", "", "Claire"] + [f"n{i}" for i in range(80)])
     assert "Cabinet" in terms and "Duverger" in terms and "Associés" in terms
     assert all(len(t) <= 20 for t in terms) and len(terms) <= 50 and terms.count("Claire") == 1
+
+
+# --- Régressions de la deuxième vérification indépendante ------------------------------
+
+class DropFake(FakeScribe):
+    """Coupe les sessions listées après `drop_after` trames reçues ; aucune validation hors fin d'appel."""
+
+    def __init__(self, drop_sessions, drop_after, old_final_on_commit=False):
+        super().__init__(words_every=10**6)
+        self.drop_sessions, self.drop_after = set(drop_sessions), drop_after
+        self.old_final_on_commit = old_final_on_commit
+        self.first_t: list[int] = []
+
+    async def handler(self, ws):
+        self.sessions += 1
+        session = self.sessions
+        await ws.send(json.dumps({"message_type": "session_started", "session_id": "s"}))
+        received = 0
+        async for raw in ws:
+            m = json.loads(raw)
+            received += 1
+            secs = received * 0.1
+            if m.get("commit"):
+                if self.old_final_on_commit:
+                    # Validation par silence d'un énoncé précédent, encore en route à la fin d'appel.
+                    await ws.send(json.dumps({
+                        "message_type": "committed_transcript_with_timestamps", "text": " ancien",
+                        "words": [{"type": "word", "text": "ancien", "start": 0.1, "end": 0.4}]}))
+                    await asyncio.sleep(0.4)
+                await ws.send(json.dumps({
+                    "message_type": "committed_transcript_with_timestamps", "text": " dernier",
+                    "words": [{"type": "word", "text": "dernier", "start": secs - 0.6, "end": secs - 0.1}]}))
+            if session in self.drop_sessions and received >= self.drop_after:
+                await ws.close(1000)
+                return
+
+
+async def _channel(fake_handler, **kw):
+    from websockets.asyncio.server import serve
+
+    out, status = [], []
+
+    async def on_t(msg):
+        out.append(msg)
+
+    async def on_s(level, message):
+        status.append((level, message))
+
+    server = await serve(fake_handler, "127.0.0.1", 0, **kw.pop("serve_kw", {}))
+    port = server.sockets[0].getsockname()[1]
+    ch = ScribeChannel("k", Speaker.PROSPECT, "fr", on_t, on_s, url=f"ws://127.0.0.1:{port}/rt", **kw)
+    ch.start()
+    return server, ch, out, status
+
+
+async def test_second_reconnect_does_not_loop_on_replayed_history():
+    fake = DropFake(drop_sessions={1, 2}, drop_after=12)
+    server, ch, out, _ = await _channel(fake.handler)
+    for _ in range(30):
+        ch.push(bytes(FRAME_BYTES))
+        await asyncio.sleep(0.05)
+    await ch.close(timeout=2)
+    server.close()
+    assert fake.sessions == 3  # avant : le rejeu réenregistré créait un trou, et l'on bouclait
+    assert any(m.final and m.end > 2.5 for m in out)
+
+
+async def test_audio_gap_after_overflow_starts_a_clean_session():
+    fake = DropFake(drop_sessions={1}, drop_after=5)
+    server, ch, out, _ = await _channel(fake.handler, max_queue_seconds=0.5)
+    for _ in range(30):  # 3 s d'audio d'un coup : la file (0,5 s) déborde pendant la coupure
+        ch.push(bytes(FRAME_BYTES))
+        await asyncio.sleep(0.005)
+    await asyncio.sleep(1.5)
+    await ch.close(timeout=2)
+    server.close()
+    assert fake.sessions <= 3  # avant : chaque session rejouait l'avant-trou et retombait dessus
+    assert any(m.final and m.end >= 2.9 for m in out)
+
+
+async def test_in_flight_silence_final_does_not_drop_the_last_utterance():
+    fake = DropFake(drop_sessions=set(), drop_after=0, old_final_on_commit=True)
+    server, ch, out, _ = await _channel(fake.handler)
+    for _ in range(30):
+        ch.push(bytes(FRAME_BYTES))
+        await asyncio.sleep(0.01)
+    await ch.close(timeout=3)
+    server.close()
+    texts = [m.text for m in out if m.final]
+    assert "ancien" in texts and "dernier" in texts
+
+
+async def test_close_is_bounded_when_the_server_goes_silent():
+    """Serveur WebSocket minimal qui accepte la session puis ne lit plus rien."""
+    import hashlib
+    import time
+
+    async def silent(reader, writer):
+        head = await reader.readuntil(b"\r\n\r\n")
+        key = next(line.split(b":", 1)[1].strip() for line in head.split(b"\r\n")
+                   if line.lower().startswith(b"sec-websocket-key"))
+        accept = base64.b64encode(hashlib.sha1(key + b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest())
+        writer.write(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                     b"Sec-WebSocket-Accept: " + accept + b"\r\n\r\n")
+        payload = json.dumps({"message_type": "session_started"}).encode()
+        writer.write(bytes([0x81, len(payload)]) + payload)
+        await writer.drain()
+        await asyncio.sleep(30)
+
+    server = await asyncio.start_server(silent, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    ch = ScribeChannel("k", Speaker.USER, "fr", lambda m: asyncio.sleep(0), url=f"ws://127.0.0.1:{port}/rt")
+    ch.start()
+    for _ in range(5):
+        ch.push(bytes(FRAME_BYTES))
+        await asyncio.sleep(0.01)
+    await asyncio.sleep(0.2)
+    t0 = time.monotonic()
+    await ch.close(timeout=2)
+    assert time.monotonic() - t0 < 4  # avant : ~12 s (poignée de main de fermeture de 10 s)
+    server.close()
+
+
+async def test_permanent_http_rejection_stops_instead_of_retrying_forever():
+    from websockets.datastructures import Headers
+    from websockets.http11 import Response
+
+    calls = []
+
+    async def handler(ws):  # jamais atteint
+        pass
+
+    def reject(conn, request):
+        calls.append(1)
+        return Response(400, "Bad Request", Headers(), b"bad keyterms")
+
+    server, ch, out, status = await _channel(handler, serve_kw={"process_request": reject})
+    ch.push(bytes(FRAME_BYTES))
+    for _ in range(30):
+        if ch.fatal:
+            break
+        await asyncio.sleep(0.05)
+    await ch.close(timeout=1)
+    server.close()
+    assert ch.fatal and "400" in ch.fatal and len(calls) == 1
+    assert status and status[-1][0] == "error"
+
+
+async def test_callback_error_and_malformed_words_do_not_kill_the_channel():
+    from websockets.asyncio.server import serve
+
+    async def handler(ws):
+        await ws.send(json.dumps({"message_type": "session_started"}))
+        n = 0
+        async for raw in ws:
+            n += 1
+            if n == 3:  # mot sans temps : ignoré
+                await ws.send(json.dumps({"message_type": "committed_transcript_with_timestamps", "text": "x",
+                                          "words": [{"type": "word", "text": "x"}]}))
+            if n in (5, 10):
+                await ws.send(json.dumps({"message_type": "committed_transcript_with_timestamps",
+                                          "text": f"mot{n}", "words": [{"type": "word", "text": "mot",
+                                                                        "start": n * 0.1 - 0.3, "end": n * 0.1}]}))
+
+    got = []
+
+    async def on_t(msg):
+        if msg.final and not got:
+            got.append("boom")
+            raise RuntimeError("erreur en aval")
+        if msg.final:
+            got.append(msg.text)
+
+    async with serve(handler, "127.0.0.1", 0) as server:
+        port = server.sockets[0].getsockname()[1]
+        ch = ScribeChannel("k", Speaker.USER, "fr", on_t, url=f"ws://127.0.0.1:{port}/rt")
+        ch.start()
+        for _ in range(12):
+            ch.push(bytes(FRAME_BYTES))
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.2)
+        await ch.close(timeout=1)
+    assert got[:2] == ["boom", "mot10"]

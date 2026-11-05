@@ -9,8 +9,11 @@ Deux sources, la première prioritaire :
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 BACKEND = Path(__file__).resolve().parent.parent
 SOURCES = {
@@ -76,23 +79,35 @@ def describe(call_id: str, labels: list[dict], dialogue: dict) -> dict:
 
 
 def list_calls() -> list[dict]:
-    seen: dict[str, dict] = {}
-    for source, root in SOURCES.items():
-        if not root.exists():
+    """Les appels jouables, avec la même règle que les points d'accès qui les servent
+    (`_call_dir`) : un appel listé s'ouvre toujours. Un fichier illisible écarte l'appel,
+    pas la liste entière."""
+    ids = sorted({d.name for root in SOURCES.values() if root.exists()
+                  for d in root.iterdir() if CALL_ID.match(d.name)})
+    calls = []
+    for call_id in ids:
+        found = _call_dir(call_id)
+        if not found:
             continue
-        for d in sorted(root.iterdir()):
-            if d.name in seen or not CALL_ID.match(d.name) or not (d / "labels.json").exists():
-                continue
+        d, source = found
+        try:
             meta = _meta(d)
-            meta["source"] = source
-            meta["has_audio"] = any((d / n).exists() for n in AUDIO_NAMES)
-            seen[d.name] = meta
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            log.warning("Appel de démo %s ignoré : %s", call_id, exc)
+            continue
+        meta["source"] = source
+        meta["has_audio"] = any((d / n).exists() for n in AUDIO_NAMES)
+        calls.append(meta)
     # Sélection du dépôt d'abord, puis par langue et identifiant.
-    return sorted(seen.values(), key=lambda m: (m["source"] != "repo", m["language"], m["id"]))
+    return sorted(calls, key=lambda m: (m["source"] != "repo", m["language"], m["id"]))
 
 
 def load_json(call_id: str, name: str) -> dict | list | None:
     found = _call_dir(call_id)
     if not found or name not in ("labels.json", "replay.json"):
         return None
-    return json.loads((found[0] / name).read_text("utf-8"))
+    try:
+        return json.loads((found[0] / name).read_text("utf-8"))
+    except (OSError, ValueError) as exc:
+        log.warning("Appel de démo %s : %s illisible (%s)", call_id, name, exc)
+        return None

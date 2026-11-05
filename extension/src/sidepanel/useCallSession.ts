@@ -39,10 +39,18 @@ interface Queued {
   at: number;
 }
 
-export function useCallSession(backendUrl: string, onServerMessage?: (msg: ServerMsg) => void) {
+export function useCallSession(
+  backendUrl: string,
+  onServerMessage?: (msg: ServerMsg) => void,
+  // Horloge de l'appel en secondes ; par défaut, le temps écoulé depuis la connexion.
+  // La page de démo passe celle de l'audio, que suivent tous les autres événements.
+  callClock?: () => number,
+) {
   // Observateur facultatif de tous les messages (page de démo : mesure de latence, revue).
   const observer = useRef(onServerMessage);
   observer.current = onServerMessage;
+  const clockRef = useRef(callClock);
+  clockRef.current = callClock;
   const [state, setState] = useState<CallState>(INITIAL);
   const ws = useRef<WebSocket | null>(null);
   const connectedAt = useRef(0);
@@ -168,7 +176,12 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
           reject(new Error("ws error"));
         };
         socket.onclose = () => {
-          if (!mine() || summaryReceived.current) return;
+          if (!mine()) return;
+          if (summaryReceived.current) {
+            // Fermeture avant le bilan IA annoncé : il n'arrivera plus.
+            setState((s) => (s.aiSummaryState === "pending" ? { ...s, aiSummaryState: "failed" } : s));
+            return;
+          }
           clearTimer();
           setState((s) =>
             s.phase === "error" ? s : { ...s, phase: "error", error: "Connexion au backend perdue. Relancez l'appel." },
@@ -218,7 +231,20 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
   );
 
   // Secondes écoulées depuis le début de l'appel (horloge du protocole).
-  const elapsed = useCallback(() => (Date.now() - connectedAt.current) / 1000, []);
+  const elapsed = useCallback(
+    () => (clockRef.current ? clockRef.current() : (Date.now() - connectedAt.current) / 1000),
+    [],
+  );
+
+  // Abandon sans bilan (changement d'appel) : le serveur ferme la session de son côté.
+  const disconnect = useCallback(() => {
+    const socket = ws.current;
+    ws.current = null;
+    socket?.close();
+    resetDisplay();
+    summaryReceived.current = false;
+    setState(INITIAL);
+  }, []);
 
   const answerAnnouncement = useCallback(
     (consent: boolean) => send({ type: "announcement_done", ts: elapsed(), consent }),
@@ -239,5 +265,5 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
     [],
   );
 
-  return { state, connect, send, sendAudio, giveFeedback, answerAnnouncement, elapsed, fail };
+  return { state, connect, disconnect, send, sendAudio, giveFeedback, answerAnnouncement, elapsed, fail };
 }
