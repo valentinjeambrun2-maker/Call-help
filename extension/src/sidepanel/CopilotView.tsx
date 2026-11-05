@@ -1,6 +1,7 @@
 // Affichage du copilote (panneau latéral et page de démo) : fil directeur,
 // message d'information, conseil courant, ressentis, métriques, bilan, historique.
-import type { EmotionReading, Hint, Metrics } from "../shared/protocol";
+import { useState } from "react";
+import type { AiSummary, EmotionReading, Hint, Metrics } from "../shared/protocol";
 import { clock, fr } from "../shared/format";
 import type { CallState } from "./useCallSession";
 
@@ -106,6 +107,15 @@ export function CopilotView({ state, selfAnalysis, onAnswer, onFeedback }: Props
         </section>
       )}
 
+      {state.aiSummaryState === "pending" && (
+        <section className="card ai-summary">
+          <div className="eyebrow halo-text">Bilan IA</div>
+          <p className="sub">Rédaction du bilan et de l'email de suivi…</p>
+        </section>
+      )}
+      {state.aiSummaryState === "failed" && <p className="sub center">Bilan IA indisponible pour cet appel.</p>}
+      {state.aiSummary && <AiSummaryCard s={state.aiSummary} />}
+
       {past.length > 0 && (
         <details className="card list">
           <summary>Conseils précédents <span className="count">{past.length}</span></summary>
@@ -184,5 +194,59 @@ function Feedback({ id, value, onFeedback }: { id: string; value?: boolean; onFe
       <button aria-label="Conseil utile" aria-pressed={value === true} onClick={() => onFeedback(id, true)}>Oui</button>
       <button aria-label="Conseil pas utile" aria-pressed={value === false} onClick={() => onFeedback(id, false)}>Non</button>
     </div>
+  );
+}
+
+const HANDLING_TONE: Record<string, string> = { "bien traitée": "good", partiellement: "warn", "à retravailler": "bad" };
+
+function AiSummaryCard({ s }: { s: AiSummary }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(`${s.follow_up_email.subject}\n\n${s.follow_up_email.body}`);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* presse-papiers indisponible */
+    }
+  };
+  return (
+    <section className="card ai-summary">
+      <div className="eyebrow halo-text">Bilan IA</div>
+      <h2>{fr(s.outcome)}</h2>
+      <p className="sum-text">{fr(s.summary)}</p>
+      <div className="sum-block">
+        <div className="eyebrow accent">Prochaine étape</div>
+        <p>{fr(s.next_step)}</p>
+      </div>
+      {s.objections.length > 0 && (
+        <div className="sum-block">
+          <div className="eyebrow">Objections</div>
+          <ul className="sum-list">
+            {s.objections.map((o, i) => (
+              <li key={i}>
+                <span className={`pill-mini ${HANDLING_TONE[o.handling] ?? ""}`}>{o.handling}</span>
+                <strong>{fr(o.objection)}</strong> — {fr(o.comment)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="sum-cols">
+        <div>
+          <div className="eyebrow">Points forts</div>
+          <ul className="sum-list">{s.strengths.map((x, i) => <li key={i}>{fr(x)}</li>)}</ul>
+        </div>
+        <div>
+          <div className="eyebrow">À travailler</div>
+          <ul className="sum-list">{s.improvements.map((x, i) => <li key={i}>{fr(x)}</li>)}</ul>
+        </div>
+      </div>
+      <details className="sum-email">
+        <summary>Email de suivi : {s.follow_up_email.subject}</summary>
+        <pre>{s.follow_up_email.body}</pre>
+        <button className="btn secondary small" onClick={() => void copy()}>{copied ? "Copié" : "Copier l'email"}</button>
+      </details>
+    </section>
   );
 }

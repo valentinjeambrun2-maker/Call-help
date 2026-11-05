@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import deque
 from collections.abc import Awaitable, Callable
 
@@ -11,7 +12,7 @@ from .coach import CoachContext, CoachEngine, HintProvider
 from .emotion import EmotionFusion
 from .metrics import ConversationMetrics
 from .models import (
-    AnnouncementDoneMsg, CallSummary, ClientMsg, FaceMsg, FeedbackMsg, Hint, HintMsg,
+    AnnouncementDoneMsg, CallSummary, ClientMsg, EmotionState, FaceMsg, FeedbackMsg, Hint, HintMsg,
     PauseAnalysisMsg, Speaker, StartMsg, StateMsg, StopMsg, SummaryMsg, TranscriptEcho, TranscriptMsg, VoiceMsg,
 )
 from .scenario import ScenarioTracker, load_scenario
@@ -27,7 +28,7 @@ def parse_client_msg(data: dict) -> ClientMsg:
 
 class CallSession:
     def __init__(self, send: Send, provider: HintProvider | None = None,
-                 context_vars: dict[str, str] | None = None) -> None:
+                 context_vars: dict[str, str] | None = None, summary_provider=None) -> None:
         self.send = send
         self.provider = provider
         self.context_vars = context_vars or {}
@@ -35,6 +36,8 @@ class CallSession:
         self.now = 0.0
         self.feedback: dict[str, bool] = {}
         self.transcript: deque[str] = deque(maxlen=12)
+        self.full_transcript: list[str] = []  # pour le bilan de fin d'appel
+        self.summary_provider = summary_provider
         self.announcement_at: float | None = None
         self.prospect_consent: bool | None = None
         self.replaced: dict[str, str] = {}  # conseil IA -> conseil par règle qu'il remplace
@@ -80,6 +83,7 @@ class CallSession:
                 await self.stt.close()  # derniers énoncés transcrits avant le bilan
             await self.close()
             await self.send(SummaryMsg(summary=self.summary()).model_dump(mode="json"))
+            await self._ai_summary()
             return False
         return True
 
@@ -108,6 +112,31 @@ class CallSession:
             self.emotions.start(0.0)
             await self.coach.on_step(self.tracker.step, 0.0)
         await self._send_state()
+
+    async def _ai_summary(self) -> None:
+        """Bilan rédigé par l'IA, envoyé après le bilan chiffré (quelques secondes)."""
+        from .coach.summary import NullSummary, SummaryInput
+
+        if self.summary_provider is None or isinstance(self.summary_provider, NullSummary) \
+                or len(self.full_transcript) < 2:
+            return
+        await self.send({"type": "ai_summary_pending"})
+        data = SummaryInput(
+            language=self.language, scenario_title=self.scenario.title,
+            seller_company=self.context_vars.get("company"),
+            steps=[st.title for st in self.scenario.steps],
+            steps_reached=[st.title for st in self.scenario.steps if st.id in self.tracker.steps_reached],
+            objections_raised=[o.label for o in self.scenario.objections if o.id in self.tracker.objections_seen],
+            duration_seconds=round(self.now, 1), transcript=self.full_transcript[-200:],
+        )
+        try:
+            result = await asyncio.wait_for(self.summary_provider.summarize(data), 60)
+        except asyncio.TimeoutError:
+            result = None
+        if result is None:
+            await self.send({"type": "ai_summary", "summary": None, "error": "Bilan IA indisponible."})
+        else:
+            await self.send({"type": "ai_summary", "summary": result.model_dump(), "error": None})
 
     async def _start_stt(self, msg: StartMsg) -> None:
         import os
@@ -166,6 +195,8 @@ class CallSession:
             return  # les résultats partiels servent à l'affichage, pas aux règles
         self.metrics.add_segment(msg.speaker, msg.text, msg.start, msg.end)
         self.transcript.append(f"{msg.speaker.value}: {msg.text}")
+        who = "vendeur" if msg.speaker is Speaker.USER else "prospect"
+        self.full_transcript.append(f"[{int(msg.start // 60):02d}:{int(msg.start % 60):02d}] {who} : {msg.text}")
 
         if self.announcement_pending:
             # Tant que le message d'information n'est pas confirmé, on ne fait
@@ -216,6 +247,12 @@ class CallSession:
             self.coach.retract_objection(provisional)
         if result.objection:
             changed |= self.tracker.mark_objection(result.objection)
+        if (result.prospect_state and self.prospect_consent and Speaker.PROSPECT not in self.emotions.blocked
+                and self.emotions.running):
+            state = None if result.prospect_state == "neutral" else EmotionState(result.prospect_state)
+            self.emotions.add_text(Speaker.PROSPECT, state, result.state_confidence, ts)
+            await self.coach.on_emotion(self.emotions.reading(Speaker.PROSPECT, self.now), self.now)
+            changed = True
         if result.step and self.tracker.advance_to(result.step, ts):
             changed = True
             await self.coach.on_step(self.tracker.step, ts)

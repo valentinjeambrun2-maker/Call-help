@@ -23,13 +23,18 @@ Emit = Callable[[Hint], Awaitable[None]]
 # Appelé avec le classement du LLM (objection, étape) avant l'émission du conseil.
 Classified = Callable[[LLMHint, float], Awaitable[None]]
 
+# Indication (toujours en français : c'est l'interface du vendeur) et phrase à dire
+# (dans la langue de l'appel).
 EMOTION_HINTS = {
     EmotionState.HESITATION: ("Il semble hésiter : rassure et pose une question ouverte.",
-                              "Qu'est-ce qui vous ferait dire oui, ou non, à ce stade ?"),
+                              {"fr": "Qu'est-ce qui vous ferait dire oui, ou non, à ce stade ?",
+                               "en": "What would make this a yes, or a no, for you at this point?"}),
     EmotionState.ANNOYANCE: ("Il semble agacé : ralentis et reconnais son point.",
-                             "Je comprends tout à fait, je vais aller à l'essentiel."),
+                             {"fr": "Je comprends tout à fait, je vais aller à l'essentiel.",
+                              "en": "I completely understand, I'll get straight to the point."}),
     EmotionState.BOREDOM: ("Attention en baisse : change de rythme, implique-le.",
-                           "Est-ce que je peux vous poser une question rapide ?"),
+                           {"fr": "Est-ce que je peux vous poser une question rapide ?",
+                            "en": "Can I ask you one quick question?"}),
     EmotionState.ENTHUSIASM: ("Signal positif : c'est le moment de proposer le rendez-vous.", None),
     EmotionState.INTEREST: ("Il est attentif : approfondis ce point.", None),
 }
@@ -158,7 +163,8 @@ class CoachEngine:
             return None
         if reading.state == self._last_emotion:
             return None
-        text, say = EMOTION_HINTS[reading.state]
+        text, says = EMOTION_HINTS[reading.state]
+        say = (says.get(self.language) or says["fr"]) if says else None
         if reading.label == "probable":
             text = f"(probable) {text}"
         hint = self._new(kind="emotion", text=text, say=say, priority=1, ts=ts)

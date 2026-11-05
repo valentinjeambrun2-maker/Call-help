@@ -19,8 +19,9 @@ CALIBRATION_SECONDS = 30.0
 SHOW_THRESHOLD = 0.70
 PROBABLE_THRESHOLD = 0.50
 SMOOTHING = 0.4  # poids de la nouvelle mesure dans la moyenne glissante
-VOICE_WEIGHT = 0.6
-FACE_WEIGHT = 0.4
+# Poids des canaux dans la fusion (renormalisés sur les canaux disponibles).
+WEIGHTS = {"voice": 0.5, "face": 0.3, "text": 0.4}
+TEXT_SMOOTHING = 0.6  # le texte arrive tour par tour : on suit plus vite le dernier tour
 
 STATES = list(EmotionState)
 
@@ -76,9 +77,31 @@ class _Channel:
 
 
 @dataclass
+class _TextChannel:
+    """État lu dans les mots du prospect (estimé par le LLM, déjà relatif au neutre) :
+    pas de calibration, lissage d'un tour à l'autre."""
+
+    current: dict[EmotionState, float] = field(default_factory=dict)
+
+    def update(self, state: EmotionState | None, confidence: float) -> None:
+        scores = {s: 0.0 for s in STATES}
+        if state is not None:
+            scores[state] = max(0.0, min(1.0, confidence))
+        if not self.current:
+            self.current = scores
+        else:
+            self.current = {s: (1 - TEXT_SMOOTHING) * self.current.get(s, 0.0) + TEXT_SMOOTHING * scores[s]
+                            for s in STATES}
+
+    def relative(self, now: float) -> dict[EmotionState, float]:
+        return dict(self.current)
+
+
+@dataclass
 class _Person:
     voice: _Channel = field(default_factory=_Channel)
     face: _Channel = field(default_factory=_Channel)
+    text: _TextChannel = field(default_factory=_TextChannel)
     face_visible: bool | None = None
 
 
@@ -118,24 +141,31 @@ class EmotionFusion:
             person.face.update(face_to_scores(face), face.ts)
             self.samples_used += 1
 
+    def add_text(self, speaker: Speaker, state: EmotionState | None, confidence: float, ts: float) -> None:
+        """État lu dans les mots (classement du LLM). Mêmes garde-fous que la voix et le visage."""
+        if self._accepts(ts, speaker):
+            self.people[speaker].text.update(state, confidence)
+            self.samples_used += 1
+
     def reading(self, speaker: Speaker, now: float) -> EmotionReading:
         person = self.people[speaker]
-        calibrated = person.voice.calibrated(now) or person.face.calibrated(now)
+        calibrated = person.voice.calibrated(now) or person.face.calibrated(now) or bool(person.text.current)
         empty = EmotionReading(
             speaker=speaker, state=None, face_visible=person.face_visible, calibrated=calibrated
         )
         if not self.running or speaker in self.blocked or not calibrated:
             return empty
 
-        voice = person.voice.relative(now)
-        face = person.face.relative(now) if person.face_visible else {}
-        if not voice and not face:
+        channels = {
+            "voice": person.voice.relative(now),
+            "face": person.face.relative(now) if person.face_visible else {},
+            "text": person.text.relative(now),
+        }
+        channels = {k: v for k, v in channels.items() if v}
+        if not channels:
             return empty
-
-        if voice and face:
-            fused = {s: VOICE_WEIGHT * voice[s] + FACE_WEIGHT * face[s] for s in STATES}
-        else:
-            fused = voice or face
+        total = sum(WEIGHTS[k] for k in channels)
+        fused = {s: sum(WEIGHTS[k] * v.get(s, 0.0) for k, v in channels.items()) / total for s in STATES}
 
         state, confidence = max(fused.items(), key=lambda kv: kv[1])
         if confidence < PROBABLE_THRESHOLD:

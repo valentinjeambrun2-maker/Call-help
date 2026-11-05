@@ -218,7 +218,7 @@ export function DemoApp() {
         nextEvent.current += 1;
       }
       // Instantané de l'état peu après chaque tour (temps de transcription et de réponse).
-      const delay = live ? 1.6 : 0.4;
+      const delay = live ? 3.2 : 2.6; // après la lecture de Claude (~2,3 s en direct)
       labels.forEach((l, i) => {
         if (!snapped.current.has(i) && now >= l.end + delay) {
           snapped.current.add(i);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
-  CallSummary, ClientMsg, EmotionReading, Hint, Metrics, ServerMsg, StepState,
+  AiSummary, CallSummary, ClientMsg, EmotionReading, Hint, Metrics, ServerMsg, StepState,
 } from "../shared/protocol";
 
 export type Phase = "idle" | "connecting" | "live" | "ended" | "error";
@@ -17,13 +17,15 @@ export interface CallState {
   current: Hint | null;
   history: Hint[];
   summary: CallSummary | null;
+  aiSummary: AiSummary | null;
+  aiSummaryState: "none" | "pending" | "ready" | "failed";
   error: string | null;
   feedback: Record<string, boolean>;
 }
 
 const INITIAL: CallState = {
   phase: "idle", step: null, metrics: null, emotions: [], analysisPaused: false, announcementPending: false,
-  prospectConsent: null, announcement: null, current: null, history: [], summary: null, error: null, feedback: {},
+  prospectConsent: null, announcement: null, current: null, history: [], summary: null, aiSummary: null, aiSummaryState: "none", error: null, feedback: {},
 };
 
 // Un conseil reste à l'écran au moins ce temps, sauf s'il est plus urgent.
@@ -190,9 +192,14 @@ export function useCallSession(backendUrl: string, onServerMessage?: (msg: Serve
           } else if (msg.type === "hint") {
             onHint(msg.hint);
           } else if (msg.type === "summary") {
+            // Le serveur ferme la connexion après le bilan IA éventuel.
             summaryReceived.current = true;
             clearTimer();
             setState((s) => ({ ...s, phase: "ended", summary: msg.summary }));
+          } else if (msg.type === "ai_summary_pending") {
+            setState((s) => ({ ...s, aiSummaryState: "pending" }));
+          } else if (msg.type === "ai_summary") {
+            setState((s) => ({ ...s, aiSummary: msg.summary, aiSummaryState: msg.summary ? "ready" : "failed" }));
             socket.close();
           } else if (msg.type === "error") {
             setState((s) => ({ ...s, error: msg.message }));

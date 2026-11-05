@@ -45,6 +45,8 @@ class LLMHint(BaseModel):
     # Classement du dernier tour du prospect (complète les mots-clés).
     objection: str | None = None  # id d'objection, "other", ou None
     step: str | None = None  # étape où en est l'appel
+    prospect_state: str | None = None  # état lu dans les mots du prospect (avec son accord seulement)
+    state_confidence: float = 0.0
 
 
 class HintProvider(Protocol):
@@ -63,7 +65,12 @@ def hint_schema(ctx: CoachContext) -> dict:
         "say": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Phrase prête à dire, 25 mots maximum"},
         "confidence": {"type": "number"},
     }
-    required = ["objection", "kind", "text", "say", "confidence"]
+    props["prospect_state"] = {
+        "anyOf": [{"type": "string", "enum": ["neutral", "interest", "hesitation", "annoyance", "boredom",
+                                              "enthusiasm"]}, {"type": "null"}],
+        "description": "État du prospect lu dans ses mots, null si emotion_allowed est faux"}
+    props["state_confidence"] = {"type": "number"}
+    required = ["objection", "kind", "text", "say", "confidence", "prospect_state", "state_confidence"]
     if step_ids:
         props["step"] = {"type": "string", "enum": step_ids, "description": "Étape où en est l'appel"}
         required.insert(1, "step")
@@ -96,6 +103,9 @@ Classement (en plus du conseil) :
   (qualification), présenter son offre ou un bénéfice (valeur), proposer un rendez-vous ou un
   créneau (prise de rendez-vous). L'appel avance normalement dans cet ordre ; ne reviens pas en arrière.
 - Si le DERNIER tour est celui du vendeur, `objection` vaut null (seul `step` compte).
+- `prospect_state` : l'état du prospect tel qu'on le perçoit dans ses mots (dernier tour du prospect
+  et contexte) : neutral, interest, hesitation, annoyance, boredom, enthusiasm ; `state_confidence`
+  entre 0 et 1. C'est une hypothèse. Si `emotion_allowed` est faux : null et 0.
 - Si `objection` n'est pas null, `kind` vaut "objection" et le conseil y répond."""
 
 

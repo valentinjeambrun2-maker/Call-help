@@ -56,6 +56,16 @@ export interface CallSummary {
   transcription_cost_usd: number | null;
 }
 
+export interface AiSummary {
+  summary: string;
+  outcome: string;
+  next_step: string;
+  objections: { objection: string; handling: "bien traitée" | "partiellement" | "à retravailler"; comment: string }[];
+  strengths: string[];
+  improvements: string[];
+  follow_up_email: { subject: string; body: string };
+}
+
 export type ServerMsg =
   | {
       type: "state";
@@ -69,6 +79,8 @@ export type ServerMsg =
   | { type: "hint"; hint: Hint }
   | { type: "summary"; summary: CallSummary }
   | { type: "transcript"; speaker: Speaker; text: string; start: number; end: number; final: boolean }
+  | { type: "ai_summary_pending" }
+  | { type: "ai_summary"; summary: AiSummary | null; error: string | null }
   | { type: "error"; message: string };
 
 export type ClientMsg =
@@ -83,6 +95,8 @@ export type ClientMsg =
       keyterms?: string[];
     }
   | { type: "transcript"; speaker: Speaker; text: string; start: number; end: number; final: boolean }
+  | { type: "ai_summary_pending" }
+  | { type: "ai_summary"; summary: AiSummary | null; error: string | null }
   | { type: "voice"; speaker: Speaker; ts: number; scores: Record<EmotionState, number> }
   | {
       type: "face";
