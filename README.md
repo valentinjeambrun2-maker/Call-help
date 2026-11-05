@@ -62,14 +62,9 @@ Ouvrez ensuite :
 
 Clés à mettre dans `backend/.env` (modèle : `backend/.env.example`) : `ANTHROPIC_API_KEY` pour les conseils et le bilan, `ELEVENLABS_API_KEY` pour la transcription en direct.
 
-Extension Chrome :
+> **Ne jamais publier ce fichier.** `backend/.env` reste sur votre ordinateur : git l'ignore, mais l'interface web de GitHub (renommer ou créer un fichier en ligne) contourne cette protection. Le dépôt est public : une clé publiée est lisible par tous, et Anthropic révoque automatiquement celles qu'il repère sur GitHub.
 
-```bash
-cd extension
-npm run build
-```
-
-Puis `chrome://extensions` → mode développeur → **Charger l'extension non empaquetée** → dossier `extension/dist`.
+Extension Chrome, pour un vrai appel : voir [`docs/extension.md`](docs/extension.md).
 
 ## Tests
 
