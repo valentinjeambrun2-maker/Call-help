@@ -8,6 +8,9 @@
     python -m datagen voices --limit 50                 # ElevenLabs
     python -m datagen assemble                          # stéréo, étiquettes, rejeu
     python -m datagen evaluate                          # rapport du moteur
+
+    python -m datagen voices-pick                       # choisit des voix natives FR/EN
+    python -m datagen pilot --n 100                     # tout le pilote en une commande
 """
 
 from __future__ import annotations
@@ -112,6 +115,55 @@ def cmd_voices(args: argparse.Namespace) -> None:
     asyncio.run(voices.synthesize_many(todo, specs, args.concurrency, args.model))
 
 
+def cmd_voices_pick(args: argparse.Namespace) -> None:
+    from . import voices
+
+    asyncio.run(voices.pick_voices(args.per_bucket, dry_run=args.dry_run))
+
+
+def cmd_pilot(args: argparse.Namespace) -> None:
+    """Pilote : plan -> n dialogues -> contrôle du volume -> voix -> assemblage -> évaluation.
+    Reprend là où il s'est arrêté : rien n'est refait (ni refacturé) si déjà présent."""
+    from . import dialogue, voices
+    from .evaluate import evaluate_dir, format_report
+
+    if not (args.root / "plan.jsonl").exists():
+        specs = build_plan(1000)
+        args.root.mkdir(parents=True, exist_ok=True)
+        (args.root / "plan.jsonl").write_text("\n".join(s.model_dump_json() for s in specs) + "\n", "utf-8")
+    pilot = load_plan(args.root)[: args.n]
+    calls = args.root / "calls"
+
+    todo = select(pilot, None, only_missing=calls)
+    if todo:
+        print(f"Dialogues : {len(todo)} à écrire")
+        ok, errors = asyncio.run(dialogue.write_many(todo, args.concurrency, args.company))
+        save_dialogues(args.root, ok, errors)
+
+    ids = {s.call_id for s in pilot}
+    written = [(p, d) for p, d in iter_dialogues(args.root) if d.call_id in ids]
+    to_voice = [(p, d) for p, d in written if not (p / "turns.json").exists()]
+    chars = sum(voices.estimate_characters(d) for _, d in to_voice)
+    print(f"Voix : {len(to_voice)} appels, {chars:,} caractères à synthétiser")
+    if chars > args.max_chars:
+        raise SystemExit(f"Arrêt : {chars:,} caractères dépassent --max-chars {args.max_chars:,}. "
+                         "Relancez avec une limite plus haute si c'est voulu.")
+    if args.skip_voices:
+        print("Voix ignorées (--skip-voices) : assemblage avec durées estimées.")
+    elif to_voice:
+        specs = {s.call_id: s for s in pilot}
+        asyncio.run(voices.synthesize_many(to_voice, specs, args.voice_concurrency, args.model))
+
+    for path, d in written:
+        write_call(path, d, voices.load_turn_audios(path),
+                   context={"user_name": d.seller_name, "company": args.company})
+    report = evaluate_dir(calls)
+    (args.root / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    text = format_report(report)
+    (args.root / "report.md").write_text(text + "\n", encoding="utf-8")
+    print(text)
+
+
 def cmd_assemble(args: argparse.Namespace) -> None:
     from .voices import load_turn_audios
 
@@ -172,6 +224,20 @@ def main() -> None:
 
     p = sub.add_parser("evaluate", help="évaluer le moteur sur les appels")
     p.set_defaults(func=cmd_evaluate)
+
+    p = sub.add_parser("voices-pick", help="choisir des voix natives dans la bibliothèque ElevenLabs")
+    p.add_argument("--per-bucket", type=int, default=6, help="voix par langue et par genre")
+    p.add_argument("--dry-run", action="store_true", help="lister sans ajouter au compte")
+    p.set_defaults(func=cmd_voices_pick)
+
+    p = sub.add_parser("pilot", help="pilote complet en une commande")
+    p.add_argument("--n", type=int, default=100)
+    p.add_argument("--concurrency", type=int, default=4, help="dialogues en parallèle")
+    p.add_argument("--voice-concurrency", type=int, default=3, help="requêtes ElevenLabs simultanées")
+    p.add_argument("--model", default=None, help="modèle de voix (défaut eleven_v4)")
+    p.add_argument("--max-chars", type=int, default=600_000, help="garde-fou de dépense voix")
+    p.add_argument("--skip-voices", action="store_true", help="dialogues + évaluation seulement")
+    p.set_defaults(func=cmd_pilot)
 
     args = parser.parse_args()
     args.func(args)

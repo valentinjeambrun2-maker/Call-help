@@ -116,14 +116,34 @@ def test_stereo_mix_puts_seller_left_and_prospect_right(tmp_path):
     assert labels[2]["objection"] == "no_time" and labels[2]["speaker"] == "prospect"
 
 
-def test_telephone_version(tmp_path):
+def test_telephone_version_degrades_prospect_channel_only(tmp_path):
     import shutil
     if not shutil.which("ffmpeg"):
         pytest.skip("ffmpeg absent")
     d = dialogue()
+    # Tonalité à 220 Hz : sous la coupure téléphonique de 300 Hz.
     write_call(tmp_path, d, [TurnAudio(tone(0.4), 16000) for _ in d.turns])
-    with wave.open(str(tmp_path / "call_telephone.wav")) as w:
-        assert w.getframerate() == 8000 and w.getnchannels() == 2
+
+    def channels(path):
+        with wave.open(str(path)) as w:
+            assert w.getnchannels() == 2 and w.getframerate() == 16000
+            s = array("h"); s.frombytes(w.readframes(w.getnframes()))
+        return s[0::2], s[1::2]
+
+    def rms(x):
+        return (sum(v * v for v in x) / max(1, len(x))) ** 0.5
+
+    left, right = channels(tmp_path / "call.wav")
+    tel_left, tel_right = channels(tmp_path / "call_telephone.wav")
+    assert rms(tel_left) == pytest.approx(rms(left), rel=0.01)   # vendeur intact (micro large bande)
+    assert rms(tel_right) < 0.5 * rms(right)                     # prospect filtré 300-3 400 Hz
+
+
+def test_labels_flag_turns_without_acoustic_cue(tmp_path):
+    turns = write_call(tmp_path, dialogue(), None)
+    by_text = {t.text: t for t in turns}
+    assert by_text["Jeudi, ça marche."].acoustic_cue is True  # indication « warm » envoyée
+    assert any(not t.acoustic_cue for t in turns)
 
 
 # --- évaluation -----------------------------------------------------------------

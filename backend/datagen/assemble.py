@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from .dialogue import WORDS_PER_MINUTE, Dialogue
+from .dialogue import WORDS_PER_MINUTE, Dialogue, Turn
 
 SPEAKER_MAP = {"seller": "user", "prospect": "prospect"}
 
@@ -48,7 +48,16 @@ class TurnLabel(BaseModel):
     delivery: list[str]
     step: str
     objection: str | None
+    # Vrai si une balise de jeu a réellement été envoyée à la synthèse vocale. Une
+    # émotion sans balise n'est qu'une intention d'écriture, pas une vérité audio.
+    acoustic_cue: bool = False
     words: list[tuple[str, float, float]] | None = None  # temps absolus
+
+
+def render_text(turn: Turn) -> str:
+    from .voices import render_text as _render  # import tardif : voices importe ce module
+
+    return _render(turn)
 
 
 def estimated_duration(text: str) -> float:
@@ -84,6 +93,7 @@ def labels(dialogue: Dialogue, spans: list[tuple[float, float]],
             index=i, speaker=SPEAKER_MAP[turn.speaker], text=turn.text, start=start, end=end,
             emotion=turn.emotion, intensity=turn.intensity, delivery=list(turn.delivery),
             step=turn.step, objection=turn.objection, words=words,
+            acoustic_cue=render_text(turn) != turn.text,
         ))
     return out
 
@@ -140,23 +150,26 @@ def write_wav(path: Path, pcm: bytes, sample_rate: int, channels: int) -> None:
 
 
 def telephone_version(src: Path, dst: Path) -> bool:
-    """Bande téléphonique 300-3400 Hz, 8 kHz, passée par le codec G.711 µ-law puis
-    redécodée en PCM 16 bits : les artefacts du codec restent, le fichier se lit
-    partout. Canaux conservés."""
+    """Dégrade le seul canal du prospect (droite) comme une ligne téléphonique :
+    bande 300-3 400 Hz, 8 kHz, codec G.711 µ-law, puis redécodage en PCM 16 bits
+    à la fréquence d'origine. Le canal du vendeur (gauche) reste en large bande :
+    dans le produit, sa voix vient du micro de l'ordinateur, pas du réseau."""
     if not shutil.which("ffmpeg"):
         return False
+    with wave.open(str(src)) as w:
+        sr = w.getframerate()
+    right = dst.with_suffix(".right.wav")
     ulaw = dst.with_suffix(".ulaw.wav")
+    run = lambda *a: subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *a], check=True)  # noqa: E731
     try:
-        subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
-             "-af", "highpass=f=300,lowpass=f=3400", "-ar", "8000", "-c:a", "pcm_mulaw", str(ulaw)],
-            check=True,
-        )
-        subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(ulaw), "-c:a", "pcm_s16le", str(dst)],
-            check=True,
-        )
+        run("-i", str(src), "-af", "pan=mono|c0=c1,highpass=f=300,lowpass=f=3400",
+            "-ar", "8000", "-c:a", "pcm_mulaw", str(ulaw))
+        run("-i", str(ulaw), "-ar", str(sr), "-c:a", "pcm_s16le", str(right))
+        run("-i", str(src), "-i", str(right), "-filter_complex",
+            "[0:a]pan=mono|c0=c0[l];[l][1:a]amerge=inputs=2[out]", "-map", "[out]",
+            "-ac", "2", "-c:a", "pcm_s16le", str(dst))
     finally:
+        right.unlink(missing_ok=True)
         ulaw.unlink(missing_ok=True)
     return True
 

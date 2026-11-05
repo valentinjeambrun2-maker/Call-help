@@ -57,6 +57,8 @@ TAG_RE = re.compile(r"\[[^\]]*\]")
 
 
 class Voice(BaseModel):
+    model_config = {"extra": "ignore"}
+
     voice_id: str
     name: str = ""
     split: str = "train"  # train | val | test
@@ -71,7 +73,8 @@ class VoiceBook(BaseModel):
     en: dict[str, list[Voice]] = {}
 
     @classmethod
-    def load(cls, path: Path = VOICES_FILE) -> "VoiceBook":
+    def load(cls, path: Path | None = None) -> "VoiceBook":
+        path = path or VOICES_FILE
         if not path.exists():
             raise SystemExit(f"Fichier de voix absent : {path}. Copiez voices.example.json et "
                              "renseignez des voice_id ElevenLabs (voir docs/donnees-synthetiques.md).")
@@ -247,3 +250,74 @@ def load_turn_audios(call_dir: Path) -> list[TurnAudio] | None:
         words = [tuple(x) for x in m["words"]] if m.get("words") else None
         audios.append(TurnAudio(pcm, sr, words))
     return audios
+
+
+# --- Choix automatique des voix (bibliothèque partagée ElevenLabs) -------------
+
+SPLIT_ORDER = ("train", "val", "test")
+
+
+def split_for(rank: int, per_bucket: int) -> str:
+    """Répartit les voix d'un groupe : au moins 2 en val et 2 en test, le reste en train."""
+    n_eval = 2 if per_bucket >= 6 else 1
+    if rank < per_bucket - 2 * n_eval:
+        return "train"
+    return "val" if rank < per_bucket - n_eval else "test"
+
+
+def choose_library_voices(candidates: list, language: str, per_bucket: int) -> list:
+    """Filtre et classe les voix de la bibliothèque : langue native, sans tarif
+    majoré ni préavis, usage conversationnel de préférence, puis les plus utilisées."""
+    def native(v) -> bool:
+        if (v.language or "") == language:
+            return True
+        return any(getattr(vl, "language", None) == language for vl in (v.verified_languages or []))
+
+    ok = [v for v in candidates
+          if native(v) and not v.rate and not v.fiat_rate and not v.notice_period
+          and v.use_case not in ("characters_animation", "entertainment_tv")]
+    ok.sort(key=lambda v: (v.use_case not in ("conversational", "social_media", "advertisement"),
+                           -(v.cloned_by_count or 0)))
+    # Diversité d'accents : un accent par voix tant que possible, puis les suivantes.
+    chosen, seen = [], set()
+    for v in ok:
+        accent = getattr(v, "accent", None) or ""
+        if accent not in seen:
+            chosen.append(v)
+            seen.add(accent)
+    chosen += [v for v in ok if v not in chosen]
+    return chosen[:per_bucket]
+
+
+async def pick_voices(per_bucket: int = 6, dry_run: bool = False, path: Path | None = None) -> dict:
+    """Sélectionne des voix natives FR/EN par genre, les ajoute au compte et écrit voices.json."""
+    from elevenlabs import AsyncElevenLabs
+
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if not key:
+        raise SystemExit("ELEVENLABS_API_KEY absent.")
+    client = AsyncElevenLabs(api_key=key)
+    book: dict = {"fr": {}, "en": {}}
+    for language in ("fr", "en"):
+        for gender in ("female", "male"):
+            res = await client.voices.get_shared(language=language, gender=gender, page_size=100,
+                                                 include_custom_rates=False)
+            chosen = choose_library_voices(res.voices, language, per_bucket)
+            if len(chosen) < per_bucket:
+                log.warning("%s/%s : seulement %d voix adaptées", language, gender, len(chosen))
+            entries = []
+            for rank, v in enumerate(chosen):
+                voice_id = v.voice_id
+                if not dry_run and not v.is_added_by_user:
+                    added = await client.voices.share(v.public_owner_id, v.voice_id,
+                                                      new_name=f"callhelp-{language}-{gender[0]}-{rank + 1}")
+                    voice_id = added.voice_id
+                entries.append({"voice_id": voice_id, "name": v.name, "split": split_for(rank, per_bucket),
+                                "accent": v.accent, "preview_url": v.preview_url})
+                log.info("%s/%s %-5s %s (%s)", language, gender, entries[-1]["split"], v.name, v.accent)
+            book[language][gender] = entries
+    if not dry_run:
+        path = path or VOICES_FILE
+        path.write_text(json.dumps(book, ensure_ascii=False, indent=1), encoding="utf-8")
+        log.info("Voix enregistrées dans %s", path)
+    return book

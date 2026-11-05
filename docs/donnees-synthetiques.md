@@ -92,10 +92,87 @@ Premier constat, sur le dialogue de test : la détection par mots-clés reconna�
 
 L'émotion ne se mesure pas ici : elle se mesurera sur l'audio, une fois le modèle de voix branché.
 
-## Conditions d'utilisation ElevenLabs
+## Pilote de 100 appels
 
-*(complété après vérification, voir plus bas)*
+Une seule commande, depuis `backend/`, avec les deux clés définies :
+
+```bash
+.venv/bin/pip install -e '.[llm,voices]'
+```
+
+```bash
+.venv/bin/python -m datagen voices-pick
+```
+
+```bash
+.venv/bin/python -m datagen pilot --n 100
+```
+
+- `voices-pick` choisit 6 voix natives par langue et par genre dans la bibliothèque ElevenLabs. Il écarte les voix à tarif majoré ou à préavis, varie les accents, les ajoute au compte et écrit `datagen/voices.json`. Ajoutez `--dry-run` pour voir la sélection sans rien ajouter.
+- `pilot` enchaîne dialogues, voix, assemblage et évaluation. Il reprend là où il s'est arrêté, sans rien redemander ni refacturer. Il s'arrête **avant** la synthèse vocale si le volume dépasse `--max-chars`, fixé par défaut à 600 000 caractères.
+- Les 100 premiers appels du plan sont équilibrés : 60 en français, 40 en anglais, environ 36 occurrences de chaque objection, tous les arcs émotionnels.
+
+Réglages ElevenLabs à faire avant de lancer :
+- désactiver « Data use » dans les paramètres du compte, pour que les scripts et la grille d'étiquettes ne servent pas à entraîner leurs modèles ;
+- rester sur un forfait payant pendant toute la génération : le contenu produit hors abonnement payant n'est pas utilisable commercialement.
 
 ## Coût
 
-*(complété après vérification, voir plus bas)*
+Tarifs relevés sur elevenlabs.io/pricing/api le 5 novembre 2026, hors TVA :
+- `eleven_v4` : 0,08 $ pour 1 000 caractères ;
+- `eleven_v4_turbo` : 0,04 $, moins expressif ;
+- les balises de jeu comptent comme des caractères.
+
+| | Caractères | Voix (v4) | Dialogues (Claude) | Total estimé |
+|---|---|---|---|---|
+| Pilote, 100 appels (344 min) | ≈ 341 000 | ≈ 27 $ | ≈ 11 $ (Opus 5.5, appels directs) | **≈ 40 à 50 $** avec 20 à 30 % de reprises |
+| 1 000 appels (3 495 min) | ≈ 3,46 M | ≈ 277 $ | ≈ 54 $ (Opus 5.5, Batches) | **≈ 350 à 420 $** |
+
+Forfaits (API) :
+- **Pilote :** Creator, 22 $/mois avec 275 000 caractères inclus, plus une recharge prépayée d'environ 66 000 caractères (≈ 5 $). Pro, à 99 $, couvre le pilote seul avec de la marge.
+- **1 000 appels :** un mois de Scale (299 $, 3,74 M caractères), puis résiliation. Activer la double authentification, sinon les recharges prépayées sont plafonnées.
+
+À vérifier : la **Startup Grant** ElevenLabs (33 M caractères et forfait Scale pendant 12 mois, pour les entreprises de moins de 25 salariés avec un modèle économique). Elle couvrirait la génération complète plusieurs fois.
+
+## Conditions d'utilisation ElevenLabs
+
+**Point bloquant, à régler par écrit avec ElevenLabs avant d'utiliser l'audio comme jeu de données.** Sources : Prohibited Use Policy du 9 octobre 2026, elevenlabs.io/use-policy.
+
+- **§12 :** interdit d'utiliser les sorties « pour développer, entraîner, affiner ou améliorer tout modèle ou service d'IA, ou de les inclure dans un jeu de données utilisé à ces fins », sauf autorisation expresse.
+  - Entraîner le modèle d'émotion de Call-help sur cet audio est donc **interdit sans accord écrit**.
+  - Même l'usage comme **jeu d'évaluation** pour améliorer le moteur est une **zone grise**.
+- **§9 :** interdit d'utiliser leurs services « pour un système classé à haut risque » par l'AI Act. La reconnaissance des émotions figure à l'annexe III (haut risque). Il faut leur faire confirmer que générer des données de test pour un tel produit n'est pas visé.
+
+Ce que je recommande :
+1. **Écrire à ElevenLabs** (juridique ou ventes ; une offre Enterprise peut accorder une exception). Demander une autorisation écrite pour :
+   - (i) l'usage en jeu d'évaluation interne ;
+   - (ii) l'entraînement d'un classifieur d'émotion interne non concurrent ;
+   - (iii) la confirmation que le §9 ne s'applique pas.
+2. **En attendant**, n'utiliser le pilote que pour l'**écoute qualité** : les voix rendent-elles bien les émotions, les étiquettes sont-elles crédibles ? Chaque appel porte un `provenance.json` qui rappelle cette restriction.
+3. **Si ElevenLabs refuse l'usage en entraînement**, produire la partie entraînement avec un fournisseur dont les conditions l'autorisent :
+   - Gemini TTS sur l'offre payante : ses conditions n'interdisent que les modèles concurrents ;
+   - Kyutai TTS `en_fr` : poids sous licence CC-BY 4.0, en n'utilisant que des voix CC-BY ou CC0.
+
+   Les scripts et étiquettes écrits par Claude restent utilisables : selon les conditions commerciales d'Anthropic, ils appartiennent au client et peuvent servir à entraîner un modèle non concurrent.
+
+## Ce que ces appels peuvent prouver, et ce qu'ils ne peuvent pas prouver
+
+D'après la littérature récente (détails et sources dans l'historique de recherche du projet).
+
+**Ils peuvent prouver :**
+- **que la chaîne fonctionne**, avec une vérité terrain exacte : attribution des canaux, suivi d'étapes, détection d'objections, délai des conseils ;
+- **des comparaisons relatives** à conditions contrôlées : un fournisseur de transcription contre un autre, des règles contre un modèle de langage, audio propre contre audio téléphone.
+
+**Ils ne peuvent pas prouver :**
+- **la précision réelle sur de vrais appels** : ni le taux d'erreur de transcription, ni la façon dont de vrais prospects formulent leurs objections.
+- **la qualité du modèle d'émotion sur de vrais prospects.** Un modèle entraîné uniquement sur de la voix de synthèse se transfère mal à la parole naturelle : même les meilleurs systèmes plafonnent vers 0,43 de F1 macro sur de la parole réelle. Sur de vrais appels de service client, environ 95 % des énoncés sont neutres. Les balises ElevenLabs ne produisent pas toujours l'émotion demandée : un banc d'essai mesure 2,67/5 de fidélité émotionnelle pour v3.
+
+**Contrôle des étiquettes avant tout usage :** 300 tours du prospect, échantillonnés par émotion, écoutés à l'aveugle par 2 évaluateurs natifs par langue. On ne garde une émotion que si l'accord entre évaluateurs atteint au moins 0,67 (kappa) **et** si l'émotion perçue correspond à l'émotion demandée dans au moins 70 % des cas. Compter environ 2 à 3 h par évaluateur.
+
+## Améliorations prévues
+
+- **Prospect :** codec Opus et pertes de paquets, bruit de fond.
+- **Vendeur :** bruit de bureau et écho du haut-parleur.
+- **Contrôle automatique :** transcrire chaque tour et régénérer ceux qui s'écartent du script (mots sautés ou ajoutés).
+- **Lot de contraste :** la même phrase dite en neutre et dans 2 émotions, pour séparer le ton des mots.
+- **Plus de voix de test :** au moins 5 par langue et par genre, et des métriques par voix.
