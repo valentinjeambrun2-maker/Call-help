@@ -33,6 +33,7 @@ from collections import deque
 from collections.abc import Awaitable, Callable
 
 from .models import Speaker, TranscriptMsg
+from .tls import CERT_HELP, client_context, is_cert_error
 
 log = logging.getLogger(__name__)
 
@@ -230,6 +231,12 @@ class ScribeChannel:
                 failures += 1
                 await self._status("info", f"reconnexion (HTTP {code})")
             except (RetrySTT, ConnectionClosed, InvalidHandshake, OSError, asyncio.TimeoutError) as exc:
+                if is_cert_error(exc):
+                    # Certificat refusé : réessayer n'y changera rien (Python du Mac sans certificats).
+                    self.fatal = CERT_HELP
+                    await self._status("error", f"transcription arrêtée : {CERT_HELP}")
+                    self._flushed.set()
+                    return
                 if self._closing.is_set():
                     self._flushed.set()
                     return
@@ -270,6 +277,7 @@ class ScribeChannel:
         # Rejeu : l'audio envoyé mais pas encore transcrit avant la coupure.
         replay = self._uncommitted()
         async with connect(self._url(), additional_headers={"xi-api-key": self.api_key},
+                           ssl=client_context() if self.url.startswith("wss:") else None,
                            open_timeout=5, ping_interval=10, close_timeout=1, max_size=2**22) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
             if first.get("message_type") != "session_started":

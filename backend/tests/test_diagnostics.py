@@ -169,3 +169,35 @@ def test_status_endpoint_serves_the_report_without_keys(monkeypatch):
     monkeypatch.setattr(diagnostics, "report", report)
     r = TestClient(app).get("/status").json()
     assert r["transcription"]["ready"] and not r["llm"]["ready"]
+
+
+# --- Python de python.org sur Mac : aucun certificat (cas réel, « CERTIFICATE_VERIFY_FAILED ») ---
+
+def test_tls_context_has_root_certificates_even_when_python_has_none(monkeypatch, tmp_path):
+    import sys
+
+    from app import tls
+
+    empty = tmp_path / "empty.pem"
+    empty.write_text("")
+    monkeypatch.setenv("SSL_CERT_FILE", str(empty))
+    monkeypatch.setenv("SSL_CERT_DIR", str(tmp_path))
+    monkeypatch.setitem(sys.modules, "truststore", None)  # repli certifi
+    tls.client_context.cache_clear()
+    try:
+        assert tls.client_context().cert_store_stats()["x509_ca"] > 50
+    finally:
+        tls.client_context.cache_clear()
+
+
+async def test_certificate_error_is_explained_not_reported_as_a_network_problem(clean_env):
+    import ssl
+
+    clean_env.setenv("ELEVENLABS_API_KEY", GOOD_EL)
+
+    def no_certs(key):
+        raise urllib.error.URLError(ssl.SSLCertVerificationError(
+            1, "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate"))
+    clean_env.setattr(diagnostics, "_elevenlabs_token", no_certs)
+    check = await diagnostics.check_transcription()
+    assert not check.ready and "Install Certificates" in check.message and "injoignable" not in check.message

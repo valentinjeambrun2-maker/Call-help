@@ -8,6 +8,8 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "pydantic>=2.7",
     "websockets>=13",  # transcription en direct (ElevenLabs Scribe v2 Realtime)
+    "truststore>=0.9",  # certificats du système (Python de python.org sur Mac : aucun par défaut)
+    "certifi",  # repli si truststore est indisponible
 ]
 
 [project.optional-dependencies]

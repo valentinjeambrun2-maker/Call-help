@@ -22,6 +22,7 @@ import urllib.request
 from dataclasses import asdict, dataclass
 
 from . import env
+from .tls import CERT_HELP, client_context, is_cert_error
 
 log = logging.getLogger("uvicorn.error")  # affiché dans le terminal d'uvicorn
 
@@ -71,7 +72,7 @@ def _elevenlabs_token(key: str, timeout: float = 8.0) -> tuple[int, dict]:
     req = urllib.request.Request(ELEVENLABS_TOKEN_URL, method="POST", data=b"",
                                  headers={"xi-api-key": key, "Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 — adresse fixe
+        with urllib.request.urlopen(req, timeout=timeout, context=client_context()) as r:  # noqa: S310 — adresse fixe
             return r.status, {}
     except urllib.error.HTTPError as e:
         try:
@@ -93,6 +94,8 @@ async def check_transcription() -> Check:
     try:
         code, body = await asyncio.to_thread(_elevenlabs_token, key)
     except (urllib.error.URLError, OSError, TimeoutError) as exc:
+        if is_cert_error(exc):
+            return Check(False, f"connexion sécurisée à ElevenLabs impossible : {CERT_HELP}.", src)
         reason = getattr(exc, "reason", exc)
         return Check(False, f"ElevenLabs injoignable ({reason}) : connexion Internet ou pare-feu ?", src)
     if code == 200:
@@ -122,7 +125,8 @@ async def _probe_realtime(key: str) -> tuple[bool, str]:
 
     try:
         async with connect(URL + "?model_id=scribe_v2_realtime&audio_format=pcm_16000",
-                           additional_headers={"xi-api-key": key}, open_timeout=8, close_timeout=1) as ws:
+                           additional_headers={"xi-api-key": key}, open_timeout=8, close_timeout=1,
+                           ssl=client_context()) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 8))
             if first.get("message_type") == "session_started":
                 return True, ""

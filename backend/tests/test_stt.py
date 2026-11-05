@@ -422,3 +422,27 @@ async def test_no_reconnect_loop_when_audio_stops_and_the_server_closes():
         idle_sessions = sessions[0]
         await ch.close(timeout=2)
     assert idle_sessions == 1  # avant : reconnexion et rejeu de 15 s toutes les quelques secondes
+
+
+async def test_certificate_error_stops_the_channel_with_a_clear_reason(monkeypatch):
+    """Python sans certificats (Mac) : chaque reconnexion échouerait pareil, en boucle."""
+    import ssl
+
+    import websockets.asyncio.client as wsc
+
+    attempts = []
+
+    def refuse(*a, **k):
+        attempts.append(1)
+        raise ssl.SSLCertVerificationError(1, "[SSL: CERTIFICATE_VERIFY_FAILED] unable to get local issuer certificate")
+    monkeypatch.setattr(wsc, "connect", refuse)
+    status = []
+
+    async def on_status(level, msg):
+        status.append((level, msg))
+    ch = ScribeChannel("k", Speaker.USER, "fr", lambda m: asyncio.sleep(0), on_status)
+    ch.start()
+    ch.push(bytes(FRAME_BYTES))
+    await asyncio.sleep(1.0)
+    await ch.close(timeout=1)
+    assert len(attempts) == 1 and ch.fatal and "Install Certificates" in status[-1][1]

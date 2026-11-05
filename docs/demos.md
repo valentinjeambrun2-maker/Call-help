@@ -44,6 +44,9 @@ Les appels générés localement (`python -m datagen pilot`) s'ajoutent à la li
   - `backend/.env` enregistré en texte enrichi par TextEdit, ou sous le nom `.env.txt`. Il est lu quand même, avec un avertissement ;
   - une clé exportée dans le terminal (`export`, `~/.zshrc`), qui l'emporte sur `backend/.env`.
 - **Ancien backend encore lancé :** la page le signale. Arrêtez-le (Ctrl+C), puis relancez-le.
+- **« CERTIFICATE_VERIFY_FAILED » sur Mac :** le Python téléchargé sur python.org n'a aucun certificat de sécurité. Le backend utilise désormais ceux du système (trousseau macOS). Si le message persiste après `git pull`, deux solutions :
+  - lancez `.venv/bin/pip install -e '.[dev,llm]'` dans `backend` ;
+  - ou lancez « Install Certificates.command » (dossier Applications > Python 3.x).
 
 `backend/.env` est relu à chaque appel : une clé corrigée est prise en compte sans relancer le backend. Le bouton « Revérifier » refait le diagnostic.
 
