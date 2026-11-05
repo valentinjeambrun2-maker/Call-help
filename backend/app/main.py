@@ -11,9 +11,13 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import ValidationError
 
-from .coach import default_provider
-from .scenario import list_scenarios
-from .session import CallSession
+from .env import load_env
+
+load_env()  # avant toute lecture de clé d'API
+
+from .coach import default_provider  # noqa: E402
+from .scenario import list_scenarios  # noqa: E402
+from .session import CallSession  # noqa: E402
 
 log = logging.getLogger("callhelp")
 

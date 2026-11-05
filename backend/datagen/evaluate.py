@@ -27,8 +27,10 @@ STEP_MAP = {"announcement": "hook", "hook": "hook", "qualify": "qualify", "value
 TOLERANCE = 3.0  # secondes après la fin du tour pour émettre le conseil
 
 
-async def run_call(replay: dict) -> tuple[list[dict], list[str | None]]:
-    """Rejoue un appel ; retourne (conseils, étape suivie juste après chaque tour)."""
+async def run_call(replay: dict, provider=None) -> tuple[list[dict], list[str | None]]:
+    """Rejoue un appel ; retourne (conseils, étape suivie juste après chaque tour).
+    Avec un fournisseur LLM, chaque classement est attendu avant le tour suivant
+    (mesure de ce que le LLM apporte, indépendamment de sa latence)."""
     hints: list[dict] = []
     last_step: list[str | None] = [None]
     steps_after_turn: list[str | None] = []
@@ -39,11 +41,17 @@ async def run_call(replay: dict) -> tuple[list[dict], list[str | None]]:
         elif msg["type"] == "state":
             last_step[0] = msg["step"]["id"]
 
-    session = CallSession(send, provider=NullProvider(), context_vars=replay.get("context", {}))
+    session = CallSession(send, provider=provider or NullProvider(), context_vars=replay.get("context", {}))
     await session.handle({"type": "start", "scenario_id": replay.get("scenario_id", "cold_call_fr"),
                           "language": replay.get("language", "fr")})
     for event in replay["events"]:
         await session.handle(event)
+        task = getattr(getattr(session, "coach", None), "_llm_task", None)
+        if task is not None and not task.done():
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         if event["type"] == "transcript":
             steps_after_turn.append(last_step[0])
     return hints, steps_after_turn
@@ -122,14 +130,25 @@ def aggregate(per_call: dict[str, dict]) -> dict:
     }
 
 
-def evaluate_dir(calls_dir: Path) -> dict:
+def evaluate_dir(calls_dir: Path, provider=None, concurrency: int = 8) -> dict:
     """Évalue tous les appels d'un dossier (chaque sous-dossier : labels.json + replay.json)."""
-    per_call: dict[str, dict] = {}
-    for call in sorted(p for p in calls_dir.iterdir() if (p / "labels.json").exists()):
-        turns = [TurnLabel.model_validate(t) for t in json.loads((call / "labels.json").read_text("utf-8"))]
-        replay = json.loads((call / "replay.json").read_text("utf-8"))
-        hints, steps = asyncio.run(run_call(replay))
-        per_call[call.name] = score_call(turns, hints, steps)
+    calls = sorted(p for p in calls_dir.iterdir() if (p / "labels.json").exists())
+
+    async def all_calls() -> dict[str, dict]:
+        sem = asyncio.Semaphore(concurrency)
+        out: dict[str, dict] = {}
+
+        async def one(call: Path) -> None:
+            turns = [TurnLabel.model_validate(t) for t in json.loads((call / "labels.json").read_text("utf-8"))]
+            replay = json.loads((call / "replay.json").read_text("utf-8"))
+            async with sem:
+                hints, steps = await run_call(replay, provider)
+            out[call.name] = score_call(turns, hints, steps)
+
+        await asyncio.gather(*(one(c) for c in calls))
+        return dict(sorted(out.items()))
+
+    per_call = asyncio.run(all_calls())
     report = aggregate(per_call)
     by_lang: dict[str, dict[str, dict]] = defaultdict(dict)
     for name, r in per_call.items():

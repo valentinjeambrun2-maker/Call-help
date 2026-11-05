@@ -143,6 +143,27 @@ class ScenarioTracker:
         self.steps_reached.append(self.step.id)
         return True
 
+    def mark_objection(self, objection_id: str) -> bool:
+        """Objection détectée par le LLM. Retourne True si l'état a changé."""
+        obj = next((o for o in self.scenario.objections if o.id == objection_id), None)
+        if obj is None:
+            return False
+        changed = self.active_objection is not obj
+        self.active_objection = obj
+        if obj.id not in self.objections_seen:
+            self.objections_seen.append(obj.id)
+            changed = True
+        return changed
+
+    def advance_to(self, step_id: str, ts: float) -> bool:
+        """Avance jusqu'à l'étape indiquée par le LLM ; ne recule jamais."""
+        ids = [st.id for st in self.scenario.steps]
+        if step_id not in ids or ids.index(step_id) <= self.index:
+            return False
+        while self.index < ids.index(step_id):
+            self.advance(ts)
+        return True
+
     def step_overtime(self, now: float) -> bool:
         return now - self.step_started_at > self.step.max_duration
 

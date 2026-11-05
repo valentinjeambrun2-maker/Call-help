@@ -64,6 +64,21 @@ def save_dialogues(root: Path, ok: dict[str, Dialogue], errors: dict[str, str]) 
     print(f"{len(ok)} dialogues valides, {len(errors)} échecs")
 
 
+def record_usage(root: Path) -> None:
+    from . import dialogue
+
+    path = root / "usage.json"
+    total = json.loads(path.read_text("utf-8")) if path.exists() else {"requests": 0, "input_tokens": 0,
+                                                                         "output_tokens": 0, "cost_usd": 0.0}
+    cost = dialogue.usage_cost() or 0.0
+    for k in ("requests", "input_tokens", "output_tokens"):
+        total[k] += dialogue.USAGE[k]
+    total["cost_usd"] = round(total["cost_usd"] + cost, 4)
+    path.write_text(json.dumps(total, indent=1), encoding="utf-8")
+    print(f"Claude : {dialogue.USAGE['requests']} requêtes, {dialogue.USAGE['input_tokens']:,} jetons en entrée, "
+          f"{dialogue.USAGE['output_tokens']:,} en sortie, ≈ {cost:.2f} $ (cumul {total['cost_usd']:.2f} $)")
+
+
 def cmd_plan(args: argparse.Namespace) -> None:
     specs = build_plan(args.n, seed=args.seed)
     args.root.mkdir(parents=True, exist_ok=True)
@@ -90,6 +105,7 @@ def cmd_dialogues(args: argparse.Namespace) -> None:
         todo = select(specs, args.limit, only_missing=calls)
         ok, errors = asyncio.run(dialogue.write_many(todo, args.concurrency, args.company))
         save_dialogues(args.root, ok, errors)
+        record_usage(args.root)
 
 
 def iter_dialogues(root: Path, limit: int | None = None):
@@ -152,6 +168,7 @@ def cmd_pilot(args: argparse.Namespace) -> None:
         print(f"Dialogues : {len(todo)} à écrire")
         ok, errors = asyncio.run(dialogue.write_many(todo, args.concurrency, args.company))
         save_dialogues(args.root, ok, errors)
+        record_usage(args.root)
 
     ids = {s.call_id for s in pilot}
     specs_by_id = {s.call_id: s for s in pilot}
@@ -195,14 +212,31 @@ def cmd_assemble(args: argparse.Namespace) -> None:
 def cmd_evaluate(args: argparse.Namespace) -> None:
     from .evaluate import evaluate_dir, format_report
 
-    report = evaluate_dir(args.root / "calls")
-    (args.root / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    provider = None
+    suffix = ""
+    if args.llm:
+        from app.coach.providers import PRICES, ClaudeProvider
+
+        provider = ClaudeProvider()
+        suffix = "_llm"
+    report = evaluate_dir(args.root / "calls", provider)
+    if provider is not None:
+        pin, pout = PRICES.get(provider.model, (0, 0))
+        u = provider.usage
+        report["llm"] = {"model": provider.model, **u,
+                         "cost_usd": round((u["input_tokens"] * pin + u["output_tokens"] * pout) / 1e6, 4)}
+    (args.root / f"report{suffix}.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
     text = format_report(report)
-    (args.root / "report.md").write_text(text + "\n", encoding="utf-8")
+    if provider is not None:
+        text += f"\n\nLLM : {report['llm']['model']}, {u['requests']} requêtes, ≈ {report['llm']['cost_usd']:.2f} $"
+    (args.root / f"report{suffix}.md").write_text(text + "\n", encoding="utf-8")
     print(text)
 
 
 def main() -> None:
+    from app.env import load_env
+
+    load_env()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     parser = argparse.ArgumentParser(prog="python -m datagen", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -239,6 +273,7 @@ def main() -> None:
     p.set_defaults(func=cmd_assemble)
 
     p = sub.add_parser("evaluate", help="évaluer le moteur sur les appels")
+    p.add_argument("--llm", action="store_true", help="avec le classement par Claude (sinon mots-clés seuls)")
     p.set_defaults(func=cmd_evaluate)
 
     p = sub.add_parser("voices-pick", help="choisir des voix natives dans la bibliothèque ElevenLabs")

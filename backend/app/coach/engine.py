@@ -15,11 +15,13 @@ from collections.abc import Awaitable, Callable
 
 from ..models import EmotionReading, EmotionState, Hint, Metrics
 from ..scenario import Objection, Step, fill
-from .providers import CoachContext, HintProvider, NullProvider
+from .providers import CoachContext, HintProvider, LLMHint, NullProvider
 
 log = logging.getLogger(__name__)
 
 Emit = Callable[[Hint], Awaitable[None]]
+# Appelé avec le classement du LLM (objection, étape) avant l'émission du conseil.
+Classified = Callable[[LLMHint, float], Awaitable[None]]
 
 EMOTION_HINTS = {
     EmotionState.HESITATION: ("Il semble hésiter : rassure et pose une question ouverte.",
@@ -65,6 +67,8 @@ class CoachEngine:
         context_vars: dict[str, str] | None = None,
         limiter: RateLimiter | None = None,
         llm_min_confidence: float = 0.6,
+        on_classified: Classified | None = None,
+        objection_ids: set[str] | None = None,
     ) -> None:
         self.emit = emit
         self.language = language
@@ -72,6 +76,8 @@ class CoachEngine:
         self.context_vars = context_vars or {}
         self.limiter = limiter or RateLimiter()
         self.llm_min_confidence = llm_min_confidence
+        self.on_classified = on_classified
+        self.objection_ids = objection_ids or set()
         self._ids = itertools.count(1)
         self._llm_task: asyncio.Task | None = None
         self._last_emotion: EmotionState | None = None
@@ -171,15 +177,29 @@ class CoachEngine:
         except Exception:  # un fournisseur défaillant ne doit jamais casser l'appel
             log.exception("Fournisseur LLM en erreur")
             return
-        if result is None or result.confidence < self.llm_min_confidence:
+        if result is None:
+            return
+        if result.objection not in self.objection_ids:
+            result = result.model_copy(update={"objection": None})  # "other" ou inconnu : pas de fiche
+        if self.on_classified:
+            await self.on_classified(result, ts)
+        if result.confidence < self.llm_min_confidence:
             return
         kind = result.kind if result.kind in ("objection", "step", "question", "emotion", "closing") else "question"
+        ref = None
+        priority = replaces.priority if replaces else 1
+        if result.objection:
+            kind, ref, priority = "objection", result.objection, 3
         hint = self._new(kind=kind, text=result.text, say=result.say, source="llm",
-                         priority=replaces.priority if replaces else 1,
+                         priority=priority, ref=ref or (replaces.ref if replaces else None),
                          replaces=replaces.id if replaces else None, ts=ts)
-        # Un conseil qui en remplace un autre ne compte pas une seconde fois.
-        if replaces:
+        if replaces and (not result.objection or replaces.ref == result.objection):
+            # Affinage du conseil par règle : ne compte pas une seconde fois.
             await self.emit(hint)
+        elif result.objection:
+            # Objection que les mots-clés ont manquée (ou différente de la leur).
+            hint = hint.model_copy(update={"replaces": None})
+            await self._send(f"objection:{result.objection}", hint)
         else:
             await self._send(f"llm:{result.text}", hint)
 

@@ -12,6 +12,9 @@ from pydantic import BaseModel
 log = logging.getLogger(__name__)
 
 LIVE_MODEL = os.getenv("CALLHELP_LIVE_MODEL", "claude-haiku-5-5")
+PRICES = {  # $ par million de jetons (entrée, sortie), tarif standard au 5 nov. 2026
+    "claude-haiku-5-5": (0.10, 0.50), "claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0),
+}
 SUMMARY_MODEL = os.getenv("CALLHELP_SUMMARY_MODEL", "claude-opus-5-5")
 
 
@@ -27,6 +30,10 @@ class CoachContext(BaseModel):
     knowledge: str = ""  # connaissance produit (base de connaissances, plus tard)
     # Faux si le prospect n'a pas donné son accord ou si l'analyse est coupée.
     emotion_allowed: bool = False
+    # Pour classer le dernier tour du prospect : étapes et objections du scénario.
+    steps: list[dict] = []  # [{"id", "title", "goal"}]
+    objections: list[dict] = []  # [{"id", "label"}]
+    current_step_id: str | None = None
 
 
 class LLMHint(BaseModel):
@@ -34,23 +41,32 @@ class LLMHint(BaseModel):
     text: str
     say: str | None
     confidence: float
+    # Classement du dernier tour du prospect (complète les mots-clés).
+    objection: str | None = None  # id d'objection, "other", ou None
+    step: str | None = None  # étape où en est l'appel
 
 
 class HintProvider(Protocol):
     async def suggest(self, ctx: CoachContext) -> LLMHint | None: ...
 
 
-HINT_SCHEMA = {
-    "type": "object",
-    "properties": {
+def hint_schema(ctx: CoachContext) -> dict:
+    """Schéma de sortie, avec les objections et étapes propres au scénario."""
+    objection_ids = [o["id"] for o in ctx.objections] + ["other"]
+    step_ids = [st["id"] for st in ctx.steps]
+    props: dict = {
+        "objection": {"anyOf": [{"type": "string", "enum": objection_ids}, {"type": "null"}],
+                      "description": "Objection exprimée dans le DERNIER tour du prospect, sinon null"},
         "kind": {"type": "string", "enum": ["objection", "step", "question", "emotion", "closing"]},
         "text": {"type": "string", "description": "Indication de 12 mots maximum"},
-        "say": {"type": ["string", "null"], "description": "Phrase prête à dire, 25 mots maximum"},
+        "say": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Phrase prête à dire, 25 mots maximum"},
         "confidence": {"type": "number"},
-    },
-    "required": ["kind", "text", "say", "confidence"],
-    "additionalProperties": False,
-}
+    }
+    required = ["objection", "kind", "text", "say", "confidence"]
+    if step_ids:
+        props["step"] = {"type": "string", "enum": step_ids, "description": "Étape où en est l'appel"}
+        required.insert(1, "step")
+    return {"type": "object", "properties": props, "required": required, "additionalProperties": False}
 
 SYSTEM_PROMPT = """Tu es un coach commercial qui souffle des conseils à un vendeur pendant un appel en direct.
 Le vendeur lit ton conseil en parlant : il doit pouvoir le lire en deux secondes.
@@ -64,7 +80,16 @@ Règles :
   et n'utilise jamais son état émotionnel, ni à partir de sa voix ni à partir de ses mots.
   Appuie-toi uniquement sur le contenu de l'échange et sur le scénario.
 - N'invente aucun chiffre, client ou fait absent du contexte.
-- `confidence` entre 0 et 1 : mets une valeur basse si le contexte ne justifie pas de conseil."""
+- `confidence` entre 0 et 1 : mets une valeur basse si le contexte ne justifie pas de conseil.
+
+Classement (en plus du conseil) :
+- `objection` : l'objection que le prospect exprime dans son DERNIER tour, même indirectement
+  (« je suis entre deux réunions » = manque de temps ; « ce n'est pas donné » = budget ;
+  « on a déjà quelqu'un » = prestataire en place). Choisis parmi `objections` du contexte,
+  "other" pour une autre objection, null s'il n'y en a pas dans ce tour.
+- `step` : l'étape où en est réellement l'appel, parmi `steps` du contexte. Elle n'avance que si
+  l'objectif de l'étape courante est atteint ou dépassé.
+- Si `objection` n'est pas null, `kind` vaut "objection" et le conseil y répond."""
 
 
 class NullProvider:
@@ -80,6 +105,7 @@ class ClaudeProvider:
 
         self.client = AsyncAnthropic()
         self.model = model
+        self.usage = {"requests": 0, "input_tokens": 0, "output_tokens": 0}
 
     async def suggest(self, ctx: CoachContext) -> LLMHint | None:
         import anthropic
@@ -93,7 +119,7 @@ class ClaudeProvider:
                 thinking={"type": "disabled"},
                 output_config={
                     "effort": "low",
-                    "format": {"type": "json_schema", "schema": HINT_SCHEMA},
+                    "format": {"type": "json_schema", "schema": hint_schema(ctx)},
                 },
                 messages=[{"role": "user", "content": ctx.model_dump_json(indent=1)}],
             )
@@ -104,6 +130,9 @@ class ClaudeProvider:
             log.warning("Erreur LLM, conseil ignoré : %s", exc)
             return None
 
+        self.usage["requests"] += 1
+        self.usage["input_tokens"] += response.usage.input_tokens or 0
+        self.usage["output_tokens"] += response.usage.output_tokens or 0
         if response.stop_reason in ("refusal", "max_tokens"):
             log.info("Conseil LLM non exploitable (stop_reason=%s)", response.stop_reason)
             return None

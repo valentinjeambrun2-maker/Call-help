@@ -88,7 +88,9 @@ class CallSession:
         self.language = msg.language
         self.context_vars = {**self.context_vars, **msg.context}
         self.coach = CoachEngine(self._emit_hint, language=msg.language,
-                                 provider=self.provider, context_vars=self.context_vars)
+                                 provider=self.provider, context_vars=self.context_vars,
+                                 on_classified=self._on_classified,
+                                 objection_ids={o.id for o in self.scenario.objections})
         self.started = True
         if self.scenario.announcement:
             # Cold call : pas d'invitation, donc message d'information en début
@@ -155,6 +157,17 @@ class CallSession:
         await self.coach.on_emotion(self.emotions.reading(Speaker.PROSPECT, self.now), self.now)
         await self._send_state()
 
+    async def _on_classified(self, result, ts: float) -> None:
+        """Classement du LLM : complète les mots-clés pour l'objection et l'étape."""
+        changed = False
+        if result.objection:
+            changed |= self.tracker.mark_objection(result.objection)
+        if result.step and self.tracker.advance_to(result.step, ts):
+            changed = True
+            await self.coach.on_step(self.tracker.step, ts)
+        if changed:
+            await self._send_state()
+
     def _context(self) -> CoachContext:
         reading = self.emotions.reading(Speaker.PROSPECT, self.now)
         emotion = None
@@ -171,6 +184,9 @@ class CallSession:
             metrics=self.metrics.snapshot(self.now).model_dump(),
             recent_transcript=list(self.transcript),
             emotion_allowed=bool(self.prospect_consent) and self.emotions.running,
+            steps=[{"id": st.id, "title": st.title, "goal": st.goal} for st in self.scenario.steps],
+            objections=[{"id": o.id, "label": o.label} for o in self.scenario.objections],
+            current_step_id=step.id,
         )
 
     async def _send_state(self) -> None:

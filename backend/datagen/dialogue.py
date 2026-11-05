@@ -254,6 +254,19 @@ def collect_batch(batch_id: str, specs: list[CallSpec]) -> tuple[dict[str, Dialo
 
 # --- Mode sync (pilote, rejeu des échecs) -----------------------------------
 
+# Consommation cumulée (toutes réponses, y compris rejetées) pour suivre le coût réel.
+USAGE = {"requests": 0, "input_tokens": 0, "output_tokens": 0}
+PRICES = {  # $ par million de jetons (entrée, sortie), tarif standard
+    "claude-opus-5-5": (4.0, 20.0), "claude-sonnet-5-5": (2.0, 10.0), "claude-haiku-5-5": (0.10, 0.50),
+}
+
+
+def usage_cost(model: str = DIALOGUE_MODEL) -> float | None:
+    if model not in PRICES:
+        return None
+    pin, pout = PRICES[model]
+    return (USAGE["input_tokens"] * pin + USAGE["output_tokens"] * pout) / 1e6
+
 
 async def write_one(client, spec: CallSpec, seller_company: str = "The Herakles",
                     attempts: int = 2) -> tuple[Dialogue | None, str | None]:
@@ -275,6 +288,9 @@ async def write_one(client, spec: CallSpec, seller_company: str = "The Herakles"
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
             last_error = f"api: {exc}"[:300]
             continue
+        USAGE["requests"] += 1
+        USAGE["input_tokens"] += getattr(msg.usage, "input_tokens", 0) or 0
+        USAGE["output_tokens"] += getattr(msg.usage, "output_tokens", 0) or 0
         if msg.stop_reason != "end_turn":
             last_error = f"stop_reason={msg.stop_reason}"
             continue
