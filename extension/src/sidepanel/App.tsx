@@ -158,7 +158,7 @@ export function App() {
   const live = state.phase === "live";
   const busy = state.phase === "connecting" || starting;
   const api = httpBase(backendUrl);
-  const { service, recheck } = useServiceStatus(api);
+  const { service, recheck } = useServiceStatus(api, state.phase === "live");
   const demoCalls = calls.filter((c) => c.language === settings.language);
 
   const setSelfAnalysis = (on: boolean) => {

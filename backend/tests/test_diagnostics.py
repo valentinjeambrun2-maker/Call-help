@@ -201,3 +201,124 @@ async def test_certificate_error_is_explained_not_reported_as_a_network_problem(
     clean_env.setattr(diagnostics, "_elevenlabs_token", no_certs)
     check = await diagnostics.check_transcription()
     assert not check.ready and "Install Certificates" in check.message and "injoignable" not in check.message
+
+
+# --- Revue du diagnostic (6 défauts confirmés) ---------------------------------------------
+
+@pytest.mark.parametrize("value", ["…", "…" + GOOD_EL, GOOD_EL[:20] + "\u200b" + GOOD_EL[20:], GOOD_EL[:20] + "’" + GOOD_EL[21:]])
+async def test_invisible_or_typographic_character_is_explained_without_crashing(clean_env, tmp_path, value):
+    f = tmp_path / ".env"
+    f.write_text(f"ELEVENLABS_API_KEY={value}\n", encoding="utf-8")
+    env.load_env(f)
+
+    def must_not_call(key):
+        raise AssertionError("aucune requête avec une clé impossible à envoyer")
+    clean_env.setattr(diagnostics, "_elevenlabs_token", must_not_call)
+    check = await diagnostics.check_transcription()
+    assert not check.ready and "invisible ou typographique" in check.message
+
+
+async def test_one_crashing_check_does_not_hide_the_other_or_break_status(clean_env):
+    async def boom():
+        raise UnicodeEncodeError("latin-1", "…", 0, 1, "x")
+
+    async def fine():
+        return diagnostics.Check(True, "prêts")
+    clean_env.setattr(diagnostics, "check_transcription", boom)
+    clean_env.setattr(diagnostics, "check_llm", fine)
+    r = await diagnostics.report(refresh=True)
+    assert not r["transcription"]["ready"] and "terminal" in r["transcription"]["message"] and r["llm"]["ready"]
+
+
+def test_inline_comment_is_not_part_of_the_key(tmp_path, clean_env):
+    f = tmp_path / ".env"
+    f.write_text(f"ELEVENLABS_API_KEY={GOOD_EL}  # clé d’essai\n", encoding="utf-8")
+    env.load_env(f)
+    assert os.environ["ELEVENLABS_API_KEY"] == GOOD_EL
+
+
+def test_key_listed_twice_uses_the_last_non_empty_value_and_says_so(tmp_path, clean_env):
+    f = tmp_path / ".env"
+    f.write_text("ANTHROPIC_API_KEY=\nELEVENLABS_API_KEY=\n# ajoutée en bas\nELEVENLABS_API_KEY=" + GOOD_EL + "\n")
+    env.load_env(f)
+    assert os.environ["ELEVENLABS_API_KEY"] == GOOD_EL and not env.OVERRIDDEN
+    assert any("apparaît 2 fois" in n for n in env.NOTES)
+    env.reload_if_changed(f)  # même résultat au démarrage et à la relecture
+    assert os.environ["ELEVENLABS_API_KEY"] == GOOD_EL
+
+
+async def test_empty_terminal_variable_masking_the_file_is_named(tmp_path, clean_env):
+    clean_env.setenv("ELEVENLABS_API_KEY", "")
+    f = tmp_path / ".env"
+    f.write_text(f"ELEVENLABS_API_KEY={GOOD_EL}\n")
+    env.load_env(f)
+    check = await diagnostics.check_transcription()
+    assert not check.ready and "masque la clé" in check.message and "unset ELEVENLABS_API_KEY" in check.message
+
+
+@pytest.mark.parametrize("code", [429, 500, 503])
+async def test_elevenlabs_outage_is_not_reported_as_a_refused_key(clean_env, code):
+    clean_env.setenv("ELEVENLABS_API_KEY", GOOD_EL)
+    clean_env.setattr(diagnostics, "_elevenlabs_token", lambda key: (code, {}))
+    check = await diagnostics.check_transcription()
+    assert not check.ready and f"HTTP {code}" in check.message and "refusée" not in check.message
+
+
+async def test_diagnosis_is_redone_when_a_call_rereads_the_env_file(tmp_path, clean_env):
+    f = tmp_path / ".env"
+    f.write_text(f"ELEVENLABS_API_KEY={GOOD_EL}x\n")
+    env.load_env(f)
+    clean_env.setattr(diagnostics, "_elevenlabs_token", lambda key: (200, {}) if len(key) == 51 else (400, {"detail": {
+        "status": "invalid_api_key_length"}}))
+    assert "52 caractères" in (await diagnostics.report(refresh=True))["transcription"]["message"]
+    f.write_text(f"ELEVENLABS_API_KEY={GOOD_EL}\n")
+    env.reload_if_changed(f)  # relu au début d'un appel, pas par report()
+    assert (await diagnostics.report())["transcription"]["ready"]
+
+
+async def test_exhausted_anthropic_credits_are_reported_and_stop_retrying(clean_env):
+    import anthropic
+    import httpx2
+
+    from app.coach.providers import ClaudeProvider, CoachContext
+
+    calls = []
+
+    def no_credit(request):
+        calls.append(request.url.path)
+        if request.url.path.endswith("/models"):
+            return httpx2.Response(200, json={"data": [], "has_more": False, "first_id": None, "last_id": None})
+        return httpx2.Response(400, json={"type": "error", "error": {"type": "invalid_request_error", "message":
+                               "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing."}})
+    real = anthropic.AsyncAnthropic
+
+    def client(**kw):
+        kw.pop("http_client", None)
+        return real(**{"api_key": "sk-ant-test", **kw}, http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(no_credit)))
+    clean_env.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    clean_env.setattr(anthropic, "AsyncAnthropic", client)
+    provider = ClaudeProvider()
+    provider.client = client(max_retries=0)
+    ctx = CoachContext(language="fr", scenario_title="t", step_title="s", step_goal="g", objection=None,
+                       prospect_emotion=None, metrics={}, recent_transcript=[])
+    try:
+        for _ in range(3):
+            assert await provider.suggest(ctx) is None
+        assert sum(p.endswith("/messages") for p in calls) == 1  # pas de nouvel essai à chaque tour
+        assert "crédits Anthropic épuisés" in provider.disabled_reason
+        check = await diagnostics.check_llm()
+        assert not check.ready and "crédits Anthropic épuisés" in check.message
+    finally:
+        diagnostics.note_llm_issue(None)
+
+
+async def test_call_with_an_unusable_key_says_why_at_once(monkeypatch):
+    out = []
+
+    async def send(m):
+        out.append(m)
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "…" + GOOD_EL)
+    s = CallSession(send)
+    await s.handle({"type": "start", "transcription": "server"})
+    assert s.stt is None
+    assert any(m["type"] == "error" and "invisible ou typographique" in m["message"] for m in out)

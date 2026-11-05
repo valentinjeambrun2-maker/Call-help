@@ -83,7 +83,6 @@ function eventTime(e: ClientMsg): number {
 export function DemoApp() {
   const backendUrl = DEFAULT_BACKEND;
   const api = httpBase(backendUrl);
-  const { service, recheck } = useServiceStatus(api);
   const [calls, setCalls] = useState<DemoCall[]>([]);
   const [lang, setLang] = useState<"all" | "fr" | "en">("all");
   const [selected, setSelected] = useState<DemoCall | null>(null);
@@ -156,6 +155,7 @@ export function DemoApp() {
   const audioClock = useCallback(() => audio.current?.currentTime ?? 0, []);
   const { state, connect, disconnect, send, sendAudio, giveFeedback, answerAnnouncement } =
     useCallSession(backendUrl, onServer, audioClock);
+  const { service, recheck } = useServiceStatus(api, state.phase === "live");
 
   useEffect(() => {
     fetch(`${api}/demo/calls`)

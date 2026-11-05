@@ -179,8 +179,15 @@ class CallSession:
         key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
         if not key:
             await self.send({"type": "error", "message": "Transcription en direct indisponible : clé ElevenLabs absente. "
-                                                        "Ajoutez ELEVENLABS_API_KEY=… dans backend/.env, puis relancez "
-                                                        "le backend (le mode « Texte de référence » marche sans clé)."})
+                                                        "Dans backend/.env, ajoutez une ligne ELEVENLABS_API_KEY= suivie "
+                                                        "de votre clé (le mode « Texte de référence » marche sans clé)."})
+            return
+        from .diagnostics import INVISIBLE, _format_problem
+
+        if _format_problem("ELEVENLABS_API_KEY", key) == INVISIBLE:
+            # Elle ne passerait même pas dans l'en-tête de connexion : chaque essai échouerait.
+            await self.send({"type": "error", "message": f"Transcription en direct indisponible : la clé ElevenLabs "
+                                                        f"de backend/.env {INVISIBLE}."})
             return
         names = msg.keyterms + [v for k, v in self.context_vars.items() if k in ("company", "user_name")]
         self.stt = SttHub(key, msg.language, self._on_stt_transcript, self._on_stt_status, keyterms=names)
@@ -208,7 +215,7 @@ class CallSession:
             try:
                 from . import diagnostics
 
-                check = (await asyncio.wait_for(diagnostics.report(), 12))["transcription"]
+                check = (await asyncio.wait_for(diagnostics.report(refresh=True), 12))["transcription"]
                 if not check["ready"]:
                     message = f"Transcription arrêtée : {check['message']}"
             except Exception:  # noqa: BLE001 — sans diagnostic, le message court suffit

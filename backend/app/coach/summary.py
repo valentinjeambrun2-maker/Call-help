@@ -124,6 +124,14 @@ class ClaudeSummary:
             log.error("Bilan IA indisponible : %s", exc)
             return None
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+            from .providers import credit_problem
+
+            credit = credit_problem(exc) if isinstance(exc, anthropic.APIStatusError) else None
+            if credit:
+                from ..diagnostics import note_llm_issue
+
+                self.last_error = credit
+                note_llm_issue(credit)
             log.warning("Bilan IA indisponible : %s", exc)
             return None
         pin, pout = PRICES.get(self.model, (0, 0))

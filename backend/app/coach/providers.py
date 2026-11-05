@@ -195,8 +195,19 @@ class ClaudeProvider:
             log.warning("LLM rate limited, conseil ignoré")
             return None
         except (anthropic.APIStatusError, anthropic.APIConnectionError) as exc:
+            credit = credit_problem(exc) if isinstance(exc, anthropic.APIStatusError) else None
+            if credit:
+                from ..diagnostics import note_llm_issue
+
+                self.disabled_reason = credit  # inutile de réessayer à chaque tour
+                note_llm_issue(credit)
+                log.error("Conseils IA désactivés pour cet appel : %s", exc)
+                return None
             log.warning("Erreur LLM, conseil ignoré : %s", exc)
             return None
+        from ..diagnostics import note_llm_issue
+
+        note_llm_issue(None)  # un appel réussi : plus de problème de crédits
 
         self.usage["requests"] += 1
         self.usage["input_tokens"] += response.usage.input_tokens or 0
@@ -211,6 +222,14 @@ class ClaudeProvider:
         if ctx.task == "step":
             return LLMHint(kind="step", text="", say=None, confidence=0.0, step=data.get("step"))
         return LLMHint.model_validate(data)
+
+
+def credit_problem(exc: Exception) -> str | None:
+    """Clé valide, mais crédits épuisés : l'API répond 400 « Your credit balance is too low »."""
+    text = str(exc).lower()
+    if "credit balance" in text or "billing" in text:
+        return "crédits Anthropic épuisés : rechargez-les sur console.anthropic.com (Plans & Billing)"
+    return None
 
 
 def default_provider() -> HintProvider:

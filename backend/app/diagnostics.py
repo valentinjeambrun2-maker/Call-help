@@ -6,7 +6,7 @@ Vérifie chaque clé par une requête gratuite, sans rien transcrire ni génére
   alors que la session de transcription ne répond que « You must be authenticated » ;
 - Anthropic : liste des modèles.
 
-Le résultat est écrit dans le terminal du backend et servi par /health, que la page de
+Le résultat est écrit dans le terminal du backend et servi par /status, que la page de
 démo et le panneau affichent. Aucune valeur de clé n'est jamais écrite ni renvoyée.
 """
 
@@ -43,8 +43,14 @@ def _source(name: str) -> str | None:
     return "backend/.env" if name in env.FROM_FILE else "environnement du terminal"
 
 
+INVISIBLE = ("elle contient un caractère invisible ou typographique (espace insécable, « … », apostrophe "
+             "courbe…) : recopiez-la depuis le site, sans rien autour")
+
+
 def _format_problem(name: str, value: str) -> str | None:
     """Défaut visible sans appeler le service (sans jamais montrer la clé)."""
+    if not value.isascii() or not value.isprintable():
+        return INVISIBLE  # ne peut même pas être envoyée dans un en-tête HTTP
     if any(c.isspace() for c in value):
         return "elle contient un espace ou un retour à la ligne"
     if any(c in value for c in "\"'\\{}"):
@@ -68,6 +74,15 @@ def _where(name: str) -> str:
     return out + "."
 
 
+def _missing(name: str, label: str) -> str:
+    if name in env.OVERRIDDEN:
+        return (f"une variable {name} vide est définie dans le terminal (export, ~/.zshrc) et masque la clé de "
+                f"backend/.env : retirez-la (unset {name}), puis relancez le backend.")
+    detail = "définie mais vide" if name in os.environ else "absente"
+    return (f"clé {label} {detail} : dans backend/.env, ajoutez une ligne {name}= suivie de votre clé "
+            "(prise en compte sans relancer le backend).")
+
+
 def _elevenlabs_token(key: str, timeout: float = 8.0) -> tuple[int, dict]:
     req = urllib.request.Request(ELEVENLABS_TOKEN_URL, method="POST", data=b"",
                                  headers={"xi-api-key": key, "Content-Type": "application/json"})
@@ -87,10 +102,10 @@ async def check_transcription() -> Check:
     key = os.environ.get(name, "").strip()
     src = _source(name)
     if not key:
-        detail = "définie mais vide" if name in os.environ else "absente"
-        return Check(False, f"clé ElevenLabs {detail} : ajoutez {name}=… dans backend/.env, puis relancez le backend.",
-                     src)
+        return Check(False, _missing(name, "ElevenLabs"), src)
     problem = _format_problem(name, key)
+    if problem == INVISIBLE:
+        return Check(False, f"clé ElevenLabs inutilisable : {problem}" + _where(name), src)
     try:
         code, body = await asyncio.to_thread(_elevenlabs_token, key)
     except (urllib.error.URLError, OSError, TimeoutError) as exc:
@@ -98,10 +113,11 @@ async def check_transcription() -> Check:
             return Check(False, f"connexion sécurisée à ElevenLabs impossible : {CERT_HELP}.", src)
         reason = getattr(exc, "reason", exc)
         return Check(False, f"ElevenLabs injoignable ({reason}) : connexion Internet ou pare-feu ?", src)
-    if code == 200:
+    if 200 <= code < 300:
         return Check(True, "prête", src)
     detail = body.get("detail") if isinstance(body.get("detail"), dict) else {}
-    status, message = detail.get("status") or detail.get("code") or "", detail.get("message") or ""
+    status = str(detail.get("status") or detail.get("code") or "")
+    message = str(detail.get("message") or "")
     if status == "missing_permissions":
         # Le jeton demande peut-être une autre permission que la transcription : on vérifie
         # sur la transcription elle-même (session ouverte puis fermée, sans audio).
@@ -111,11 +127,13 @@ async def check_transcription() -> Check:
         return Check(False, "la clé ElevenLabs n'a pas accès à la transcription : sur elevenlabs.io, "
                             "dans les réglages de la clé, autorisez « Speech to Text »" + (f" ({why})" if why else "")
                      + _where(name), src)
-    if status.startswith("invalid_api_key"):
-        why = problem or "clé invalide ou supprimée"
-    else:
-        why = problem or message or f"HTTP {code}"
-    return Check(False, f"clé ElevenLabs refusée : {why}" + _where(name), src)
+    if code in (400, 401, 403) and (status.startswith("invalid_api_key")
+                                    or detail.get("type") == "authentication_error"):
+        why = problem or ("clé invalide ou supprimée" if status.startswith("invalid_api_key") else message)
+        return Check(False, f"clé ElevenLabs refusée : {why or f'HTTP {code}'}" + _where(name), src)
+    # Panne, limite de débit, passerelle : la clé n'y est pour rien.
+    return Check(False, f"ElevenLabs répond HTTP {code}{f' ({message})' if message else ''} : réessayez dans un "
+                        "moment (bouton « Revérifier »).", src)
 
 
 async def _probe_realtime(key: str) -> tuple[bool, str]:
@@ -142,14 +160,15 @@ async def check_llm() -> Check:
     key = os.environ.get(name, "").strip()
     src = _source(name)
     if not key and not os.environ.get("ANTHROPIC_AUTH_TOKEN"):
-        return Check(False, f"clé Anthropic absente : ajoutez {name}=… dans backend/.env, puis relancez le backend. "
-                            "Les conseils par mots-clés restent actifs.", src)
+        return Check(False, _missing(name, "Anthropic") + " Les conseils par mots-clés restent actifs.", src)
     try:
         import anthropic
     except ImportError:
         return Check(False, "module anthropic non installé : dans backend, lancez "
                             ".venv/bin/pip install -e '.[dev,llm]', puis relancez le backend.", src)
     problem = _format_problem(name, key) if key else None
+    if problem == INVISIBLE:
+        return Check(False, f"clé Anthropic inutilisable : {problem}" + _where(name), src)
     try:
         client = anthropic.AsyncAnthropic(max_retries=0, timeout=8.0)
         await client.models.list(limit=1)
@@ -162,23 +181,50 @@ async def check_llm() -> Check:
         return Check(False, "Anthropic injoignable : connexion Internet ou pare-feu ?", src)
     except anthropic.APIStatusError as exc:
         return Check(False, f"Anthropic répond HTTP {exc.status_code} : réessayez plus tard.", src)
+    if _llm_runtime_issue:
+        # La liste des modèles est gratuite : elle ne voit pas des crédits épuisés, un vrai appel si.
+        return Check(False, _llm_runtime_issue, src)
     return Check(True, "prêts", src)
+
+
+# Problème constaté pendant un appel réel (crédits épuisés…), que la vérification gratuite ne voit pas.
+_llm_runtime_issue: str | None = None
+
+
+def note_llm_issue(message: str | None) -> None:
+    """Appelé par les fournisseurs Claude : un problème (ou None quand un appel réussit)."""
+    global _llm_runtime_issue, _cache
+    if message != _llm_runtime_issue:
+        _llm_runtime_issue = message
+        _cache = None  # la page affichera la nouvelle raison
+
+
+async def _safe(check, label: str) -> Check:
+    try:
+        return await check()
+    except Exception as exc:  # noqa: BLE001 — un diagnostic qui plante ne doit rien cacher d'autre
+        log.exception("Diagnostic %s", label)
+        return Check(False, f"vérification impossible ({type(exc).__name__}) : détail dans le terminal du backend.")
 
 
 _cache: dict | None = None
 _cache_at = 0.0
+_cache_generation = -1
 _lock = asyncio.Lock()
 TTL = 60.0
 
 
 async def report(refresh: bool = False) -> dict:
     """État des services, mis en cache une minute (les vérifications sont gratuites, mais lentes)."""
-    global _cache, _cache_at
+    global _cache, _cache_at, _cache_generation
     async with _lock:
-        if env.reload_if_changed():
-            refresh = True  # backend/.env modifié : nouvelles clés, nouveau diagnostic
-        if refresh or _cache is None or time.monotonic() - _cache_at > TTL:
-            transcription, llm = await asyncio.gather(check_transcription(), check_llm())
+        env.reload_if_changed()
+        # backend/.env relu (ici ou au début d'un appel) : nouvelles clés, nouveau diagnostic.
+        if (refresh or _cache is None or _cache_generation != env.generation
+                or time.monotonic() - _cache_at > TTL):
+            _cache_generation = env.generation
+            transcription, llm = await asyncio.gather(_safe(check_transcription, "transcription"),
+                                                      _safe(check_llm, "Claude"))
             _cache = {"transcription": asdict(transcription), "llm": asdict(llm),
                       "env_notes": list(env.NOTES)}
             _cache_at = time.monotonic()
