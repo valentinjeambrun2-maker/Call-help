@@ -36,18 +36,24 @@ EMOTION_HINTS = {
 
 
 class RateLimiter:
-    """Au plus `max_hints` conseils par fenêtre glissante ; les urgents passent toujours."""
+    """Au plus `max_hints` conseils par fenêtre glissante ; les urgents passent toujours.
+    Une même objection n'est pas re-signalée avant `objection_cooldown` secondes : le
+    vendeur a déjà la réponse, et le prospect y revient souvent (62 % des fausses alertes
+    mesurées sur le pilote de 100 appels)."""
 
-    def __init__(self, max_hints: int = 6, window: float = 20.0, cooldown: float = 15.0) -> None:
+    def __init__(self, max_hints: int = 6, window: float = 20.0, cooldown: float = 15.0,
+                 objection_cooldown: float = 90.0) -> None:
         self.max_hints = max_hints
         self.window = window
         self.cooldown = cooldown
+        self.objection_cooldown = objection_cooldown
         self.sent: deque[float] = deque()
         self.last_by_key: dict[str, float] = {}
 
     def allow(self, key: str, now: float, priority: int) -> bool:
         last = self.last_by_key.get(key)
-        if last is not None and now - last < self.cooldown:
+        cooldown = self.objection_cooldown if key.startswith("objection:") else self.cooldown
+        if last is not None and now - last < cooldown:
             return False
         while self.sent and now - self.sent[0] > self.window:
             self.sent.popleft()

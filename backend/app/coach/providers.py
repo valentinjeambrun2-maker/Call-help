@@ -34,6 +34,7 @@ class CoachContext(BaseModel):
     steps: list[dict] = []  # [{"id", "title", "goal"}]
     objections: list[dict] = []  # [{"id", "label"}]
     current_step_id: str | None = None
+    objections_raised: list[str] = []  # déjà levées dans cet appel : ne pas les reclasser
 
 
 class LLMHint(BaseModel):
@@ -83,10 +84,13 @@ Règles :
 - `confidence` entre 0 et 1 : mets une valeur basse si le contexte ne justifie pas de conseil.
 
 Classement (en plus du conseil) :
-- `objection` : l'objection que le prospect exprime dans son DERNIER tour, même indirectement
-  (« je suis entre deux réunions » = manque de temps ; « ce n'est pas donné » = budget ;
-  « on a déjà quelqu'un » = prestataire en place). Choisis parmi `objections` du contexte,
-  "other" pour une autre objection, null s'il n'y en a pas dans ce tour.
+- `objection` : une objection NOUVELLE que le prospect exprime dans son DERNIER tour, même
+  indirectement (« je suis entre deux réunions » = manque de temps ; « ce n'est pas donné » =
+  budget ; « on a déjà quelqu'un » = prestataire en place). Choisis parmi `objections` du
+  contexte, "other" pour une autre objection, null sinon. Mets null dans ces cas :
+  - le prospect revient sur une objection déjà levée (`objections_raised`) ;
+  - il accepte un rappel ou propose un créneau (« rappelez-moi mardi » quand on fixe un rendez-vous) ;
+  - simple politesse, acquiescement ou fin d'appel (« d'accord », « au revoir », « mm-hmm »).
 - `step` : l'étape où en est réellement l'appel, parmi `steps` du contexte. Elle n'avance que si
   l'objectif de l'étape courante est atteint ou dépassé.
 - Si `objection` n'est pas null, `kind` vaut "objection" et le conseil y répond."""

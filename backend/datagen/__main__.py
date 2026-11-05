@@ -219,7 +219,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
 
         provider = ClaudeProvider()
         suffix = "_llm"
-    report = evaluate_dir(args.root / "calls", provider)
+    report = evaluate_dir(args.root / "calls", provider, save_as="llm" if args.llm else "rules")
     if provider is not None:
         pin, pout = PRICES.get(provider.model, (0, 0))
         u = provider.usage

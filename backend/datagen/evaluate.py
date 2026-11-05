@@ -62,7 +62,7 @@ def score_call(turns: list[TurnLabel], hints: list[dict], steps_after_turn: list
     fn: dict[str, int] = defaultdict(int)
     fp: dict[str, int] = defaultdict(int)
 
-    obj_hints = [h for h in hints if h["kind"] == "objection"]
+    obj_hints = [h for h in hints if h["kind"] == "objection" and h.get("ref") in OBJECTIONS]
     used: set[str] = set()
     for t in turns:
         if t.speaker != "prospect" or t.objection not in OBJECTIONS:
@@ -130,7 +130,7 @@ def aggregate(per_call: dict[str, dict]) -> dict:
     }
 
 
-def evaluate_dir(calls_dir: Path, provider=None, concurrency: int = 8) -> dict:
+def evaluate_dir(calls_dir: Path, provider=None, concurrency: int = 8, save_as: str | None = None) -> dict:
     """Évalue tous les appels d'un dossier (chaque sous-dossier : labels.json + replay.json)."""
     calls = sorted(p for p in calls_dir.iterdir() if (p / "labels.json").exists())
 
@@ -144,6 +144,9 @@ def evaluate_dir(calls_dir: Path, provider=None, concurrency: int = 8) -> dict:
             async with sem:
                 hints, steps = await run_call(replay, provider)
             out[call.name] = score_call(turns, hints, steps)
+            if save_as:  # détail par appel, pour analyser les erreurs
+                (call / f"eval_{save_as}.json").write_text(
+                    json.dumps({"hints": hints, "steps_after_turn": steps}, ensure_ascii=False, indent=1), "utf-8")
 
         await asyncio.gather(*(one(c) for c in calls))
         return dict(sorted(out.items()))

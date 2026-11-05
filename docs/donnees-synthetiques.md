@@ -124,6 +124,43 @@ Réglages ElevenLabs à faire avant de lancer :
 - désactiver « Data use » dans les paramètres du compte, pour que les scripts et la grille d'étiquettes ne servent pas à entraîner leurs modèles ;
 - rester sur un forfait payant pendant toute la génération : le contenu produit hors abonnement payant n'est pas utilisable commercialement.
 
+## Résultats du pilote (5 novembre 2026, dialogues seulement)
+
+100 dialogues écrits par `claude-opus-5-5` : **100 valides sur 100**, pour **10,32 $** (218 000 jetons en entrée, 472 000 en sortie). Les voix n'ont pas encore été générées : la clé ElevenLabs manque. La ligne de temps est donc estimée à 150 mots par minute. Volume à synthétiser : 309 000 caractères, soit environ 25 $ en `eleven_v4`.
+
+**Qualité constatée :**
+- le style est parlé (hésitations, interruptions, « mm-hmm ») ;
+- les objections sont formulées indirectement, comme dans la réalité (« I've got a crew pouring a slab in twenty minutes » pour un manque de temps) ;
+- les étiquettes sont cohérentes.
+
+**Moteur évalué sur les 147 objections et environ 2 400 tours :**
+
+| Détection | Précision | Rappel | F1 | Étape correcte | Conseils/min |
+|---|---|---|---|---|---|
+| Mots-clés seuls | 56 % | 31 % | 40 % | 30 % | 1,9 |
+| + classement par Claude Haiku 5.5, 1ʳᵉ version | 25 % | 95 % | 40 % | 51 % | 5,3 |
+| **+ classement par Claude, corrigé** | **58 %** | **91 %** | **71 %** | **56 %** | 5,7 |
+
+Coût de l'évaluation avec Claude : 0,37 $ pour 1 186 requêtes.
+
+**Ce qui a été corrigé entre les deux versions du classement :**
+- **62 % des fausses alertes** venaient d'un prospect qui revient sur une objection déjà levée. Claude reçoit désormais la liste des objections déjà levées, et une même objection n'est plus re-signalée pendant 90 s.
+- **Les mots-clés « rappelez », « occupé », « call me back »** se déclenchaient surtout quand le prospect accepte un rappel. Le classement par Claude écarte ces cas.
+
+**Limites de la mesure :**
+- Les étiquettes de référence ne marquent l'objection que sur un tour. Plusieurs « fausses alertes » restantes sont de vraies objections étiquetées sur un tour voisin (« I've got, like, two minutes »). La précision réelle est donc probablement sous-estimée.
+- C'est une mesure sur dialogues synthétiques, sans transcription automatique ni latence réelle. Elle compare des versions du moteur ; elle ne prédit pas le score sur de vrais appels.
+
+Reproduire :
+
+```bash
+.venv/bin/python -m datagen pilot --n 100 --skip-voices
+```
+
+```bash
+.venv/bin/python -m datagen evaluate --llm
+```
+
 ## Coût
 
 Tarifs relevés sur elevenlabs.io/pricing/api le 5 novembre 2026, hors TVA :

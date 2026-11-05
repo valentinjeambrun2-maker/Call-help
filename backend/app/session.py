@@ -187,6 +187,7 @@ class CallSession:
             steps=[{"id": st.id, "title": st.title, "goal": st.goal} for st in self.scenario.steps],
             objections=[{"id": o.id, "label": o.label} for o in self.scenario.objections],
             current_step_id=step.id,
+            objections_raised=list(self.tracker.objections_seen),
         )
 
     async def _send_state(self) -> None:

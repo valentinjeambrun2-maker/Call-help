@@ -24,7 +24,8 @@ Référence des décisions : `docs/decisions.md`.
 │   ├─ Suivi du scénario (étape, branche objection)             │
 │   └─ Moteur de conseils                                       │
 │        ├─ règles instantanées (< 100 ms)                      │
-│        └─ LLM rapide en parallèle (1-3 s), sortie JSON        │
+│        └─ LLM rapide en parallèle (~2 s), sortie JSON :       │
+│           conseil + classement (objection, étape)             │
 │  Bilan post-appel (modèle plus fort)                          │
 │  API admin (structures, membres, droits) — étape suivante     │
 └───────────────────────────────────────────────────────────────┘
@@ -110,3 +111,15 @@ LLM retenus par défaut : `claude-haiku-5-5` pour les conseils en direct, `claud
 3. **Semaine 3** — émotion vocale, calibration, bilan post-appel, email de suivi.
 4. **Semaine 4** — visage (MediaPipe local), tests sur vrais appels internes, mesures.
 5. **Ensuite** — dashboard admin, HubSpot, base de connaissances, collecte d'entraînement opt-in.
+
+## 8. Classement par Claude (objection et étape)
+
+Mesure sur le pilote de 100 appels : avec les mots-clés seuls, le moteur ne détecte que 31 % des objections, car elles sont formulées librement. Il ne suit la bonne étape que dans 30 % des tours.
+
+À chaque tour du prospect, le fournisseur LLM (`claude-haiku-5-5`, environ 2 s, environ 0,0003 $ par tour) renvoie aussi :
+- l'objection **nouvelle** du tour, parmi celles du scénario ;
+- l'étape où en est réellement l'appel.
+
+Le moteur émet alors une fiche d'objection quand les mots-clés l'ont manquée, et fait avancer le fil directeur, jamais en arrière. Les mots-clés restent le réflexe instantané ; Claude complète environ 2 s plus tard.
+
+Résultat : F1 des objections de 40 % à 71 %, étape correcte de 30 % à 56 %. Détails dans `docs/donnees-synthetiques.md`.
