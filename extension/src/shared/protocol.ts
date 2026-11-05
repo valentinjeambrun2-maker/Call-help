@@ -1,0 +1,86 @@
+// Miroir des schémas du backend (backend/app/models.py).
+
+export type Speaker = "user" | "prospect";
+export type EmotionState = "interest" | "hesitation" | "annoyance" | "boredom" | "enthusiasm";
+
+export interface Hint {
+  id: string;
+  kind: "objection" | "step" | "pace" | "emotion" | "question" | "closing";
+  text: string;
+  say: string | null;
+  source: "rule" | "llm";
+  priority: number;
+  replaces: string | null;
+  ts: number;
+}
+
+export interface EmotionReading {
+  speaker: Speaker;
+  state: EmotionState | null;
+  confidence: number;
+  label: "sûr" | "probable" | "incertain";
+  face_visible: boolean | null;
+  calibrated: boolean;
+}
+
+export interface Metrics {
+  elapsed: number;
+  user_wpm: number;
+  prospect_wpm: number;
+  user_talk_ratio: number;
+  current_monologue: number;
+  questions_asked: number;
+}
+
+export interface StepState {
+  id: string;
+  title: string;
+  index: number;
+  total: number;
+  goal: string;
+  active_objection: string | null;
+}
+
+export interface CallSummary {
+  duration: number;
+  steps_reached: string[];
+  objections: string[];
+  metrics: Metrics;
+  hints_given: number;
+  hints_useful: number;
+  hints_not_useful: number;
+}
+
+export type ServerMsg =
+  | { type: "state"; step: StepState; metrics: Metrics; emotions: EmotionReading[]; analysis_paused: boolean }
+  | { type: "hint"; hint: Hint }
+  | { type: "summary"; summary: CallSummary }
+  | { type: "error"; message: string };
+
+export type ClientMsg =
+  | { type: "start"; scenario_id: string; language: "fr" | "en"; self_analysis: boolean; context?: Record<string, string> }
+  | { type: "transcript"; speaker: Speaker; text: string; start: number; end: number; final: boolean }
+  | { type: "voice"; speaker: Speaker; ts: number; scores: Record<EmotionState, number> }
+  | {
+      type: "face";
+      speaker: Speaker;
+      ts: number;
+      visible: boolean;
+      smile: number;
+      frown: number;
+      nod: number;
+      gaze_away: number;
+    }
+  | { type: "feedback"; hint_id: string; useful: boolean }
+  | { type: "pause_analysis" }
+  | { type: "stop" };
+
+// Messages internes à l'extension (panneau <-> service worker <-> offscreen).
+export type ExtensionMsg =
+  | { target: "background"; action: "start-capture"; tabId: number }
+  | { target: "background"; action: "stop-capture" }
+  | { target: "offscreen"; action: "start"; streamId: string; backendUrl: string }
+  | { target: "offscreen"; action: "stop" }
+  | { target: "sidepanel"; action: "capture-status"; status: "running" | "stopped" | "error"; detail?: string };
+
+export const DEFAULT_BACKEND = "ws://localhost:8000/ws/session";

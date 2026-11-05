@@ -1,0 +1,287 @@
+{
+ "context": {
+  "user_name": "Léa",
+  "company": "Herakles",
+  "segment": "PME lyonnaises",
+  "benefit": "gagner des clients grâce au web",
+  "topic": "votre acquisition de clients",
+  "client_ref": "un cabinet comptable",
+  "result": "deux fois plus de demandes en trois mois"
+ },
+ "events": [
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Bonjour, ici Léa de Herakles, vous avez trente secondes ?",
+   "start": 0,
+   "end": 4
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Oui allez-y, je vous écoute.",
+   "start": 4.5,
+   "end": 6
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 6,
+   "scores": {
+    "interest": 0.3,
+    "hesitation": 0.2,
+    "annoyance": 0.1,
+    "boredom": 0.1,
+    "enthusiasm": 0.2
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 7,
+   "smile": 0.2,
+   "frown": 0.1,
+   "nod": 0.2,
+   "gaze_away": 0.2
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Comment gérez-vous votre acquisition de clients aujourd'hui ?",
+   "start": 7,
+   "end": 10
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Honnêtement c'est difficile, on a un vrai problème de visibilité.",
+   "start": 11,
+   "end": 15
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 20,
+   "scores": {
+    "interest": 0.3,
+    "hesitation": 0.2,
+    "annoyance": 0.1,
+    "boredom": 0.1,
+    "enthusiasm": 0.2
+   }
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Ce que vous décrivez, on l'a réglé pour un cabinet comptable.",
+   "start": 16,
+   "end": 20
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Bon, on a déjà un prestataire pour ça.",
+   "start": 33,
+   "end": 36
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 36,
+   "scores": {
+    "interest": 0.1,
+    "hesitation": 0.9,
+    "annoyance": 0.3,
+    "boredom": 0.1,
+    "enthusiasm": 0.0
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 36.5,
+   "smile": 0.0,
+   "frown": 0.8,
+   "nod": 0.0,
+   "gaze_away": 0.9
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 37,
+   "scores": {
+    "interest": 0.1,
+    "hesitation": 0.9,
+    "annoyance": 0.3,
+    "boredom": 0.1,
+    "enthusiasm": 0.0
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 37.5,
+   "smile": 0.0,
+   "frown": 0.8,
+   "nod": 0.0,
+   "gaze_away": 0.9
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 38,
+   "scores": {
+    "interest": 0.1,
+    "hesitation": 0.9,
+    "annoyance": 0.3,
+    "boredom": 0.1,
+    "enthusiasm": 0.0
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 38.5,
+   "smile": 0.0,
+   "frown": 0.8,
+   "nod": 0.0,
+   "gaze_away": 0.9
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 39,
+   "scores": {
+    "interest": 0.1,
+    "hesitation": 0.9,
+    "annoyance": 0.3,
+    "boredom": 0.1,
+    "enthusiasm": 0.0
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 39.5,
+   "smile": 0.0,
+   "frown": 0.8,
+   "nod": 0.0,
+   "gaze_away": 0.9
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Très bien. Si vous pouviez améliorer une seule chose avec eux, ce serait quoi ?",
+   "start": 37,
+   "end": 41
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Ah c'est intéressant, comment ça marche chez vous ?",
+   "start": 42,
+   "end": 45
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 46,
+   "scores": {
+    "interest": 0.6,
+    "hesitation": 0.1,
+    "annoyance": 0.0,
+    "boredom": 0.0,
+    "enthusiasm": 0.95
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 46.5,
+   "smile": 0.95,
+   "frown": 0.0,
+   "nod": 0.8,
+   "gaze_away": 0.0
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 47,
+   "scores": {
+    "interest": 0.6,
+    "hesitation": 0.1,
+    "annoyance": 0.0,
+    "boredom": 0.0,
+    "enthusiasm": 0.95
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 47.5,
+   "smile": 0.95,
+   "frown": 0.0,
+   "nod": 0.8,
+   "gaze_away": 0.0
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 48,
+   "scores": {
+    "interest": 0.6,
+    "hesitation": 0.1,
+    "annoyance": 0.0,
+    "boredom": 0.0,
+    "enthusiasm": 0.95
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 48.5,
+   "smile": 0.95,
+   "frown": 0.0,
+   "nod": 0.8,
+   "gaze_away": 0.0
+  },
+  {
+   "type": "voice",
+   "speaker": "prospect",
+   "ts": 49,
+   "scores": {
+    "interest": 0.6,
+    "hesitation": 0.1,
+    "annoyance": 0.0,
+    "boredom": 0.0,
+    "enthusiasm": 0.95
+   }
+  },
+  {
+   "type": "face",
+   "speaker": "prospect",
+   "ts": 49.5,
+   "smile": 0.95,
+   "frown": 0.0,
+   "nod": 0.8,
+   "gaze_away": 0.0
+  },
+  {
+   "type": "transcript",
+   "speaker": "user",
+   "text": "Je vous propose vingt minutes : mardi 10h ou jeudi 14h ?",
+   "start": 47,
+   "end": 51
+  },
+  {
+   "type": "transcript",
+   "speaker": "prospect",
+   "text": "Jeudi ça marche.",
+   "start": 52,
+   "end": 53
+  },
+  {
+   "type": "stop"
+  }
+ ]
+}

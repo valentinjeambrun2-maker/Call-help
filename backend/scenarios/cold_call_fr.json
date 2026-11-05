@@ -1,0 +1,93 @@
+{
+  "id": "cold_call_fr",
+  "title": "Cold call — prise de rendez-vous",
+  "target_duration": 300,
+  "steps": [
+    {
+      "id": "hook",
+      "title": "Accroche",
+      "goal": "Te présenter en une phrase et obtenir 30 secondes d'attention.",
+      "max_duration": 30,
+      "exit_keywords": ["d'accord", "allez-y", "je vous écoute", "oui", "ok", "go ahead", "sure"],
+      "say": {
+        "fr": "Bonjour, ici {user_name} de {company}. Je vous appelle car on aide les {segment} à {benefit}. Vous avez 30 secondes ?",
+        "en": "Hi, this is {user_name} from {company}. We help {segment} {benefit}. Do you have 30 seconds?"
+      }
+    },
+    {
+      "id": "qualify",
+      "title": "Qualification",
+      "goal": "Comprendre la situation actuelle et un problème concret.",
+      "max_duration": 120,
+      "exit_keywords": ["problème", "difficile", "on cherche", "besoin", "pas satisfait", "problem", "we need", "looking for"],
+      "say": {
+        "fr": "Aujourd'hui, comment gérez-vous {topic} ? Qu'est-ce qui vous prend le plus de temps ?",
+        "en": "How do you handle {topic} today? What takes up most of your time?"
+      }
+    },
+    {
+      "id": "value",
+      "title": "Proposition de valeur",
+      "goal": "Relier le problème exprimé à un bénéfice chiffré.",
+      "max_duration": 60,
+      "exit_keywords": ["intéressant", "pourquoi pas", "comment ça marche", "interesting", "how does it work"],
+      "say": {
+        "fr": "Ce que vous décrivez, c'est exactement ce qu'on a réglé pour {client_ref} : {result}.",
+        "en": "What you describe is exactly what we solved for {client_ref}: {result}."
+      }
+    },
+    {
+      "id": "close",
+      "title": "Prise de rendez-vous",
+      "goal": "Obtenir un créneau précis, pas un « rappelez-moi ».",
+      "max_duration": 60,
+      "exit_keywords": ["mardi", "jeudi", "demain", "semaine prochaine", "ça marche", "tuesday", "thursday", "tomorrow", "next week"],
+      "say": {
+        "fr": "Je vous propose 20 minutes pour vous montrer ça concrètement : mardi 10h ou jeudi 14h ?",
+        "en": "Let's take 20 minutes to show you concretely: Tuesday 10am or Thursday 2pm?"
+      }
+    }
+  ],
+  "objections": [
+    {
+      "id": "no_time",
+      "label": "Pas le temps",
+      "keywords": ["pas le temps", "occupé", "pas maintenant", "rappelez", "no time", "busy", "call me back", "not now"],
+      "hint": "Respecte son temps, propose un créneau court.",
+      "say": {
+        "fr": "Je comprends, je ne vais pas vous retenir. Est-ce que 2 minutes demain matin seraient plus simples ?",
+        "en": "I understand, I won't keep you. Would 2 minutes tomorrow morning be easier?"
+      }
+    },
+    {
+      "id": "has_provider",
+      "label": "Déjà un prestataire",
+      "keywords": ["déjà un prestataire", "on a déjà", "déjà quelqu'un", "already have", "already work with"],
+      "hint": "Ne critique pas le prestataire. Cherche ce qui pourrait être mieux.",
+      "say": {
+        "fr": "Très bien. Si vous pouviez améliorer une seule chose avec eux, ce serait quoi ?",
+        "en": "Great. If you could improve one thing with them, what would it be?"
+      }
+    },
+    {
+      "id": "no_budget",
+      "label": "Pas de budget",
+      "keywords": ["pas de budget", "trop cher", "pas les moyens", "budget", "too expensive", "no budget"],
+      "hint": "Parle du coût du problème, pas du prix.",
+      "say": {
+        "fr": "C'est justement pour ça que je vous appelle : combien vous coûte ce problème aujourd'hui chaque mois ?",
+        "en": "That's exactly why I'm calling: how much does this problem cost you each month today?"
+      }
+    },
+    {
+      "id": "send_email",
+      "label": "Envoyez un mail",
+      "keywords": ["envoyez-moi un mail", "envoyez un mail", "par mail", "envoyez-moi", "send me an email", "send an email"],
+      "hint": "Accepte, mais qualifie pour que le mail soit utile.",
+      "say": {
+        "fr": "Avec plaisir. Pour vous envoyer quelque chose de pertinent : quel est votre principal sujet en ce moment sur {topic} ?",
+        "en": "Happy to. So I send something relevant: what's your main focus right now on {topic}?"
+      }
+    }
+  ]
+}

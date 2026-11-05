@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Call-help",
+  "description": "Copilote d'appel : fil directeur, conseils et lecture du ton en temps réel.",
+  "version": "0.1.0",
+  "action": { "default_title": "Ouvrir Call-help" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "permissions": ["sidePanel", "tabCapture", "offscreen", "storage", "activeTab"]
+}
